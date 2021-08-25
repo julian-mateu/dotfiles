@@ -37,6 +37,8 @@ create_git_config() {
 		    name = ${GIT_NAME}
 		[push]
 		    followTags = true
+		[init]
+		    defaultBranch = main
 	EOF
 }
 
