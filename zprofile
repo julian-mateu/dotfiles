@@ -8,3 +8,4 @@ export PATH="${HOME}/bin:${PATH}"
 # => Configurations for tools
 ###############################################################
 
+[[ -f "${HOME}/.zprofile_custom.zsh" ]] && source "${HOME}/.zprofile_custom.zsh"

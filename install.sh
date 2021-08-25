@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e -o pipefail -u
 
-PROFILE_FILE='./zprofile'
+PROFILE_FILE='./zprofile_custom.zsh'
 GREEN='\033[32m'
 RED='\033[31m'
 YELLOW='\033[33m'
