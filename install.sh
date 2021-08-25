@@ -94,7 +94,6 @@ install_hub() {
     IFS='' read -r -d '' lines <<-"EOS" || true
 		# hub
 		eval "$(hub alias -s)"
-
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
@@ -110,7 +109,6 @@ install_python() {
 		export PYENV_ROOT="${HOME}/.pyenv"
 		export PATH="${PYENV_ROOT}/bin:${PATH}"
 		eval "$(pyenv init --path)"
-
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
@@ -141,7 +139,6 @@ install_nvm() {
 		export NVM_DIR="${HOME}/.nvm"
 		[ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
 		[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
-
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"    
@@ -181,7 +178,6 @@ install_sdk_man() {
 		#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 		export SDKMAN_DIR="${HOME}/.sdkman"
 		[[ -s "${HOME}/.sdkman/bin/sdkman-init.sh" ]] && source "${HOME}/.sdkman/bin/sdkman-init.sh"
-
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
@@ -217,6 +213,9 @@ append_lines_to_file_if_not_there() {
     lines="${1}"
     file="${2}"
     while IFS= read -r line; do
+        if [[ "${line}" == "" ]]; then
+            echo "${line}" >>"${file}"
+        fi
         grep -qxF "${line}" "${file}" || echo "${line}" >>"${file}"
     done < <(echo "${lines}")
 
