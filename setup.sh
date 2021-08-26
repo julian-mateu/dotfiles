@@ -39,6 +39,8 @@ create_git_config() {
 		    followTags = true
 		[init]
 		    defaultBranch = main
+		[pull]
+		    ff = only
 	EOF
 }
 
