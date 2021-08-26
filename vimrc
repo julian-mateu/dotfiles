@@ -1,6 +1,6 @@
 " Source Amix's vimrc if exists
-if !empty(glob("amix.vim"))
-    source amix.vim
+if !empty(glob("~/.amix.vim"))
+    source ~/.amix.vim
 endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
