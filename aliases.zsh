@@ -24,7 +24,6 @@ alias deleteDSFiles="find . -name '.DS_Store' -type f -delete"
 alias npm-update="npx npm-check -u";
 alias flushdns="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder"
 
-
 ## git aliases
 function gc { git commit -m "$@"; }
 alias gcm="git checkout master";
