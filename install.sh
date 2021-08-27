@@ -41,6 +41,9 @@ main() {
     # Kubernetes
     ask_for_confirmation "kubernetes" "https://kubernetes.io/" install_kubernetes
 
+    # Kafka
+    setup_conduktor
+
     # shellcheck disable=SC2016
     echo -e "${GREEN}Done!${NC} you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
 }
@@ -204,6 +207,11 @@ install_kubernetes() {
         brew install k9s
     print_warning "Download lens from $(fmt_underline https://k8slens.dev/)"
     print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
+}
+
+setup_conduktor() {
+    ask_for_confirmation "conduktor" "https://www.conduktor.io/" \
+        "brew tap conduktor/brew && brew install conduktor"
 }
 
 append_lines_to_file_if_not_there() {
