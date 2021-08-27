@@ -1,30 +1,69 @@
-# other aliases
+###############################################################
+# Author: Julian Mateu - julianmateu@gmail.com
+#
+# Sections:
+#    -> Misc
+#    -> Filesystem Navigation
+#    -> OSX Filesystem
+#    -> Applications
+#    -> Networking
+#    -> Git
+#    -> Npm
+#    -> Yarn
+#    -> Docker
+#
+###############################################################
+
+###############################################################
+# => Misc
+###############################################################
 alias zshrc='code ~/.zshrc'
+alias update="source ~/.zshrc"
 alias topten="history | commands | sort -rn | head"
-alias myip="curl http://ipecho.net/plain; echo"
 alias dirs='dirs -v | head -10'
 alias usage='du -h -d1'
-alias update="source ~/.zshrc"
-alias sshdir="cd ~/.ssh"
 alias runp="lsof -i "
+
+###############################################################
+# => Filesystem Navigation
+###############################################################
 alias ll="ls -1a";
 alias md="mkdir "
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ..l="cd ../ && ll";
-alias chrome='open -a "Google Chrome"'
-alias c="code .";
-alias pg="echo 'Pinging Google' && ping www.google.com";
+alias sshdir="cd ~/.ssh"
 alias de="cd ~/Desktop";
-alias dd="cd ~/code";
-alias d="cd ~/code && cd "
+alias dd="cd ~/workplace";
+alias d="cd ~/workplace && cd "
+alias p="cd ~/projects";
+
+###############################################################
+# => OSX Filesystem
+###############################################################
 alias showFiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'
 alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'
 alias deleteDSFiles="find . -name '.DS_Store' -type f -delete"
-alias npm-update="npx npm-check -u";
-alias flushdns="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder"
 
-## git aliases
+###############################################################
+# => Applications
+###############################################################
+alias chrome='open -a "Google Chrome"'
+alias c="code .";
+
+###############################################################
+# => Networking
+###############################################################
+alias myip="curl http://ipecho.net/plain; echo"
+alias pg="echo 'Pinging Google' && ping www.google.com";
+alias flushdns="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder"
+## IPv6 can mess up with connections, so these are shortcuts to disable/enable. See https://stackoverflow.com/a/51544596
+alias disableipv6="networksetup -setv6off Ethernet && networksetup -setv6off Wi-Fi"
+alias enableipv6="networksetup -setv6automatic Wi-Fi && networksetup -setv6automatic Ethernet"
+
+###############################################################
+# => Git
+###############################################################
 function gc { git commit -m "$@"; }
 alias gcm="git checkout master";
 alias gs="git status";
@@ -45,10 +84,9 @@ alias gac="git add . && git commit -a -m "
 alias gsu="git gpush --set-upstream origin "
 alias glog="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --branches"
 
-## checkout a new remote branch (exists remote, not locally)
-## git checkout -b LocalName origin/remotebranchname (checkout a remote branch)
-
-## npm aliases
+###############################################################
+# => Npm
+###############################################################
 alias ni="npm install";
 alias nrs="npm run start -s --";
 alias nrb="npm run build -s --";
@@ -58,8 +96,11 @@ alias nrtw="npm run test:watch -s --";
 alias nrv="npm run validate -s --";
 alias rmn="rm -rf node_modules";
 alias flush-npm="rm -rf node_modules && npm i && echo NPM is done";
+alias npm-update="npx npm-check -u";
 
-## yarn aliases
+###############################################################
+# => Yarn
+###############################################################
 alias yar="yarn run"; # lists all the scripts we have available
 alias yab="yarn build"; # build dist directory for each package
 alias yal="yarn lint:fix"; # format source and auto-fix eslint issues
@@ -69,7 +110,9 @@ alias yasb="yarn storybook:start"; # start storybook
 alias yat="yarn test"; # run the unit tests*
 alias yatw="yarn test:watch"; #run the unit tests for files changed on save
 
-## docker
+###############################################################
+# => Docker
+###############################################################
 alias dockerstop='docker-compose stop'
 alias dockerrestart='docker-compose restart'
 alias dockerup='docker-compose up -d'
