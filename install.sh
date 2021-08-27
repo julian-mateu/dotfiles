@@ -77,6 +77,7 @@ setup_homebrew_services() {
 }
 
 setup_useful_tools() {
+    ask_for_confirmation "coreutils" "https://www.gnu.org/software/coreutils/" brew install coreutils
     ask_for_confirmation "jq" "https://stedolan.github.io/jq/" brew install jq
     ask_for_confirmation "httpie" "https://httpie.io/" brew install httpie
     ask_for_confirmation "pgcli" "https://www.pgcli.com/" brew install pgcli
