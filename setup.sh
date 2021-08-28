@@ -27,21 +27,21 @@ main() {
 parse_arguments() {
     while getopts "hf" o; do
         case "${o}" in
-            f)
-                FORCE_FLAG="force"
-                ;;
-            h)
-                usage
-                exit 0
-                ;;
-            \? | *)
-                usage
-                exit 1
-                ;;
+        f)
+            FORCE_FLAG="force"
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
+        \? | *)
+            usage
+            exit 1
+            ;;
         esac
     done
 
-    shift $((OPTIND-1))
+    shift $((OPTIND - 1))
 
     if [[ "${#}" -ne 0 ]]; then
         echo "Illegal number of parameters ${0}: got ${#} but expected exactly 0: ${*}" >&2
@@ -88,28 +88,28 @@ create_git_config() {
 }
 
 download_amix_vimrc() {
-    curl -fsSL https://raw.githubusercontent.com/amix/vimrc/master/vimrcs/basic.vim > amix.vim
+    curl -fsSL https://raw.githubusercontent.com/amix/vimrc/master/vimrcs/basic.vim >amix.vim
 }
 
 copy_files() {
     for name in *; do
-    if [[ ! -d "${name}" ]]; then
-        target="${HOME}/.${name}"
-        if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md)$ ]]; then
+        if [[ ! -d "${name}" ]]; then
+            target="${HOME}/.${name}"
+            if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md)$ ]]; then
 
-            if [[ -e "${target}" ]]; then                 # Does the config file already exist?
-                if [[ ! -L "${target}" ]]; then           # as a pure file?
-                    mv "${target}" "${target}.backup"     # Then backup it
-                    echo "-----> Moved your old ${target} config file to ${target}.backup"
+                if [[ -e "${target}" ]]; then             # Does the config file already exist?
+                    if [[ ! -L "${target}" ]]; then       # as a pure file?
+                        mv "${target}" "${target}.backup" # Then backup it
+                        echo "-----> Moved your old ${target} config file to ${target}.backup"
+                    fi
+                fi
+
+                if [[ ! -e "${target}" ]]; then
+                    echo "-----> Symlinking your new ${target}"
+                    ln -s ${FORCE_FLAG:+-f} "${PWD}/${name}" "${target}"
                 fi
             fi
-
-            if [[ ! -e "${target}" ]]; then
-                echo "-----> Symlinking your new ${target}"
-                ln -s ${FORCE_FLAG:+-f} "${PWD}/${name}" "${target}"
-            fi
         fi
-    fi
     done
 }
 

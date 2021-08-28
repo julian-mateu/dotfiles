@@ -26,21 +26,21 @@ HIST_STAMPS="yyyy-mm-dd"
 # => Plugins
 ###############################################################
 plugins=(
-  git
-  bundler
-  dotenv
-  osx
-  rake
-  zsh-autosuggestions
-  last-working-dir
-  web-search
-  cloudfoundry
-  zsh-syntax-highlighting
-  zsh-history-substring-search
-  history
-  sudo
-  yarn
-  z
+    git
+    bundler
+    dotenv
+    osx
+    rake
+    zsh-autosuggestions
+    last-working-dir
+    web-search
+    cloudfoundry
+    zsh-syntax-highlighting
+    zsh-history-substring-search
+    history
+    sudo
+    yarn
+    z
 )
 
 ###############################################################
@@ -60,18 +60,18 @@ setopt correct
 # => Functions
 ###############################################################
 function gpr {
-  if [ $? -eq 0 ]; then
-    github_url=`git remote -v | awk '/fetch/{print $2}' | sed -Ee 's#(git@|git://)#http://#' -e 's@com:@com/@' -e 's%\.git$%%'`;
-    branch_name=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`;
-    pr_url=$github_url"/compare/master..."$branch_name
-    open $pr_url;
-  else
-    echo 'failed to open a pull request.';
-  fi
+    if [ $? -eq 0 ]; then
+        github_url=$(git remote -v | awk '/fetch/{print $2}' | sed -Ee 's#(git@|git://)#http://#' -e 's@com:@com/@' -e 's%\.git$%%')
+        branch_name=$(git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
+        pr_url=$github_url"/compare/master..."$branch_name
+        open $pr_url
+    else
+        echo 'failed to open a pull request.'
+    fi
 }
 
 commands() {
-  awk '{a[$2]++}END{for(i in a){print a[i] " " i}}'
+    awk '{a[$2]++}END{for(i in a){print a[i] " " i}}'
 }
 
 ###############################################################

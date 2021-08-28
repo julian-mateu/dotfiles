@@ -56,7 +56,7 @@ alias c="code ."
 # => Networking
 ###############################################################
 alias myip="curl http://ipecho.net/plain; echo"
-alias pg="echo 'Pinging Google' && ping www.google.com";
+alias pg="echo 'Pinging Google' && ping www.google.com"
 alias flushdns="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder"
 ## IPv6 can mess up with connections, so these are shortcuts to disable/enable. See https://stackoverflow.com/a/51544596
 alias disableipv6="networksetup -setv6off Ethernet && networksetup -setv6off Wi-Fi"
@@ -82,7 +82,7 @@ alias gbn="git checkout -B "
 alias grf="git reflog"
 alias grh="git reset HEAD~" # last commit
 alias gac="git add . && git commit -a -m "
-alias gsu="git gpush --set-upstream origin "
+alias gsu="git push --set-upstream origin "
 alias glog="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --branches"
 
 ###############################################################
@@ -102,14 +102,14 @@ alias npm-update="npx npm-check -u"
 ###############################################################
 # => Yarn
 ###############################################################
-alias yar="yarn run" # lists all the scripts we have available
-alias yab="yarn build" # build dist directory for each package
+alias yar="yarn run"      # lists all the scripts we have available
+alias yab="yarn build"    # build dist directory for each package
 alias yal="yarn lint:fix" # format source and auto-fix eslint issues
-alias yac="yarn commit" # open a Q&A prompt to help construct valid commit messages
+alias yac="yarn commit"   # open a Q&A prompt to help construct valid commit messages
 alias yas="yarn start"
 alias yasb="yarn storybook:start" # start storybook
-alias yat="yarn test" # run the unit tests*
-alias yatw="yarn test:watch" #run the unit tests for files changed on save
+alias yat="yarn test"             # run the unit tests*
+alias yatw="yarn test:watch"      #run the unit tests for files changed on save
 
 ###############################################################
 # => Docker

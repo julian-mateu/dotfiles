@@ -37,7 +37,7 @@ main() {
     ask_for_confirmation "sdk_man" "https://sdkman.io/install" install_sdk_man
     setup_java_11_openjdk
     setup_gradle
-    
+
     # Kubernetes
     ask_for_confirmation "kubernetes" "https://kubernetes.io/" install_kubernetes
 
@@ -145,7 +145,7 @@ install_nvm() {
 		[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"    
+    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
 }
 
 setup_node() {
@@ -205,6 +205,10 @@ install_kubernetes() {
         brew install kubectl
     ask_for_confirmation "k9s" "https://k9scli.io/" \
         brew install k9s
+    ask_for_confirmation "helm" "https://helm.sh/" \
+        brew install helm
+    ask_for_confirmation "skaffold" "https://skaffold.dev/" \
+        brew install skaffold
     print_warning "Download lens from $(fmt_underline https://k8slens.dev/)"
     print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
 }
@@ -255,12 +259,12 @@ print_warning() {
 }
 
 fmt_underline() {
-  printf '\033[4m%s\033[24m\n' "$*"
+    printf '\033[4m%s\033[24m\n' "$*"
 }
 
 fmt_code() {
-  # shellcheck disable=SC2016 # backtic in single-quote
-  printf '`\033[38;5;247m%s%s`\n' "$*" "${NC}"
+    # shellcheck disable=SC2016 # backtic in single-quote
+    printf '`\033[38;5;247m%s%s`\n' "$*" "${NC}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
