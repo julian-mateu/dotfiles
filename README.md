@@ -1,14 +1,26 @@
 ## Install
 
-There is configuration for `zsh` so first of all switch your shell from the default `bash` to `zsh` on OS X:
-```
+There is configuration for `zsh` so first of all switch your shell from the default `bash` to `zsh` on OSX:
+```bash
 chsh -s /bin/zsh
 ```
 
 Run the setup script. It will interactively prompt you to install dependencies. It will not override existing config files, just rename them as `#{file}.backup`.
-```
+```bash
 ./setup.sh
 ```
+
+**NOTE**: `brew doctor` showed a warning:
+> Warning: You have unlinked kegs in your Cellar
+
+so I ran
+`brew link kubernetes-cli`, and that failed because `/usr/local/bin/kubectl` already existed:
+```bash
+la /usr/local/bin/kubectl
+lrwxr-xr-x  1 root  admin    55B 23 Aug 22:01 /usr/local/bin/kubectl -> /Applications/Docker.app/Contents/Resources/bin/kubectl
+```
+
+So I ran `brew link --overwrite --dry-run kubernetes-cli`
 
 ## Optional tricks
 

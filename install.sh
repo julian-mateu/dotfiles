@@ -89,6 +89,7 @@ setup_useful_tools() {
     ask_for_confirmation "wget" "https://www.gnu.org/software/wget/" brew install wget
     ask_for_confirmation "htop" "https://htop.dev/" brew install htop
     ask_for_confirmation "insomnia" "https://insomnia.rest/" brew install insomnia
+    ask_for_confirmation "k6" "https://k6.io/docs/getting-started/installation/#macos" brew install k6
 }
 
 install_hub() {
