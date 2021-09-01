@@ -49,7 +49,7 @@ plugins=(
 source "${ZSH}/oh-my-zsh.sh"
 
 ## Source NVM
-[[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh
+[[ -s ${HOME}/.nvm/nvm.sh ]] && . ${HOME}/.nvm/nvm.sh
 
 ###############################################################
 # => Options
@@ -63,8 +63,8 @@ function gpr {
     if [ $? -eq 0 ]; then
         github_url=$(git remote -v | awk '/fetch/{print $2}' | sed -Ee 's#(git@|git://)#http://#' -e 's@com:@com/@' -e 's%\.git$%%')
         branch_name=$(git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
-        pr_url=$github_url"/compare/master..."$branch_name
-        open $pr_url
+        pr_url=${github_url}"/compare/master..."${branch_name}
+        open ${pr_url}
     else
         echo 'failed to open a pull request.'
     fi
@@ -88,8 +88,8 @@ bindkey -M vicmd 'j' history-substring-search-down
 
 # bind UP and DOWN arrow keys
 zmodload zsh/terminfo
-bindkey "$terminfo[kcuu1]" history-substring-search-up
-bindkey "$terminfo[kcud1]" history-substring-search-down
+bindkey "${terminfo}[kcuu1]" history-substring-search-up
+bindkey "${terminfo}[kcud1]" history-substring-search-down
 
 # Enable vi mode:
 bindkey -v

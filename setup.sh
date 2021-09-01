@@ -103,7 +103,7 @@ copy_files() {
     done
 
     if [[ -n "${ZSH_CUSTOM+x}" ]]; then
-        copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM}/julianmateu.zsh-theme"
+        copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM}/themes/julianmateu.zsh-theme"
     else
         echo -e "${YELLOW}Warning: did not copy the zsh theme as ZSH_CUSTOM variable does not exist${NC}"
         echo -e " ${YELLOW}might need to run $(fmt_code "ZSH_CUSTOM=\$ZSH_CUSTOM ${0}") ${NC}"
