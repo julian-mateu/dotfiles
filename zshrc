@@ -18,7 +18,7 @@
 
 export ZSH="${HOME}/.oh-my-zsh"
 
-ZSH_THEME="robbyrussell"
+ZSH_THEME="julianmateu"
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
 

@@ -15,7 +15,7 @@ main() {
     copy_files
 
     echo -e "Do you want to install dependencies (needed if setting up a new computer)? [y/n]"
-    echo -e " ${YELLOW}Warning: note that if the setup process fails because spme command is not found, you might need to open a new shell and run ./install.sh again!${NC}"
+    echo -e " ${YELLOW}Warning: note that if the setup process fails because some command is not found, you might need to open a new shell and run ./install.sh again!${NC}"
     read -p "" -n 1 -r REPLY
     echo
 
@@ -95,22 +95,41 @@ copy_files() {
     for name in *; do
         if [[ ! -d "${name}" ]]; then
             target="${HOME}/.${name}"
-            if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md)$ ]]; then
-
-                if [[ -e "${target}" ]]; then             # Does the config file already exist?
-                    if [[ ! -L "${target}" ]]; then       # as a pure file?
-                        mv "${target}" "${target}.backup" # Then backup it
-                        echo "-----> Moved your old ${target} config file to ${target}.backup"
-                    fi
-                fi
-
-                if [[ ! -e "${target}" ]]; then
-                    echo "-----> Symlinking your new ${target}"
-                    ln -s ${FORCE_FLAG:+-f} "${PWD}/${name}" "${target}"
-                fi
+            if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md|julianmateu.zsh-theme)$ ]]; then
+                copy_file "${PWD}/${name}" "${target}"
             fi
+
         fi
     done
+
+    if [[ -n "${ZSH_CUSTOM+x}" ]]; then
+        copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM}/julianmateu.zsh-theme"
+    else
+        echo -e "${YELLOW}Warning: did not copy the zsh theme as ZSH_CUSTOM variable does not exist${NC}"
+        echo -e " ${YELLOW}might need to run $(fmt_code "ZSH_CUSTOM=\$ZSH_CUSTOM ${0}") ${NC}"
+    fi
+}
+
+copy_file() {
+    source="${1}"
+    target="${2}"
+
+    if [[ -e "${target}" ]]; then             # Does the config file already exist?
+        if [[ ! -L "${target}" ]]; then       # as a pure file?
+            mv "${target}" "${target}.backup" # Then backup it
+            echo "-----> Moved your old ${target} config file to ${target}.backup"
+        fi
+    fi
+
+    if [[ ! -e "${target}" ]]; then
+        echo "-----> Symlinking your new ${target}"
+        ln -s ${FORCE_FLAG:+-f} "${source}" "${target}"
+    fi
+}
+
+fmt_code() {
+    # shellcheck disable=SC2016 # backtic in single-quote
+    printf '`\033[38;5;247m%s%s`\n' "$*" "${NC}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
