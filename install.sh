@@ -114,6 +114,9 @@ install_python() {
 		export PYENV_ROOT="${HOME}/.pyenv"
 		export PATH="${PYENV_ROOT}/bin:${PATH}"
 		eval "$(pyenv init --path)"
+		
+		# pyenv adds *-config scripts and produces a brew warning
+		alias brew="pyenv global system && echo -e '\033[31mWarning: changed pyenv version to system\033[m\n' && brew "
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
