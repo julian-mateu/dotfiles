@@ -61,6 +61,10 @@ setup_oh_my_zsh_and_plugins() {
 
     ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" \
         git clone https://github.com/zsh-users/zsh-history-substring-search "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-history-substring-search"
+
+    ask_for_confirmation "zsh-nvm" "https://github.com/lukechilds/zsh-nvm" \
+        git clone https://github.com/lukechilds/zsh-nvm "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-nvm"
+
 }
 
 setup_x_code() {

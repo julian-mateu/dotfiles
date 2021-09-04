@@ -15,6 +15,7 @@
 ###############################################################
 # => Environment variables
 ###############################################################
+zmodload zsh/zprof
 
 export ZSH="${HOME}/.oh-my-zsh"
 
@@ -22,10 +23,14 @@ ZSH_THEME="julianmateu"
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
 
+# Lazy load NVM: https://blog.mattclemente.com/2020/06/26/oh-my-zsh-slow-to-load/
+export NVM_LAZY_LOAD=true
+export NVM_COMPLETION=true
 ###############################################################
 # => Plugins
 ###############################################################
 plugins=(
+    zsh-nvm
     git
     bundler
     dotenv
