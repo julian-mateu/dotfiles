@@ -23,6 +23,7 @@ alias topten="history | commands | sort -rn | head"
 alias dirs="dirs -v | head -10"
 alias usage="du -h -d1"
 alias runp="lsof -i "
+alias uuid="python -c 'import uuid;print(uuid.uuid4())'"
 
 ###############################################################
 # => Filesystem Navigation
