@@ -24,6 +24,7 @@ alias dirs="dirs -v | head -10"
 alias usage="du -h -d1"
 alias runp="lsof -i "
 alias uuid="python -c 'import uuid;print(uuid.uuid4())'"
+alias randpwd="openssl rand -base64 32"
 
 ###############################################################
 # => Filesystem Navigation
