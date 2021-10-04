@@ -15,7 +15,7 @@ main() {
     setup_x_code
     setup_homebrew
     setup_homebrew_services
-    setup_useful_tools
+    ask_for_confirmation "useful tools" "more info in the command if you accept" setup_useful_tools
 
     # GIT & Python
     ask_for_confirmation "hub" "https://hub.github.com/" install_hub
@@ -120,7 +120,7 @@ install_python() {
 		export PYENV_ROOT="${HOME}/.pyenv"
 		export PATH="${PYENV_ROOT}/bin:${PATH}"
 		eval "$(pyenv init --path)"
-		
+
 		# pyenv adds *-config scripts and produces a brew warning
 		alias brew="pyenv global system && echo -e '\033[31mWarning: changed pyenv version to system\033[m\n' && brew "
 	EOS
@@ -208,7 +208,13 @@ setup_gradle() {
 }
 
 install_kubernetes() {
-    print_warning "Before installing Kubernetes, first install docker desktop: $(fmt_underline https://docs.docker.com/desktop/mac/install/)"
+    print_warning "$(cat <<-EOS
+		Before installing Kubernetes, it is advised to first install docker desktop: $(fmt_underline https://docs.docker.com/desktop/mac/install/)
+		However, it is possible to use hyperkit $(fmt_underline https://minikube.sigs.k8s.io/docs/drivers/hyperkit/)
+	EOS
+    )"
+    ask_for_confirmation "hyperkit" "https://github.com/moby/hyperkit" \
+        brew install hyperkit
     ask_for_confirmation "minikube" "https://minikube.sigs.k8s.io/docs/start/" \
         brew install minikube
     ask_for_confirmation "kubectl" "https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/#install-with-homebrew-on-macos" \
