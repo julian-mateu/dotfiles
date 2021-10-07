@@ -122,7 +122,15 @@ install_python() {
 		eval "$(pyenv init --path)"
 
 		# pyenv adds *-config scripts and produces a brew warning
-		alias brew="pyenv global system && echo -e '\033[31mWarning: changed pyenv version to system\033[m\n' && brew "
+		function brew_wrapper() {
+		    current_version="$(pyenv global)"
+		    pyenv global system
+		    echo -e "\033[31mWarning: changed pyenv version from ${current_version} to system\033[m\n"
+		    brew "${@}"
+		    echo -e "\033[31mWarning: changed pyenv version from system to ${current_version} \033[m\n"
+		    pyenv global "${current_version}"
+		}
+		alias brew="brew_wrapper"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
