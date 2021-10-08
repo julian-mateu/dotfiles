@@ -17,6 +17,7 @@
 ###############################################################
 # => Misc
 ###############################################################
+alias sed="gsed"
 alias zshrc="code ~/.zshrc"
 alias update="source ~/.zshrc"
 alias topten="history | commands | sort -rn | head"
