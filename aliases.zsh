@@ -11,6 +11,7 @@
 #    -> Npm
 #    -> Yarn
 #    -> Docker
+#    -> Kubernetes
 #
 ###############################################################
 
@@ -122,3 +123,8 @@ alias dockerrestart="docker-compose restart"
 alias dockerup="docker-compose up -d"
 alias dockerdown="docker-compose down --volumes --remove-orphans"
 alias dockerrm="docker-compose rm --all"
+
+###############################################################
+# => Kubernetes
+###############################################################
+alias k="kubectl"

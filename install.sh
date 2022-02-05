@@ -28,7 +28,8 @@ main() {
     setup_yalc
 
     # AWS
-    setup_aws_cli
+    ask_for_confirmation "aws_cli" "https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" \
+        setup_aws_cli
     setup_botoenv
     setup_testim
     setup_terraform
@@ -43,6 +44,9 @@ main() {
 
     # Kafka
     setup_conduktor
+
+    # Vagrant
+    setup_vagrant_and_virtualbox
 
     # shellcheck disable=SC2016
     echo -e "${GREEN}Done!${NC} you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
@@ -76,6 +80,8 @@ setup_homebrew() {
     # shellcheck disable=SC2016
     ask_for_confirmation "brew" "https://brew.sh/" \
         '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
+    ask_for_confirmation "brew automatic updates" "https://docs.brew.sh/Manpage#autoupdate-subcommand-interval-options" \
+        brew autoupdate start --upgrade
 }
 
 setup_homebrew_services() {
@@ -88,6 +94,8 @@ setup_useful_tools() {
     ask_for_confirmation "GNU parallel" "https://www.gnu.org/software/parallel/" brew install parallel
     ask_for_confirmation "gsed" "https://formulae.brew.sh/formula/gnu-sed" brew install gsed
     ask_for_confirmation "watch" "https://formulae.brew.sh/formula/watch" brew install watch
+    ask_for_confirmation "pv" "https://formulae.brew.sh/formula/pv" brew install pv
+    ask_for_confirmation "dnsmasq" "https://thekelleys.org.uk/dnsmasq/doc.html" brew install dnsmasq
     ask_for_confirmation "jq" "https://stedolan.github.io/jq/" brew install jq
     ask_for_confirmation "httpie" "https://httpie.io/" brew install httpie
     ask_for_confirmation "pgcli" "https://www.pgcli.com/" brew install pgcli
@@ -144,8 +152,9 @@ install_python() {
 }
 
 setup_aws_cli() {
-    ask_for_confirmation "aws_cli" "https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html" \
-        pip install awscli
+    curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+    sudo installer -pkg ./AWSCLIV2.pkg -target /
+    rm -rf ./AWSCLIV2.pkg
 }
 
 setup_botoenv() {
@@ -192,6 +201,15 @@ setup_terraform() {
         brew install terraform
 }
 
+setup_vagrant_and_virtualbox() {
+    ask_for_confirmation "virtualbox" "https://www.virtualbox.org/" \
+        brew install --cask virtualbox
+    ask_for_confirmation "vagrant" "https://www.vagrantup.com/" \
+        brew install --cask vagrant
+    ask_for_confirmation "vagrant-manager" "https://www.vagrantmanager.com/" \
+        brew install --cask vagrant-manager
+}
+
 install_sdk_man() {
     curl -s "https://get.sdkman.io" | bash
 
@@ -234,6 +252,8 @@ install_kubernetes() {
         brew install helm
     ask_for_confirmation "skaffold" "https://skaffold.dev/" \
         brew install skaffold
+    ask_for_confirmation "telepresence" "https://www.telepresence.io/" \
+        brew install datawire/blackbird/telepresence
     print_warning "Download lens from $(fmt_underline https://k8slens.dev/)"
     print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
 }

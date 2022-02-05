@@ -34,7 +34,7 @@ plugins=(
     git
     bundler
     dotenv
-    osx
+    macos
     rake
     zsh-autosuggestions
     last-working-dir

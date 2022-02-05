@@ -3,6 +3,7 @@
 ###############################################################
 
 export PATH="${HOME}/bin:${PATH}"
+export HISTCONTROL="ignoreboth"
 
 ###############################################################
 # => Configurations for tools
