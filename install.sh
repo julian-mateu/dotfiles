@@ -8,13 +8,15 @@ YELLOW='\033[33m'
 NC='\033[m' # No Color
 
 main() {
-    # ZSH
-    setup_oh_my_zsh_and_plugins
-
-    # OSX stuff and tools
+    # OSX stuffx
     setup_x_code
     setup_homebrew
     setup_homebrew_services
+
+    # ZSH
+    setup_oh_my_zsh_and_plugins
+
+    # Misc tools
     ask_for_confirmation "useful tools" "more info in the command if you accept" setup_useful_tools
 
     # GIT & Python
@@ -48,8 +50,44 @@ main() {
     # Vagrant
     setup_vagrant_and_virtualbox
 
+    # IDEs
+    setup_ides
+
+    # Slack
+    ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
+
     # shellcheck disable=SC2016
     echo -e "${GREEN}Done!${NC} you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
+}
+
+setup_x_code() {
+    echo "Installing XCode command line tools, you might need to install XCode itself from the app store"
+    ask_for_confirmation "xcode" "https://developer.apple.com/xcode/" xcode-select --install
+}
+
+setup_homebrew() {
+    # shellcheck disable=SC2016
+    ask_for_confirmation "brew" "https://brew.sh/" \
+        '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
+
+# Note that indentation with tabs is needed here!
+    IFS='' read -r -d '' lines <<-"EOS" || true
+		# brew
+		eval "$(/opt/homebrew/bin/brew shellenv)"
+	EOS
+
+    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+
+    mkdir -p "${HOME}/Library/LaunchAgents"
+    ask_for_confirmation "brew automatic updates" "https://docs.brew.sh/Manpage#autoupdate-subcommand-interval-options" \
+        brew autoupdate start --upgrade
+}
+
+setup_homebrew_services() {
+    ask_for_confirmation "homebrew services" "https://thoughtbot.com/blog/starting-and-stopping-background-services-with-homebrew" \
+        brew tap homebrew/services
 }
 
 setup_oh_my_zsh_and_plugins() {
@@ -71,25 +109,8 @@ setup_oh_my_zsh_and_plugins() {
 
 }
 
-setup_x_code() {
-    echo "Installing XCode, you might want to install it from the app store"
-    ask_for_confirmation "xcode" "https://developer.apple.com/xcode/" xcode-select --install
-}
-
-setup_homebrew() {
-    # shellcheck disable=SC2016
-    ask_for_confirmation "brew" "https://brew.sh/" \
-        '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
-    ask_for_confirmation "brew automatic updates" "https://docs.brew.sh/Manpage#autoupdate-subcommand-interval-options" \
-        brew autoupdate start --upgrade
-}
-
-setup_homebrew_services() {
-    ask_for_confirmation "homebrew services" "https://thoughtbot.com/blog/starting-and-stopping-background-services-with-homebrew" \
-        brew tap homebrew/services
-}
-
 setup_useful_tools() {
+    ask_for_confirmation "trash" "https://hasseg.org/trash/" brew install trash
     ask_for_confirmation "coreutils" "https://www.gnu.org/software/coreutils/" brew install coreutils
     ask_for_confirmation "GNU parallel" "https://www.gnu.org/software/parallel/" brew install parallel
     ask_for_confirmation "gsed" "https://formulae.brew.sh/formula/gnu-sed" brew install gsed
@@ -144,9 +165,12 @@ install_python() {
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
 
-    pyenv install 3.7.8
-    pyenv install 3.9.6
-    pyenv global 3.7.8
+    pyenv install 3.9.10
+    pyenv global 3.9.10
+
+    export PYENV_ROOT="${HOME}/.pyenv"
+    export PATH="${PYENV_ROOT}/bin:${PATH}"
+    eval "$(pyenv init --path)"
 
     pip install --upgrade pip setuptools
 }
@@ -174,6 +198,10 @@ install_nvm() {
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 }
 
 setup_node() {
@@ -214,7 +242,7 @@ install_sdk_man() {
     curl -s "https://get.sdkman.io" | bash
 
     # Note that indentation with tabs is needed here!
-    IFS='' read -r -d '' lines <<-"EOS"
+    IFS='' read -r -d '' lines <<-"EOS" || true
 		# sdkman
 		#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 		export SDKMAN_DIR="${HOME}/.sdkman"
@@ -222,9 +250,11 @@ install_sdk_man() {
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+
 }
 
 setup_java_11_openjdk() {
+    print_warning "sdk might not work inside a script so you might need to run the following command in a separate terminal..."
     ask_for_confirmation "java_11_openjdk" "https://sdkman.io/usage" \
         sdk install java 11.0.2-open
 }
@@ -240,6 +270,8 @@ install_kubernetes() {
 		However, it is possible to use hyperkit $(fmt_underline https://minikube.sigs.k8s.io/docs/drivers/hyperkit/)
 	EOS
     )"
+    ask_for_confirmation "docker" "https://docs.docker.com/desktop" \
+        install_docker
     ask_for_confirmation "hyperkit" "https://github.com/moby/hyperkit" \
         brew install hyperkit
     ask_for_confirmation "minikube" "https://minikube.sigs.k8s.io/docs/start/" \
@@ -254,13 +286,46 @@ install_kubernetes() {
         brew install skaffold
     ask_for_confirmation "telepresence" "https://www.telepresence.io/" \
         brew install datawire/blackbird/telepresence
-    print_warning "Download lens from $(fmt_underline https://k8slens.dev/)"
+    ask_for_confirmation "lens" "https://k8slens.dev/" \
+        brew install --cask lens
     print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
+}
+
+install_docker() {
+    architecture="$(uname -m)"
+
+    if [[ "${architecture}" = "x86_64" ]]; then
+        curl "https://desktop.docker.com/mac/main/amd64/Docker.dmg" -o "Docker.dmg"
+    elif [[ "${architecture}" = "arm64" ]]; then
+        curl "https://desktop.docker.com/mac/main/arm64/Docker.dmg" -o "Docker.dmg"
+    else
+        echo "unknown architecture ${architecture}. Please install docker manually."
+    fi
+    sudo hdiutil attach "./Docker.dmg"
+    sudo cp -R "/Volumes/Docker/Docker.app" "/Applications"
+    sudo hdiutil unmount "/Volumes/Docker"
+    rm -rf "./Docker.dmg"
 }
 
 setup_conduktor() {
     ask_for_confirmation "conduktor" "https://www.conduktor.io/" \
         "brew tap conduktor/brew && brew install conduktor"
+}
+
+setup_ides() {
+    ask_for_confirmation "IntelliJ IDEA CE" "https://www.jetbrains.com/idea/" \
+        brew install --cask intellij-idea-ce
+    ask_for_confirmation "Visual Studio Code" "https://code.visualstudio.com/" \
+        brew install --cask visual-studio-code
+    ask_for_confirmation "PyCharm" "https://www.jetbrains.com/pycharm/" \
+        brew install --cask pycharm-ce
+}
+
+setup_slack() {
+    ask_for_confirmation "Delete current slack version" "" \
+        trash "/Applications/Slack.app"
+    ask_for_confirmation "slack" "https://www.slack.com" \
+        brew install slack
 }
 
 append_lines_to_file_if_not_there() {

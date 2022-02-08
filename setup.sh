@@ -8,12 +8,6 @@ main() {
 
     parse_arguments "${@}"
 
-    if [[ ! -L "${HOME}/.gitconfig" ]]; then
-        create_git_config
-    fi
-    download_amix_vimrc
-    copy_files
-
     echo -e "Do you want to install dependencies (needed if setting up a new computer)? [y/n]"
     echo -e " ${YELLOW}Warning: note that if the setup process fails because some command is not found, you might need to open a new shell and run ./install.sh again!${NC}"
     read -p "" -n 1 -r REPLY
@@ -22,6 +16,12 @@ main() {
     if [[ "${REPLY}" =~ ^[Yy]$ ]]; then
         ./install.sh
     fi
+
+    if [[ ! -L "${HOME}/.gitconfig" ]]; then
+        create_git_config
+    fi
+    download_amix_vimrc
+    copy_files
 }
 
 parse_arguments() {
