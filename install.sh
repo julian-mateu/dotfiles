@@ -110,6 +110,9 @@ setup_oh_my_zsh_and_plugins() {
 }
 
 setup_useful_tools() {
+    ask_for_confirmation "postgresql" "https://www.postgresql.org/" brew install postgresql
+    ask_for_confirmation "rg" "https://formulae.brew.sh/formula/ripgrep" brew install ripgrep
+    ask_for_confirmation "git lfs" "https://git-lfs.github.com/" brew install git-lfs
     ask_for_confirmation "trash" "https://hasseg.org/trash/" brew install trash
     ask_for_confirmation "coreutils" "https://www.gnu.org/software/coreutils/" brew install coreutils
     ask_for_confirmation "GNU parallel" "https://www.gnu.org/software/parallel/" brew install parallel
@@ -117,6 +120,7 @@ setup_useful_tools() {
     ask_for_confirmation "watch" "https://formulae.brew.sh/formula/watch" brew install watch
     ask_for_confirmation "pv" "https://formulae.brew.sh/formula/pv" brew install pv
     ask_for_confirmation "dnsmasq" "https://thekelleys.org.uk/dnsmasq/doc.html" brew install dnsmasq
+    ask_for_confirmation "csvkit" "https://csvkit.readthedocs.io/en/latest/" brew install csvkit
     ask_for_confirmation "jq" "https://stedolan.github.io/jq/" brew install jq
     ask_for_confirmation "httpie" "https://httpie.io/" brew install httpie
     ask_for_confirmation "pgcli" "https://www.pgcli.com/" brew install pgcli
