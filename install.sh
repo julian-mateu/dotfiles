@@ -45,6 +45,7 @@ main() {
     ask_for_confirmation "kubernetes" "https://kubernetes.io/" install_kubernetes
 
     # Kafka
+    ask_for_confirmation "librdkafka" "https://formulae.brew.sh/formula/librdkafka" brew install librdkafka
     setup_conduktor
 
     # Vagrant
@@ -121,6 +122,7 @@ setup_useful_tools() {
     ask_for_confirmation "pv" "https://formulae.brew.sh/formula/pv" brew install pv
     ask_for_confirmation "dnsmasq" "https://thekelleys.org.uk/dnsmasq/doc.html" brew install dnsmasq
     ask_for_confirmation "csvkit" "https://csvkit.readthedocs.io/en/latest/" brew install csvkit
+    ask_for_confirmation "shellcheck" "https://github.com/koalaman/shellcheck#installing" brew install shellcheck
     ask_for_confirmation "jq" "https://stedolan.github.io/jq/" brew install jq
     ask_for_confirmation "httpie" "https://httpie.io/" brew install httpie
     ask_for_confirmation "pgcli" "https://www.pgcli.com/" brew install pgcli
@@ -363,7 +365,7 @@ ask_for_confirmation() {
     echo
 
     if [[ "${REPLY}" =~ ^[Yy]$ ]]; then
-        eval "${@:3}"
+        "${@:3}"
     fi
 }
 

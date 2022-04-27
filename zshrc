@@ -64,8 +64,9 @@ setopt correct
 ###############################################################
 # => Functions
 ###############################################################
-function gpr {
-    if [ $? -eq 0 ]; then
+function gcpr {
+  # Create a PR in github for the current branch
+  if [ $? -eq 0 ]; then
         github_url=$(git remote -v | awk '/fetch/{print $2}' | sed -Ee 's#(git@|git://)#http://#' -e 's@com:@com/@' -e 's%\.git$%%')
         branch_name=$(git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
         pr_url=${github_url}"/compare/master..."${branch_name}
@@ -73,6 +74,14 @@ function gpr {
     else
         echo 'failed to open a pull request.'
     fi
+}
+
+function grebase() {
+  PREVIOUS_BRANCH="$(git branch --show-current)"
+  git checkout "$(git_main_branch)"
+  git pull
+  git checkout "${PREVIOUS_BRANCH}"
+  git rebase "$(git_main_branch)"
 }
 
 commands() {
