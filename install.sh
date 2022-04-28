@@ -150,6 +150,7 @@ install_hub() {
 install_python() {
     brew install pyenv
     brew install openssl readline sqlite3 xz zlib
+    brew install openblas
 
     # Note that indentation with tabs is needed here!
     IFS='' read -r -d '' lines <<-"EOS" || true
