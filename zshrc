@@ -92,6 +92,12 @@ bashman() {
     man bash | less -p "^       ${1} "
 }
 
+function precmd() {
+    if [[ "$(which kubectl)" ]]; then
+        current_kubecontext="$(kubectl config current-context | awk -F'/' '{print $NF}')"
+    fi
+}
+
 ###############################################################
 # => Aliases
 ###############################################################

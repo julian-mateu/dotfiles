@@ -29,6 +29,8 @@ JULIANMATEU_GIT_BRANCH_COLOR="%{$fg_bold[red]%}"
 JULIANMATEU_GIT_CLEAN_COLOR="%{$fg_bold[green]%}"
 JULIANMATEU_GIT_DIRTY_COLOR="%{$fg_bold[yellow]%}"
 
+JULIANMATEU_KUBECONTEXT_COLOR="%{$fg_bold[magenta]%}"
+
 ###############################################################
 # => Prompt symbols and indicators
 ###############################################################
@@ -72,4 +74,5 @@ ZSH_THEME_GIT_PROMPT_SUFFIX="%{${reset_color}%}"
 # => Final prompt variable :)
 # Note the single qoutes to prevent variables to be evaluated when setting the variable
 ###############################################################
-PROMPT='${JULIANMATEU_SUCCESS} ${JULIANMATEU_TIME} ${JULIANMATEU_DIR} $(git_prompt_info)%# '
+JULIANMATEU_PROMPT_STATIC="${JULIANMATEU_SUCCESS} ${JULIANMATEU_TIME} ${JULIANMATEU_DIR} ${JULIANMATEU_KUBECONTEXT_COLOR}"
+PROMPT='${JULIANMATEU_PROMPT_STATIC}${current_kubecontext} $(git_prompt_info)%# '
