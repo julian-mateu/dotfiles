@@ -93,9 +93,11 @@ bashman() {
 }
 
 function precmd() {
-    if [[ "$(which kubectl)" ]]; then
+  if [[ "$(which kubectl)" ]]; then
+    if kubectl config current-context >/dev/null 2>/dev/null; then
         current_kubecontext="$(kubectl config current-context | awk -F'/' '{print $NF}')"
     fi
+  fi
 }
 
 ###############################################################
