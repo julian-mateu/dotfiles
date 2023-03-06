@@ -135,7 +135,10 @@ setup_useful_tools() {
     ask_for_confirmation "GPG" "https://gnupg.org/" brew install gnupg
 
     ask_for_confirmation "re2" "for python toml packages in m1 mac" brew install re2
+
     ask_for_confirmation "git-secret" "https://formulae.brew.sh/formula/git-secret" brew install git-secret
+    ask_for_confirmation "paperkey" "https://formulae.brew.sh/formula/paperkey" brew install paperkey
+    ask_for_confirmation "qrencode" "https://formulae.brew.sh/formula/qrencode" brew install qrencode
 }
 
 install_hub() {
