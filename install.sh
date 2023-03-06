@@ -135,7 +135,7 @@ setup_useful_tools() {
     ask_for_confirmation "GPG" "https://gnupg.org/" brew install gnupg
 
     ask_for_confirmation "re2" "for python toml packages in m1 mac" brew install re2
-    ask_for_confirmation "git-remote-gcrypt" "https://formulae.brew.sh/formula/git-remote-gcrypt" brew install git-remote-gcrypt
+    ask_for_confirmation "git-secret" "https://formulae.brew.sh/formula/git-secret" brew install git-secret
 }
 
 install_hub() {
