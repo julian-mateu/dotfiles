@@ -139,6 +139,7 @@ setup_useful_tools() {
     ask_for_confirmation "git-secret" "https://formulae.brew.sh/formula/git-secret" brew install git-secret
     ask_for_confirmation "paperkey" "https://formulae.brew.sh/formula/paperkey" brew install paperkey
     ask_for_confirmation "qrencode" "https://formulae.brew.sh/formula/qrencode" brew install qrencode
+    ask_for_confirmation "zbar" "https://formulae.brew.sh/formula/zbar" brew install zbar
 }
 
 install_hub() {
