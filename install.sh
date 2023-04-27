@@ -7,6 +7,9 @@ RED='\033[31m'
 YELLOW='\033[33m'
 NC='\033[m' # No Color
 
+PYTHON_VERSION='3.11.3'
+SDK_JAVA_VERSION='20-open'
+
 main() {
     # OSX stuffx
     setup_x_code
@@ -33,7 +36,6 @@ main() {
     ask_for_confirmation "aws_cli" "https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" \
         setup_aws_cli
     setup_botoenv
-    setup_testim
     setup_terraform
 
     # Java
@@ -180,8 +182,8 @@ install_python() {
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
 
-    pyenv install 3.9.10
-    pyenv global 3.9.10
+    pyenv install "${PYTHON_VERSION}"
+    pyenv global "${PYTHON_VERSION}"
 
     export PYENV_ROOT="${HOME}/.pyenv"
     export PATH="${PYENV_ROOT}/bin:${PATH}"
@@ -220,8 +222,8 @@ install_nvm() {
 }
 
 setup_node() {
-    ask_for_confirmation "node14.16.1" "https://nodejs.org/en/download/package-manager/#nvm" \
-        nvm install 14.16.1
+    ask_for_confirmation "Node LTS" "https://nodejs.org/en/download/package-manager/#nvm" \
+        nvm install --lts
 }
 
 setup_yarn() {
@@ -232,11 +234,6 @@ setup_yarn() {
 setup_yalc() {
     ask_for_confirmation "yalc" "https://www.npmjs.com/package/yalc" \
         npm i yalc -g
-}
-
-setup_testim() {
-    ask_for_confirmation "testim" "https://help.testim.io/docs" \
-        npm install -g @testim/testim-cli
 }
 
 setup_terraform() {
@@ -270,8 +267,8 @@ install_sdk_man() {
 
 setup_java_11_openjdk() {
     print_warning "sdk might not work inside a script so you might need to run the following command in a separate terminal..."
-    ask_for_confirmation "java_11_openjdk" "https://sdkman.io/usage" \
-        sdk install java 11.0.2-open
+    ask_for_confirmation "java_20_openjdk" "https://sdkman.io/usage" \
+        sdk install java "${SDK_JAVA_VERSION}"
 }
 
 setup_gradle() {
@@ -334,6 +331,8 @@ setup_ides() {
         brew install --cask visual-studio-code
     ask_for_confirmation "PyCharm" "https://www.jetbrains.com/pycharm/" \
         brew install --cask pycharm-ce
+    ask_for_confirmation "Android Studio" "https://developer.android.com/studio/" \
+        brew install --cask android-studio
 }
 
 setup_slack() {
