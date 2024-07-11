@@ -31,17 +31,12 @@ alias randpwd="openssl rand -base64 32"
 ###############################################################
 # => Filesystem Navigation
 ###############################################################
-alias ll="ls -1a"
+alias ll="ls -la"
 alias md="mkdir "
 alias ..="cd .."
 alias ...="cd ../.."
 alias ..l="cd ../ && ll"
-alias sshdir="cd ~/.ssh"
-alias de="cd ~/Desktop"
-alias dd="cd ~/workplace"
-alias d="cd ~/workplace && cd "
-alias p="cd ~/projects"
-alias pd="cd ~/projects && cd "
+
 
 ###############################################################
 # => OSX Filesystem
@@ -54,6 +49,7 @@ alias deleteDSFiles="find . -name '.DS_Store' -type f -delete"
 # => Applications
 ###############################################################
 alias chrome='open -a "Google Chrome"'
+#alias code='open -a "Visual Studio Code"'
 alias c="code ."
 
 ###############################################################
@@ -71,12 +67,12 @@ alias enableipv6="networksetup -setv6automatic Wi-Fi && networksetup -setv6autom
 ###############################################################
 function gc { git commit -m "$@"; }
 alias gcm="git checkout master"
-alias gs="git status"
-alias gpull="git pull"
+alias gs="git switch"
+alias gl="git pull"
 alias gf="git fetch"
 alias gfa="git fetch --all"
 alias gf="git fetch origin"
-alias gpush="git push"
+alias gp="git push"
 alias gd="git diff"
 alias ga="git add ."
 alias gb="git branch"

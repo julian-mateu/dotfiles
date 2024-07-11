@@ -9,6 +9,7 @@ NC='\033[m' # No Color
 
 PYTHON_VERSION='3.11.3'
 SDK_JAVA_VERSION='20-open'
+NVM_VERSION='0.39.7'
 
 main() {
     # OSX stuffx
@@ -205,7 +206,7 @@ setup_botoenv() {
 }
 
 install_nvm() {
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
 
     # Note that indentation with tabs is needed here!
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -217,9 +218,9 @@ install_nvm() {
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
 
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+    export NVM_DIR="${HOME}/.nvm"
+    [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
+    [ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 }
 
 setup_node() {

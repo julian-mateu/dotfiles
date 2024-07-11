@@ -23,14 +23,10 @@ ZSH_THEME="julianmateu"
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
 
-# Lazy load NVM: https://blog.mattclemente.com/2020/06/26/oh-my-zsh-slow-to-load/
-export NVM_LAZY_LOAD=true
-export NVM_COMPLETION=true
 ###############################################################
 # => Plugins
 ###############################################################
 plugins=(
-    zsh-nvm
     git
     bundler
     dotenv
@@ -52,9 +48,7 @@ plugins=(
 # => External files
 ###############################################################
 source "${ZSH}/oh-my-zsh.sh"
-
-## Source NVM
-[[ -s ${HOME}/.nvm/nvm.sh ]] && . ${HOME}/.nvm/nvm.sh
+[[ -f "${HOME}/.zshrc_custom.zsh" ]] && source "${HOME}/.zshrc_custom.zsh"
 
 ###############################################################
 # => Options
@@ -104,6 +98,7 @@ function precmd() {
 # => Aliases
 ###############################################################
 [[ -f "${HOME}/.aliases.zsh" ]] && source "${HOME}/.aliases.zsh"
+[[ -f "${HOME}/.aliases_custom.zsh" ]] && source "${HOME}/.aliases_custom.zsh"
 
 ###############################################################
 # => Key bindings
@@ -119,3 +114,6 @@ bindkey "${terminfo}[kcud1]" history-substring-search-down
 
 # Enable vi mode:
 bindkey -v
+
+# Edit current command in Vim
+bindkey '^xe' edit-command-line
