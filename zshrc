@@ -117,3 +117,5 @@ bindkey -v
 
 # Edit current command in Vim
 bindkey '^xe' edit-command-line
+
+PROMPT="${PROMPT}"$'\n'
