@@ -79,7 +79,7 @@ function grebase() {
 }
 
 commands() {
-    awk '{a[$2]++}END{for(i in a){print a[i] " " i}}'
+    awk '{a[$4]++}END{for(i in a){print a[i] " " i}}'
 }
 
 bashman() {
@@ -113,9 +113,32 @@ bindkey "${terminfo}[kcuu1]" history-substring-search-up
 bindkey "${terminfo}[kcud1]" history-substring-search-down
 
 # Enable vi mode:
-bindkey -v
+# bindkey -v
+set -o vi
+EDITOR=vim
 
 # Edit current command in Vim
-bindkey '^xe' edit-command-line
+# bindkey '^xe' edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd v edit-command-line
 
+# perform parameter expansion/command substitution in prompt
+setopt PROMPT_SUBST
+
+vim_ins_mode="[INS]"
+vim_cmd_mode="[CMD]"
+vim_mode=$vim_ins_mode
+
+function zle-keymap-select {
+  vim_mode="${${KEYMAP/vicmd/${vim_cmd_mode}}/(main|viins)/${vim_ins_mode}}"
+  zle reset-prompt
+}
+zle -N zle-keymap-select
+
+function zle-line-finish {
+  vim_mode=$vim_ins_mode
+}
+zle -N zle-line-finish
+
+# PROMPT="${PROMPT}"$'${vim_mode}\n'
 PROMPT="${PROMPT}"$'\n'

@@ -4,3 +4,4 @@ zprofile_custom.zsh
 zshrc_custom.zsh
 zshenv_custom.zsh
 aliases_custom.zsh
+.DS_store

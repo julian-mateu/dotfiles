@@ -27,6 +27,7 @@ alias usage="du -h -d1"
 alias runp="lsof -i "
 alias uuid="python -c 'import uuid;print(uuid.uuid4())'"
 alias randpwd="openssl rand -base64 32"
+alias v="nvim"
 
 ###############################################################
 # => Filesystem Navigation
@@ -76,6 +77,7 @@ alias gp="git push"
 alias gd="git diff"
 alias ga="git add ."
 alias gb="git branch"
+alias gsbs="git --no-pager branch"
 alias gbr="git branch remote"
 alias gfr="git remote update"
 alias gbn="git checkout -B "
