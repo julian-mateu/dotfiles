@@ -48,3 +48,9 @@ Then save and go to System Preferences -> Extensions -> Touch Bar -> Customize C
 
 ## Sources
 This is based on some other sources for [dot files](https://github.com/afallou/dotfiles), [vimrc](https://github.com/amix/vimrc) and [oh-my-zsh](https://www.youtube.com/watch?v=MSPu-lYF-A8).
+
+## Files
+This repo contains the following dotfiles:
+- `zshenv`: sourced in all zsh sessions, both login and non-login, interactive and non-interactive. It's the first file loaded, so it's suitable for setting environment variables that need to be available to all shells, such as $PATH.
+- `zprofile`: sourced only in login shells. Login shells are typically started when you log in to your system, either directly or via ssh. It's a good place to set environment variables specific to login sessions, like those related to your user account, and it's also a place to execute commands that you only want to run once when you log in.
+- `zshrc`: sourced only in interactive shells. Interactive shells are shells that you interact with directly, like when you open a new terminal window. It's the place to set aliases, prompts, and other customizations that you want to apply to your interactive terminal sessions.

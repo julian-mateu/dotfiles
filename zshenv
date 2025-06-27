@@ -5,6 +5,3 @@ source "${HOME}/.zutils.zsh" || {
 
 # Source custom zshenv if it exists
 source_if_exists "${HOME}/.zshenv_custom.zsh"
-
-# Source cargo environment if it exists
-source_if_exists "${HOME}/.cargo/env"

@@ -12,7 +12,10 @@
 # Where ${0%/*} is parameter expansion that removes the shortest match
 # of "/*" from the end of $0 (script name), giving us the script's directory.
 # See: bash manual "Parameter Expansion" section
-#
+###############################################################
+
+
+###############################################################
 # ANSI Escape Codes and SGR Color Utilities
 # -----------------------------------------
 # This section provides general-purpose functions and variables

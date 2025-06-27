@@ -5,6 +5,7 @@ set -e -o pipefail
 # See: zutils.zsh for ANSI color utilities and other functions
 # ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
 # See: bash manual "Parameter Expansion" section
+# shellcheck disable=SC1091
 source "${0%/*}/zutils.zsh" || { 
     echo "Failed to load zutils.zsh" >&2
     echo "Please ensure the dotfiles repository is properly set up." >&2
@@ -27,7 +28,6 @@ main() {
     if [[ ! -L "${HOME}/.gitconfig" ]]; then
         create_git_config
     fi
-    download_amix_vimrc
     copy_files
 }
 
@@ -91,11 +91,10 @@ create_git_config() {
 		    defaultBranch = main
 		[pull]
 		    ff = only
+		[core]
+		    excludesFile = ~/.gitignore
+		    editor = nvim -f
 	EOF
-}
-
-download_amix_vimrc() {
-    curl -fsSL https://raw.githubusercontent.com/amix/vimrc/master/vimrcs/basic.vim >amix.vim
 }
 
 copy_files() {
@@ -105,15 +104,13 @@ copy_files() {
             if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md|julianmateu.zsh-theme)$ ]]; then
                 copy_file "${PWD}/${name}" "${target}"
             fi
-
         fi
     done
 
-    if [[ -n "${ZSH_CUSTOM+x}" ]]; then
-        copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM}/themes/julianmateu.zsh-theme"
+    if [[ -n "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}" ]]; then
+        copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/julianmateu.zsh-theme"
     else
-        echo -e "$(colorize "Warning: did not copy the zsh theme as ZSH_CUSTOM variable does not exist" yellow)"
-        echo -e " $(colorize "might need to run $(fmt_code "ZSH_CUSTOM=\$ZSH_CUSTOM ${0}")" yellow)"
+        echo -e "$(colorize "Warning: did not copy the zsh theme as the zsh custom directory does not exist" yellow)"
     fi
 }
 
@@ -134,7 +131,11 @@ copy_file() {
     fi
 }
 
-# TODO: explain how this works:
+# Script execution guard
+# ${BASH_SOURCE[0]} is the path to the current script
+# ${0} is the name of the script as it was called
+# This check ensures the script only runs when executed directly, not when sourced
+# See: bash manual "Special Parameters" section
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "${@}"
 fi

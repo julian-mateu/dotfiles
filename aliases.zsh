@@ -1,17 +1,24 @@
 ###############################################################
-# Author: Julian Mateu - julianmateu@gmail.com
+# ZSH Aliases Configuration
+# ========================
+# This file contains all shell aliases organized by category.
+# Aliases are shortcuts that make common commands easier to type.
 #
-# Sections:
-#    -> Misc
-#    -> Filesystem Navigation
-#    -> OSX Filesystem
-#    -> Applications
-#    -> Networking
-#    -> Git
-#    -> Npm
-#    -> Yarn
-#    -> Docker
-#    -> Kubernetes
+# Alias Categories:
+# - Git aliases - shortcuts for common git operations
+# - Directory navigation - quick cd commands and path shortcuts
+# - Development tools - aliases for common dev workflows
+# - System utilities - shortcuts for system commands
+# - Docker/Kubernetes - container and orchestration shortcuts
+# - Network utilities - networking and connectivity commands
+# - File operations - file and directory management shortcuts
+# - Python/Node.js - language-specific development aliases
+#
+# Usage:
+# - Aliases are automatically loaded when zsh starts
+# - Use 'alias' command to see all current aliases
+# - Use 'unalias <name>' to remove a specific alias
+# - Use 'alias <name>="command"' to create new aliases
 #
 ###############################################################
 
@@ -50,8 +57,8 @@ alias deleteDSFiles="find . -name '.DS_Store' -type f -delete"
 # => Applications
 ###############################################################
 alias chrome='open -a "Google Chrome"'
-#alias code='open -a "Visual Studio Code"'
 alias c="code ."
+alias n="nvim ."
 
 ###############################################################
 # => Networking
@@ -72,27 +79,14 @@ alias glog="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%
 # => Npm
 ###############################################################
 alias ni="npm install"
-alias nrs="npm run start -s --"
-alias nrb="npm run build -s --"
-alias nrd="npm run dev -s --"
-alias nrt="npm run test -s --"
-alias nrtw="npm run test:watch -s --"
-alias nrv="npm run validate -s --"
+alias nrs="npm run start"
+alias nrb="npm run build"
+alias nrd="npm run dev"
+alias nrt="npm run test"
+alias nrtw="npm run test:watch"
 alias rmn="rm -rf node_modules"
 alias flush-npm="rm -rf node_modules && npm i && echo NPM is done"
 alias npm-update="npx npm-check -u"
-
-###############################################################
-# => Yarn
-###############################################################
-alias yar="yarn run"      # lists all the scripts we have available
-alias yab="yarn build"    # build dist directory for each package
-alias yal="yarn lint:fix" # format source and auto-fix eslint issues
-alias yac="yarn commit"   # open a Q&A prompt to help construct valid commit messages
-alias yas="yarn start"
-alias yasb="yarn storybook:start" # start storybook
-alias yat="yarn test"             # run the unit tests*
-alias yatw="yarn test:watch"      #run the unit tests for files changed on save
 
 ###############################################################
 # => Docker
@@ -107,3 +101,9 @@ alias dockerrm="docker-compose rm --all"
 # => Kubernetes
 ###############################################################
 alias k="kubectl"
+alias kc="kubectl config use-context"
+alias kctx="kubectl config current-context"
+alias kgp="kubectl get pods"
+alias kgn="kubectl get nodes"
+alias kgs="kubectl get services"
+alias kd="kubectl describe"

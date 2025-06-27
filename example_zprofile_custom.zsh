@@ -1,28 +1,39 @@
-# SAFELOAD PATTERN
-# ----------------
-# Load utility functions using the safeload pattern
-# ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
-# See: bash manual "Parameter Expansion" section
-source "${0%/*}/.zutils.zsh" || { 
+# shellcheck disable=SC1091
+source "${HOME}/.zutils.zsh" || { 
     echo "Failed to load zutils.zsh" >&2
     return 1
 }
 
-# brew
+###############################################################
+# => Homebrew configuration
+###############################################################
+# Initialize Homebrew environment
+# See: https://brew.sh/
 eval "$(/opt/homebrew/bin/brew shellenv)"
+
+###############################################################
+# => Go configuration
+###############################################################
+# Go version management
 # Monzo requires go 1.22, but brew will install the latest, so I need to manually add the old version to the path
 #GOVERSION='1.22'
 #GOVERSION_EXACT='1.22.7'
 #export PATH="/opt/homebrew/opt/go@${GOVERSION}/bin:${PATH}"
 #export GOROOT="/opt/homebrew/Cellar/go@${GOVERSION}/${GOVERSION_EXACT}/libexec/"
+
+# Current Go version
 GOVERSION='1.24'
 GOVERSION_EXACT='1.24.2'
-export PATH="/opt/homebrew/opt/go@${GOVERSION}/bin:${PATH}"
+add_to_path "/opt/homebrew/opt/go@${GOVERSION}/bin"
 export GOROOT="/opt/homebrew/Cellar/go/${GOVERSION_EXACT}/libexec"
 
-# PyEnv
+###############################################################
+# => Python configuration
+###############################################################
+# PyEnv configuration
+# See: https://github.com/pyenv/pyenv#installation
 export PYENV_ROOT="${HOME}/.pyenv"
-export PATH="${PYENV_ROOT}/bin:${PATH}"
+add_to_path "${PYENV_ROOT}/bin"
 eval "$(pyenv init --path)"
 
 # pyenv adds *-config scripts and produces a brew warning

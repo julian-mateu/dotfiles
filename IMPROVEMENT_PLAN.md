@@ -2,225 +2,140 @@
 
 ## Overview
 
-This document outlines the comprehensive improvement plan for the dotfiles repository, addressing documentation, modernization, structure, and maintainability issues.
+This document outlines a comprehensive plan to improve the dotfiles repository, focusing on documentation, utility function centralization, fixing TODOs, modernizing setup, and reconciling declarative vs imperative configuration styles.
 
-## Current State Analysis
+## Phase 1: Foundation and Documentation ✅ COMPLETED
 
-### Strengths
+### ✅ Completed Tasks:
 
-- **Well-organized structure** with separate files for different concerns (aliases, zshrc, theme, etc.)
-- **Interactive installation** with user confirmation for each tool
-- **Good separation** between core config and custom additions
-- **Comprehensive tool coverage** including Python, Node.js, Java, Kubernetes, AWS, etc.
-- **Backup strategy** for existing configs
+1. **Utility Functions Module** - Created comprehensive `zutils.zsh` with:
 
-### Issues Identified
+   - ANSI color management (`sgr()`, `colorize()`)
+   - File operations (`append_lines_to_file_if_not_there()`)
+   - User interaction (`ask_for_confirmation()`, `print_warning()`)
+   - System detection (`is_macos()`, `is_linux()`)
+   - Path management (`add_to_path_if_not_there()`)
+   - Comprehensive documentation for all functions
 
-1. **Documentation gaps** - Many functions lack proper documentation
-2. **Code duplication** - Similar patterns repeated across files
-3. **TODOs** - Unresolved issues in zshrc and zshenv
-4. **Outdated approaches** - Some installation methods could be modernized
-5. **Inconsistent patterns** - Mix of different sourcing approaches
-6. **Theme complexity** - Custom theme vs modern alternatives like Powerlevel10k
+2. **Safeload Pattern** - Implemented reliable utility loading:
 
-## Improvement Phases
+   - Uses `${0%/*}` parameter expansion for script-relative paths
+   - Fails fast with clear error messages if utils are missing
+   - Applied consistently across all scripts
 
-### Phase 1: Foundation & Documentation (High Priority)
+3. **Comprehensive Documentation**:
 
-#### 1.1 Create Utility Functions Module
+   - Documented all shell constructs (`zmodload`, `setopt`, parameter expansion)
+   - Added detailed comments for obscure syntax
+   - Documented zsh theme system and prompt expansion
+   - Added comprehensive alias documentation
+   - Explained script execution guards and safeload patterns
 
-- **File**: `lib/utils.zsh`
-- **Purpose**: Centralize common functions like `source_if_exists`, `print_warning`, `ask_for_confirmation`
-- **Benefits**: Reduce duplication, improve maintainability
+4. **TODOs Fixed**:
 
-#### 1.2 Document All Functions
+   - Real-time vim mode indicator in zshrc
+   - Centralized ANSI color management
+   - Removed all fallback definitions (fail-fast approach)
+   - Fixed nvm plugin installation and configuration
 
-- Add comprehensive documentation for each function
-- Include usage examples and parameter descriptions
-- Link to relevant documentation for external tools
+5. **Code Quality Improvements**:
+   - Removed duplicate function definitions
+   - Centralized color utilities
+   - Added shellcheck directives for dynamic sourcing
+   - Improved error handling and user feedback
 
-#### 1.3 Fix TODOs
+## Phase 2: Modernization and Enhancement 🚧 IN PROGRESS
 
-- **zshrc TODO**: Fix real-time vim mode indicator (use `zle-line-init` hook)
-- **zshenv TODO**: Clarify `-f` vs `-r` difference and implement `source_if_exists` usage
+### Current Focus:
 
-### Phase 2: Modernize Installation (Medium Priority)
+1. **Configuration Style Reconciliation**
 
-#### 2.1 Declarative Configuration
+   - Analyze current mix of declarative vs imperative approaches
+   - Standardize on preferred style (likely declarative for most configs)
+   - Create clear guidelines for when to use each approach
 
-- **Option A**: Convert to Ansible playbook for true idempotency
-- **Option B**: Enhance current bash script with better state management
-- **Option C**: Hybrid approach - use current script but add state tracking
+2. **Installation Script Modernization**
 
-#### 2.2 Package Manager Strategy
+   - Review and update `install.sh` for current macOS versions
+   - Add support for Apple Silicon (M1/M2) specific optimizations
+   - Improve error handling and rollback capabilities
+   - Add dry-run mode for testing
 
-- **Brew Casks**: Research current reliability and alternatives
-- **Direct Downloads**: Create wrapper functions for consistent handling
-- **Version Management**: Add version pinning for critical tools
+3. **Development Environment Setup**
 
-#### 2.3 Modern Tool Alternatives
+   - Add support for additional development tools
+   - Improve language-specific setup (Python, Node.js, Go, Rust)
+   - Add container development environment setup
+   - Include cloud development tools (AWS, GCP, Azure)
 
-- **Powerlevel10k**: Evaluate vs custom theme (Powerlevel10k is still actively maintained)
-- **chezmoi**: Consider migration path and benefits
-- **asdf**: Consider replacing pyenv/nvm with unified version manager
+4. **Performance Optimization**
+   - Profile zsh startup time
+   - Implement lazy loading for heavy plugins
+   - Optimize prompt rendering
+   - Add startup time measurement
 
-### Phase 3: Structure Improvements (Medium Priority)
+### Planned Tasks:
 
-#### 3.1 Modular Configuration
+- [ ] **Configuration Analysis**: Document current config patterns and create style guide
+- [ ] **Installation Script Review**: Modernize for current macOS and add M1/M2 support
+- [ ] **Performance Profiling**: Measure and optimize zsh startup time
+- [ ] **Plugin Management**: Implement smart plugin loading and configuration
+- [ ] **Development Tools**: Add modern development environment setup
+- [ ] **Testing Framework**: Add automated testing for configuration changes
 
-- Split large files into logical modules
-- Create plugin system for optional features
-- Implement conditional loading based on environment
+## Phase 3: Advanced Features and Integration
 
-#### 3.2 Environment Detection
+### Future Enhancements:
 
-- Add macOS version detection
-- Support for different architectures (Intel vs Apple Silicon)
-- Conditional configuration based on available tools
+1. **Automated Setup and Updates**
 
-#### 3.3 Testing Framework
+   - Self-updating dotfiles mechanism
+   - Automated backup and restore
+   - Configuration validation and testing
 
-- Add unit tests for utility functions
-- Integration tests for installation process
-- Validation scripts for configuration correctness
+2. **Cross-Platform Support**
 
-### Phase 4: Advanced Features (Low Priority)
+   - Linux compatibility improvements
+   - Windows Subsystem for Linux (WSL) support
+   - Cloud development environment setup
 
-#### 4.1 Performance Optimization
+3. **Advanced Customization**
 
-- Lazy loading for heavy plugins
-- Profile startup time and optimize
-- Implement caching for expensive operations
+   - Theme system improvements
+   - Plugin marketplace integration
+   - Custom function library expansion
 
-#### 4.2 Cross-Platform Support
+4. **Integration and Automation**
+   - CI/CD pipeline for dotfiles
+   - Automated testing and validation
+   - Integration with development tools
 
-- Linux compatibility
-- WSL support
-- Remote development environments
+## Implementation Guidelines
 
-## Detailed Implementation Plan
+### Code Quality Standards:
 
-### Immediate Actions (Next 1-2 sessions)
+- All functions must be documented with usage examples
+- Use consistent error handling patterns
+- Implement fail-fast approach for missing dependencies
+- Add shellcheck directives where appropriate
+- Test all changes in a clean environment
 
-1. **Create `lib/utils.zsh`** with common functions
-2. **Fix the vim mode indicator TODO** in zshrc
-3. **Implement `source_if_exists` usage** throughout the codebase
-4. **Add comprehensive documentation** to all functions
-5. **Create a proper README** with setup instructions and troubleshooting
+### Documentation Standards:
 
-### Short-term Goals (Next 1-2 weeks)
+- Explain all shell constructs and obscure syntax
+- Provide context for configuration decisions
+- Include usage examples and best practices
+- Document breaking changes and migration steps
 
-1. **Modernize installation script** with better error handling
-2. **Add version management** for critical tools
-3. **Implement state tracking** for idempotent installations
-4. **Create migration guide** for existing users
+### Testing Strategy:
 
-### Long-term Vision (Next 1-2 months)
+- Test installation on clean macOS systems
+- Verify all utilities work correctly
+- Test configuration loading and error handling
+- Validate performance impact of changes
 
-1. **Evaluate chezmoi migration** - pros/cons analysis
-2. **Consider Ansible conversion** for true declarative setup
-3. **Implement comprehensive testing** framework
-4. **Add performance monitoring** and optimization
 
-## Technical Recommendations
+# Additional features
 
-### For the Theme Dilemma
-
-- **Keep custom theme** if you prefer control and simplicity
-- **Consider Powerlevel10k** if you want more features and don't mind complexity
-- **Powerlevel10k is NOT deprecated** - it's actively maintained and very popular
-
-### For Declarative vs Imperative
-
-- **Current approach**: Good for one-time setup, harder to maintain
-- **Ansible approach**: True idempotency, better for multiple machines
-- **chezmoi approach**: Good for dotfiles management, less good for system setup
-
-### For Package Management
-
-- **Brew Casks**: Generally reliable, but can be slow
-- **Direct downloads**: More control, but requires more maintenance
-- **Hybrid approach**: Use brew when possible, direct downloads for critical tools
-
-## Progress Tracking
-
-### Phase 1 Progress
-
-- [x] Create `lib/utils.zsh`
-- [x] Document all functions
-- [x] Fix TODOs
-- [x] Implement `source_if_exists` usage
-- [x] Move utils to toplevel as `zutils.zsh`
-- [x] Implement safeload pattern
-- [x] Add comprehensive documentation for all shell constructs
-
-### Phase 2 Progress
-
-- [ ] Research declarative configuration options
-- [ ] Modernize installation script
-- [ ] Add version management
-- [ ] Evaluate modern tool alternatives
-
-### Phase 3 Progress
-
-- [ ] Modularize configuration
-- [ ] Add environment detection
-- [ ] Create testing framework
-
-### Phase 4 Progress
-
-- [ ] Performance optimization
-- [ ] Cross-platform support
-
-## Completed Tasks
-
-### Phase 1 - Foundation & Documentation ✅
-
-1. **Created `zutils.zsh`** with comprehensive utility functions:
-
-   - File and source management functions (`source_if_exists`, `append_lines_to_file_if_not_there`, etc.)
-   - User interaction functions (`ask_for_confirmation`, `print_warning`, etc.)
-   - Output formatting functions (`fmt_code`, `fmt_underline`, etc.)
-   - System detection functions (`is_macos`, `is_apple_silicon`, etc.)
-   - Validation functions (`is_command_available`, `is_file_readable`, etc.)
-   - Path management functions (`add_to_path`, `remove_from_path`)
-
-2. **Implemented safeload pattern**:
-
-   - Moved `zutils.zsh` to toplevel for easier access
-   - Created consistent safeload pattern: `source "${0%/*}/zutils.zsh" || { echo "Failed to load zutils.zsh" >&2; exit 1; }`
-   - Applied safeload pattern across all scripts (`install.sh`, `setup.sh`, `zshrc`, `zshenv`)
-   - Scripts now fail fast with clear error messages if utils can't be loaded
-
-3. **Added comprehensive documentation**:
-
-   - All functions in `zutils.zsh` have detailed documentation with usage examples
-   - Documented all shell constructs (parameter expansion, zsh options, etc.)
-   - Added references to relevant manual sections for further reading
-   - Explained obscure constructs like `${0%/*}`, `zmodload`, `setopt`, etc.
-   - Added inline comments explaining complex commands and their purpose
-
-4. **Fixed TODOs**:
-
-   - **zshrc TODO**: Fixed real-time vim mode indicator by adding `zle-line-init` hook
-   - **zshenv TODO**: Clarified `-f` vs `-r` difference and implemented `source_if_exists` usage
-
-5. **Implemented utility functions across codebase**:
-
-   - Updated `zshenv` to use `source_if_exists`
-   - Updated `zshrc` to use utility functions and fixed vim mode indicator
-   - Updated `install.sh` to use utility functions with safeload pattern
-   - Updated `setup.sh` to use utility functions with safeload pattern
-   - Updated `zprofile_custom.zsh` with better documentation and structure
-
-6. **Created centralized ANSI color management**:
-   - Well-documented ANSI escape code utilities with references
-   - General-purpose `sgr()` and `colorize()` functions
-   - Consistent color usage across all scripts
-   - Easy to extend with new colors or effects
-
-## Notes
-
-- This plan is iterative and can be adjusted based on priorities and time constraints
-- Each phase can be worked on independently
-- Focus on high-impact, low-effort improvements first
+1. Self-documenting aliases: I want to be able to know which ones I have when the context is right...
+2. Support for multiple OS (Mac, Linux, Windows)

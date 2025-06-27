@@ -5,6 +5,7 @@ set -e -o pipefail -u
 # See: zutils.zsh for ANSI color utilities and other functions
 # ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
 # See: bash manual "Parameter Expansion" section
+# shellcheck disable=SC1091
 source "${0%/*}/zutils.zsh" || { 
     echo "Failed to load zutils.zsh" >&2
     echo "Please ensure the dotfiles repository is properly set up." >&2
@@ -16,6 +17,10 @@ PROFILE_FILE='./zprofile_custom.zsh'
 PYTHON_VERSION='3.11.3'
 SDK_JAVA_VERSION='20-open'
 NVM_VERSION='0.39.7'
+GOVERSION='1.24'
+GOVERSION_EXACT='1.24.2'
+
+NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
 main() {
     init_profile_file
@@ -28,12 +33,21 @@ main() {
     # ZSH
     setup_oh_my_zsh_and_plugins
 
+    # Nvim
+    setup_nvim
+
     # Misc tools
     ask_for_confirmation "useful tools" "more info in the command if you accept" setup_useful_tools
 
     # GIT & Python
     ask_for_confirmation "hub" "https://hub.github.com/" install_hub
     ask_for_confirmation "pyenv-python" "https://github.com/pyenv/pyenv#installation" install_python
+
+    # Go
+    setup_go
+
+    # Rust
+    setup_rust
 
     # JS
     ask_for_confirmation "nvm" "https://github.com/nvm-sh/nvm/blob/master/README.md" install_nvm
@@ -80,7 +94,7 @@ init_profile_file() {
 		# Load utility functions using the safeload pattern
 		# ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
 		# See: bash manual "Parameter Expansion" section
-		source "${0%/*}/.zutils.zsh" || { 
+		source "${HOME}/.zutils.zsh" || { 
 		    echo "Failed to load zutils.zsh" >&2
 		    return 1
 		}
@@ -100,8 +114,13 @@ setup_homebrew() {
         '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
 
     # Note that indentation with tabs is needed here!
+    # The EOS is a here-document that ends with the string EOS. Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
-		# brew
+		###############################################################
+		# => Homebrew configuration
+		###############################################################
+		# Initialize Homebrew environment
+		# See: https://brew.sh/
 		eval "$(/opt/homebrew/bin/brew shellenv)"
 	EOS
 
@@ -136,6 +155,18 @@ setup_oh_my_zsh_and_plugins() {
     ask_for_confirmation "zsh nvm plugin" "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm" \
         git clone https://github.com/ohmyzsh/ohmyzsh.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm"
 
+}
+
+setup_nvim() {
+    ask_for_confirmation "nvim" "https://neovim.io/" brew install neovim
+
+    if [[ ! -d "${HOME}/.config/nvim" ]]; then
+        ask_for_confirmation "nvim-config" "https://github.com/julianmateu/nvim-config" \
+            git clone "${NEOVIM_CONFIG_REPO}" "${HOME}/.config/nvim"
+    else 
+        ask_for_confirmation "update nvim-config" "https://github.com/julianmateu/nvim-config" \
+            git -C "${HOME}/.config/nvim" pull
+    fi
 }
 
 setup_useful_tools() {
@@ -188,11 +219,15 @@ install_python() {
     brew install openssl readline sqlite3 xz zlib
     brew install openblas
 
-    # Note that indentation with tabs is needed here!
+    # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
-		# PyEnv
+		###############################################################
+		# => Python configuration
+		###############################################################
+		# PyEnv configuration
+		# See: https://github.com/pyenv/pyenv#installation
 		export PYENV_ROOT="${HOME}/.pyenv"
-		export PATH="${PYENV_ROOT}/bin:${PATH}"
+		add_to_path "${PYENV_ROOT}/bin"
 		eval "$(pyenv init --path)"
 
 		# pyenv adds *-config scripts and produces a brew warning
@@ -221,6 +256,42 @@ install_python() {
     pip install --upgrade pip setuptools
 }
 
+setup_go() {
+    ask_for_confirmation "go" "https://go.dev/doc/install" \
+        brew install go@${GOVERSION}
+
+    # Note that indentation with tabs is needed here! Not using quotes to force interpolation.
+    IFS='' read -r -d '' lines <<-EOS || true
+		###############################################################
+		# => Go configuration
+		###############################################################
+		# Go version management
+		# Monzo requires go 1.22, but brew will install the latest, so I need to manually add the old version to the path
+		GOVERSION='${GOVERSION}'
+		GOVERSION_EXACT='${GOVERSION_EXACT}'
+        add_to_path "/opt/homebrew/opt/go@\${GOVERSION}/bin"
+        export GOROOT="/opt/homebrew/Cellar/go/\${GOVERSION_EXACT}/libexec"
+	EOS
+
+    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+}
+
+setup_rust() {
+    ask_for_confirmation "rust" "https://www.rust-lang.org/" \
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+    # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
+    IFS='' read -r -d '' lines <<-"EOS" || true
+		###############################################################
+		# => Rust configuration
+		###############################################################
+        # Cargo environment
+        source "${HOME}/.cargo/env"
+	EOS
+
+    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+}
+
 setup_aws_cli() {
     curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
     sudo installer -pkg ./AWSCLIV2.pkg -target /
@@ -239,17 +310,17 @@ install_nvm() {
     if [[ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm" ]]; then
         # Note that indentation with tabs is needed here!
         IFS='' read -r -d '' lines <<-"EOS" || true
-			# NVM
+			###############################################################
+			# => Node.js configuration
+			###############################################################
+			# NVM configuration
+			# See: https://github.com/nvm-sh/nvm#installing-and-updating
 			export NVM_DIR="${HOME}/.nvm"
 			[ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
 			[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 		EOS
 
         append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
-
-        export NVM_DIR="${HOME}/.nvm"
-        [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
-        [ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
     fi
 
 }
@@ -288,8 +359,10 @@ install_sdk_man() {
 
     # Note that indentation with tabs is needed here!
     IFS='' read -r -d '' lines <<-"EOS" || true
-		# sdkman
-		#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+		###############################################################
+		# => SDKMAN configuration
+		###############################################################
+		# This must be at the end of the file for SDKMAN to work!!!
 		export SDKMAN_DIR="${HOME}/.sdkman"
 		[[ -s "${HOME}/.sdkman/bin/sdkman-init.sh" ]] && source "${HOME}/.sdkman/bin/sdkman-init.sh"
 	EOS
@@ -375,6 +448,11 @@ setup_slack() {
         brew install slack
 }
 
+# Script execution guard
+# ${BASH_SOURCE[0]} is the path to the current script
+# ${0} is the name of the script as it was called
+# This check ensures the script only runs when executed directly, not when sourced
+# See: bash manual "Special Parameters" section
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi

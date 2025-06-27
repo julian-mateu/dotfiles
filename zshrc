@@ -1,15 +1,8 @@
 ###############################################################
-# Author: Julian Mateu - julianmateu@gmail.com
-#
 # Main zsh configuration file
 # ==========================
 # This file sets up the basic zsh environment including Oh My Zsh,
 # plugins, theme, and custom functions.
-#
-source "${HOME}/.zutils.zsh" || { 
-    echo "Failed to load zutils.zsh" >&2
-    return 1
-}
 #
 # Sections:
 #    -> Environment variables
@@ -21,6 +14,10 @@ source "${HOME}/.zutils.zsh" || {
 #    -> Key bindings
 #
 ###############################################################
+source "${HOME}/.zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    return 1
+}
 
 ###############################################################
 # => Environment variables
@@ -161,7 +158,10 @@ bindkey "${terminfo[kcud1]}" history-substring-search-down
 # bindkey -v - Enable vi keymap
 # set -o vi - Alternative way to enable vi mode
 set -o vi
-EDITOR=vim
+
+# Set the editor to nvim
+export EDITOR=nvim
+export VISUAL=nvim
 
 # Edit current command in Vim
 # bindkey '^xe' edit-command-line - Alternative binding
@@ -205,8 +205,9 @@ function zle-line-init {
 }
 zle -N zle-line-init
 
-# Final prompt with newline
-PROMPT="${PROMPT}"$'\n'
+# Final prompt with vim mode indicator and newline
+# The vim_mode variable will be updated by the zle widgets above
+PROMPT="${PROMPT}"$'${vim_mode}\n'
 
 # zprof - Print zsh startup profile
 # See: zsh manual "The zsh/zprof Module" section

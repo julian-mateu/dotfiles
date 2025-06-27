@@ -5,7 +5,9 @@ source "${HOME}/.zutils.zsh" || {
 ###############################################################
 # => Environment variables
 ###############################################################
-export PATH="${HOME}/bin:${PATH}"
+add_to_path "${HOME}/bin"
+
+# Ignore duplicate entries in the history
 export HISTCONTROL="ignoreboth"
 
 ###############################################################
