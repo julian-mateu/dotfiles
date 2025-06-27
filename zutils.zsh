@@ -439,10 +439,7 @@ install_packages_with_urls() {
         local package_url="${package_info#*|}"
         
         # Replace {name} placeholder with actual package name
-        local install_command_str="${install_command_template//\{name\}/${package_name}}"
-        local -a install_command
-        # Split the command string into an array (word splitting)
-        read -r -a install_command <<< "${install_command_str}"
-        ask_for_confirmation "${package_name}" "${package_url}" "${install_command[@]}"
+        local install_command="${install_command_template//\{name\}/${package_name}}"
+        ask_for_confirmation "${package_name}" "${package_url}" ${install_command}
     done
 } 
