@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e -o pipefail -u
+set -e -o pipefail
 
 # SAFELOAD: Load utility functions - required for this script to work
 # See: zutils.zsh for ANSI color utilities and other functions
@@ -130,7 +130,8 @@ init_profile_file() {
 # Returns: 0 on success, 1 on error
 # Note: Prompts user to install XCode command line tools via xcode-select
 setup_x_code() {
-    print_info "Installing XCode command line tools, you might need to install XCode itself from the app store"
+    print_info "Installing XCode command line tools, you might need to install XCode itself from the app store."
+    print_error "If a pop up appears, click 'Install' and then 'Agree', and wait for it to finish before proceeding."
     ask_for_confirmation "xcode" "https://developer.apple.com/xcode/" xcode-select --install
 }
 

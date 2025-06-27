@@ -430,21 +430,19 @@ install_packages_with_urls() {
     fi
     
     # Use indirect expansion to get the array contents
-    # ${!package_array_name[@]} gets the indices of the array
-    # ${!package_array_name[i]} gets the value at index i
     local -a packages
     eval "packages=(\"\${${package_array_name}[@]}\")"
     
     for package_info in "${packages[@]}"; do
         # Split package_info into name and URL using parameter expansion
-        # ${package_info%%|*} removes the longest match of "|*" from the end (package name)
-        # ${package_info#*|} removes the shortest match of "*|" from the beginning (URL)
         local package_name="${package_info%%|*}"
         local package_url="${package_info#*|}"
         
         # Replace {name} placeholder with actual package name
-        local install_command="${install_command_template//\{name\}/${package_name}}"
-        
-        ask_for_confirmation "${package_name}" "${package_url}" ${install_command}
+        local install_command_str="${install_command_template//\{name\}/${package_name}}"
+        local -a install_command
+        # Split the command string into an array (word splitting)
+        read -r -a install_command <<< "${install_command_str}"
+        ask_for_confirmation "${package_name}" "${package_url}" "${install_command[@]}"
     done
 } 

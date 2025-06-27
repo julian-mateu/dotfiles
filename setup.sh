@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# set -e -o pipefail -u - are bash options that are set to ensure the script fails fast and with a clear error message. -e is for error handling, -o pipefail is for pipeline handling, -u is for undefined variables.
-set -e -o pipefail -u
+# set -e -o pipefail - are bash options that are set to ensure the script fails fast and with a clear error message. -e is for error handling, -o pipefail is for pipeline handling.
+set -e -o pipefail
 
 # SAFELOAD: Load utility functions - required for this script to work
 # See: zutils.zsh for ANSI color utilities and other functions
