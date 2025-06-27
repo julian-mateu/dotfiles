@@ -20,6 +20,7 @@ SDK_JAVA_VERSION='20-open'
 NVM_VERSION='0.40.3'
 GOVERSION='1.24'
 GOVERSION_EXACT='1.24.2'
+OBSIDIAN_VERSION='1.8.10'
 
 NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
@@ -69,35 +70,25 @@ main() {
     # JS
     ask_for_confirmation "nvm" "https://github.com/nvm-sh/nvm/blob/master/README.md" install_nvm
     setup_node
-    # setup_yarn
-    # setup_yalc
-
-    # AWS
-    # ask_for_confirmation "aws_cli" "https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" \
-    #     setup_aws_cli
-    # setup_botoenv
-    # setup_terraform
 
     # Java
     ask_for_confirmation "sdk_man" "https://sdkman.io/install" install_sdk_man
     setup_java_openjdk
-    # setup_gradle
 
     # Kubernetes
     ask_for_confirmation "kubernetes" "https://kubernetes.io/" install_kubernetes
-
-    # Kafka
-    # ask_for_confirmation "librdkafka" "https://formulae.brew.sh/formula/librdkafka" brew install librdkafka
-    # setup_conduktor
-
-    # Vagrant
-    # setup_vagrant_and_virtualbox
 
     # IDEs
     setup_ides
 
     # Slack
-    # ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
+    ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
+
+    # Obsidian
+    ask_for_confirmation "Obsidian" "https://obsidian.md/" install_obsidian
+
+    # Nerd Fonts
+    ask_for_confirmation "Nerd Fonts" "https://www.nerdfonts.com/" install_nerd_fonts
 
     # shellcheck disable=SC2016
     echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
@@ -254,31 +245,6 @@ setup_useful_tools() {
     ask_for_confirmation "jq" "https://stedolan.github.io/jq/" brew install jq
     ask_for_confirmation "GPG" "https://gnupg.org/" brew install gnupg
     ask_for_confirmation "tree" "https://formulae.brew.sh/formula/tree" brew install tree
-
-    # ask_for_confirmation "git lfs" "https://git-lfs.github.com/" brew install git-lfs
-    # ask_for_confirmation "trash" "https://hasseg.org/trash/" brew install trash
-    # ask_for_confirmation "GNU parallel" "https://www.gnu.org/software/parallel/" brew install parallel
-    # ask_for_confirmation "watch" "https://formulae.brew.sh/formula/watch" brew install watch
-    # ask_for_confirmation "postgresql" "https://www.postgresql.org/" brew install postgresql
-    # ask_for_confirmation "pv" "https://formulae.brew.sh/formula/pv" brew install pv
-    # ask_for_confirmation "dnsmasq" "https://thekelleys.org.uk/dnsmasq/doc.html" brew install dnsmasq
-    # ask_for_confirmation "csvkit" "https://csvkit.readthedocs.io/en/latest/" brew install csvkit
-    # ask_for_confirmation "shellcheck" "https://github.com/koalaman/shellcheck#installing" brew install shellcheck
-    # ask_for_confirmation "httpie" "https://httpie.io/" brew install httpie
-    # ask_for_confirmation "pgcli" "https://www.pgcli.com/" brew install pgcli
-    # ask_for_confirmation "bloomrpc" "https://github.com/uw-labs/bloomrpc" brew install --cask bloomrpc
-    # ask_for_confirmation "tig" "https://jonas.github.io/tig/INSTALL.html" brew install tig
-    # ask_for_confirmation "htop" "https://htop.dev/" brew install htop
-    # ask_for_confirmation "insomnia" "https://insomnia.rest/" brew install insomnia
-    # ask_for_confirmation "k6" "https://k6.io/docs/getting-started/installation/#macos" brew install k6
-    # ask_for_confirmation "GitHub CLI" "https://cli.github.com/" brew install gh
-
-    # ask_for_confirmation "re2" "for python toml packages in m1 mac" brew install re2
-
-    # ask_for_confirmation "git-secret" "https://formulae.brew.sh/formula/git-secret" brew install git-secret
-    # ask_for_confirmation "paperkey" "https://formulae.brew.sh/formula/paperkey" brew install paperkey
-
-    # ask_for_confirmation "aspell" "http://aspell.net/" brew install aspell
 }
 
 ###############################################################
@@ -396,38 +362,6 @@ setup_rust() {
 }
 
 ###############################################################
-# => AWS and infrastructure setup
-###############################################################
-
-# setup_aws_cli - Install AWS CLI v2
-# Usage: setup_aws_cli
-# Returns: 0 on success, 1 on error
-# Note: Downloads and installs AWS CLI v2 package for macOS
-setup_aws_cli() {
-    curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
-    sudo installer -pkg ./AWSCLIV2.pkg -target /
-    rm -rf ./AWSCLIV2.pkg
-}
-
-# setup_botoenv - Install botoenv for AWS credential management
-# Usage: setup_botoenv
-# Returns: 0 on success, 1 on error
-# Note: Installs botoenv Python package for AWS environment management
-setup_botoenv() {
-    ask_for_confirmation "botoenv" "https://github.com/globality-corp/botoenv" \
-        pip install botoenv
-}
-
-# setup_terraform - Install Terraform
-# Usage: setup_terraform
-# Returns: 0 on success, 1 on error
-# Note: Installs Terraform via Homebrew for infrastructure as code
-setup_terraform() {
-    ask_for_confirmation "terraform" "https://www.terraform.io/intro/" \
-        brew install terraform
-}
-
-###############################################################
 # => Node.js setup
 ###############################################################
 
@@ -465,24 +399,6 @@ setup_node() {
         nvm install --lts
 }
 
-# setup_yarn - Install Yarn package manager
-# Usage: setup_yarn
-# Returns: 0 on success, 1 on error
-# Note: Installs Yarn globally via npm
-setup_yarn() {
-    ask_for_confirmation "yarn" "https://classic.yarnpkg.com/en/docs/install/#mac-stable" \
-        npm install -g yarn
-}
-
-# setup_yalc - Install Yalc for local package development
-# Usage: setup_yalc
-# Returns: 0 on success, 1 on error
-# Note: Installs Yalc globally via npm for local package linking
-setup_yalc() {
-    ask_for_confirmation "yalc" "https://www.npmjs.com/package/yalc" \
-        npm i yalc -g
-}
-
 ###############################################################
 # => Java setup
 ###############################################################
@@ -517,15 +433,6 @@ setup_java_openjdk() {
         sdk install java "${SDK_JAVA_VERSION}"
 }
 
-# setup_gradle - Install Gradle build tool
-# Usage: setup_gradle
-# Returns: 0 on success, 1 on error
-# Note: Installs Gradle via Homebrew for Java project building
-setup_gradle() {
-    ask_for_confirmation "gradle" "https://docs.gradle.org/current/userguide/installation.html" \
-        brew install gradle
-}
-
 ###############################################################
 # => Kubernetes setup
 ###############################################################
@@ -542,22 +449,12 @@ install_kubernetes() {
     )"
     ask_for_confirmation "docker" "https://docs.docker.com/desktop" \
         install_docker
-    ask_for_confirmation "hyperkit" "https://github.com/moby/hyperkit" \
-        brew install hyperkit
-    ask_for_confirmation "minikube" "https://minikube.sigs.k8s.io/docs/start/" \
-        brew install minikube
     ask_for_confirmation "kubectl" "https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/#install-with-homebrew-on-macos" \
         brew install kubectl
     ask_for_confirmation "k9s" "https://k9scli.io/" \
         brew install k9s
     ask_for_confirmation "helm" "https://helm.sh/" \
         brew install helm
-    ask_for_confirmation "skaffold" "https://skaffold.dev/" \
-        brew install skaffold
-    ask_for_confirmation "telepresence" "https://www.telepresence.io/" \
-        brew install datawire/blackbird/telepresence
-    ask_for_confirmation "lens" "https://k8slens.dev/" \
-        brew install --cask lens
     print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
 }
 
@@ -596,41 +493,33 @@ install_docker() {
 # => Additional tools setup
 ###############################################################
 
-# setup_conduktor - Install Conduktor for Kafka management
-# Usage: setup_conduktor
-# Returns: 0 on success, 1 on error
-# Note: Installs Conduktor via Homebrew tap for Kafka cluster management
-setup_conduktor() {
-    ask_for_confirmation "conduktor" "https://www.conduktor.io/" \
-        "brew tap conduktor/brew && brew install conduktor"
-}
-
-# setup_vagrant_and_virtualbox - Install Vagrant and VirtualBox
-# Usage: setup_vagrant_and_virtualbox
-# Returns: 0 on success, 1 on error
-# Note: Installs Vagrant, VirtualBox, and Vagrant Manager for virtual machine management
-setup_vagrant_and_virtualbox() {
-    ask_for_confirmation "virtualbox" "https://www.virtualbox.org/" \
-        brew install --cask virtualbox
-    ask_for_confirmation "vagrant" "https://www.vagrantup.com/" \
-        brew install --cask vagrant
-    ask_for_confirmation "vagrant-manager" "https://www.vagrantmanager.com/" \
-        brew install --cask vagrant-manager
-}
-
 # setup_ides - Install development IDEs
 # Usage: setup_ides
 # Returns: 0 on success, 1 on error
 # Note: Installs popular development IDEs via Homebrew Cask
 setup_ides() {
-#    ask_for_confirmation "IntelliJ IDEA CE" "https://www.jetbrains.com/idea/" \
-#        brew install --cask intellij-idea-ce
     ask_for_confirmation "Visual Studio Code" "https://code.visualstudio.com/" \
-        brew install --cask visual-studio-code
-#    ask_for_confirmation "PyCharm" "https://www.jetbrains.com/pycharm/" \
-#        brew install --cask pycharm-ce
-#    ask_for_confirmation "Android Studio" "https://developer.android.com/studio/" \
-#        brew install --cask android-studio
+        install_vscode
+}
+
+# install_vscode - Install Visual Studio Code
+
+# Usage: install_vscode
+# Returns: 0 on success, 1 on error
+# Note: Installs Visual Studio Code via Homebrew Cask
+install_vscode() {
+    print_info "Installing Visual Studio Code"
+    if is_macos; then
+        curl "https://code.visualstudio.com/sha/download?build=stable&os=darwin-universal" -o "vscode.zip"
+        unzip "vscode.zip" -d "/Applications/Visual Studio Code.app"
+        rm -rf "vscode.zip"
+    else
+        local architecture  
+        architecture="$(get_architecture)"
+        curl "https://code.visualstudio.com/sha/download?build=stable&os=linux-${architecture}" -o "vscode.deb"
+        sudo dpkg -i "vscode.deb"
+        rm -rf "vscode.deb"
+    fi
 }
 
 # setup_slack - Reinstall Slack via Homebrew
@@ -638,10 +527,52 @@ setup_ides() {
 # Returns: 0 on success, 1 on error
 # Note: Removes existing Slack installation and reinstalls via Homebrew for updates
 setup_slack() {
-    ask_for_confirmation "Delete current slack version" "" \
-        trash "/Applications/Slack.app"
     ask_for_confirmation "slack" "https://www.slack.com" \
-        brew install slack
+        brew install --cask slack
+}
+
+# install_obsidian - Install Obsidian
+# Usage: install_obsidian
+# Returns: 0 on success, 1 on error
+# Note: Installs Obsidian via Homebrew Cask
+install_obsidian() {
+    print_info "Installing Obsidian"
+    if is_macos; then
+        curl "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg" -o "obsidian.dmg"
+        sudo hdiutil attach "./obsidian.dmg"
+        sudo cp -R "/Volumes/Obsidian/Obsidian.app" "/Applications"
+        sudo hdiutil unmount "/Volumes/Obsidian"
+        rm -rf "./obsidian.dmg"
+    else
+        local architecture
+        architecture="$(get_architecture)"
+        curl "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}-${architecture}.deb" -o "obsidian.deb"
+        sudo dpkg -i "obsidian.deb"
+        rm -rf "obsidian.deb"
+    fi
+}
+
+# install_nerd_fonts - Install Nerd Fonts
+# Usage: install_nerd_fonts
+# Returns: 0 on success, 1 on error
+# Note: Installs Nerd Fonts via Homebrew Cask
+install_nerd_fonts() {
+    local font
+    font="0xProto"
+    local version
+    version="3.4.0"
+
+    print_info "Installing Nerd Fonts"
+
+    if is_macos; then
+        brew tap homebrew/cask-fonts
+        brew install --cask "font-$(echo ${font} | tr '[:upper:]' '[:lower:]')-nerd-font"
+    else
+        curl "https://github.com/ryanoasis/nerd-fonts/releases/download/v${version}/${font}.zip" -o "${font}.zip"
+        unzip "${font}.zip" -d "${HOME}/.local/share/fonts"
+        fc-cache -fv
+        rm -rf "${font}.zip"
+    fi
 }
 
 # Script execution guard
