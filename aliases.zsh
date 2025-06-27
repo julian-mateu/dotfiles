@@ -18,10 +18,10 @@
 ###############################################################
 # => Misc
 ###############################################################
+# OSX uses a different sed by default. See https://unix.stackexchange.com/a/131940
 alias sed="gsed"
 alias zshrc="code ~/.zshrc"
 alias update="source ~/.zshrc"
-alias topten="history | commands | sort -rn | head"
 alias dirs="dirs -v | head -10"
 alias usage="du -h -d1"
 alias runp="lsof -i "
@@ -66,25 +66,6 @@ alias enableipv6="networksetup -setv6automatic Wi-Fi && networksetup -setv6autom
 ###############################################################
 # => Git
 ###############################################################
-function gc { git commit -m "$@"; }
-alias gcm="git checkout master"
-alias gs="git switch"
-alias gl="git pull"
-alias gf="git fetch"
-alias gfa="git fetch --all"
-alias gf="git fetch origin"
-alias gp="git push"
-alias gd="git diff"
-alias ga="git add ."
-alias gb="git branch"
-alias gsbs="git --no-pager branch"
-alias gbr="git branch remote"
-alias gfr="git remote update"
-alias gbn="git checkout -B "
-alias grf="git reflog"
-alias grh="git reset HEAD~" # last commit
-alias gac="git add . && git commit -a -m "
-alias gsu="git push --set-upstream origin "
 alias glog="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --branches"
 
 ###############################################################

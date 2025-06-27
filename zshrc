@@ -26,21 +26,20 @@ HIST_STAMPS="yyyy-mm-dd"
 ###############################################################
 # => Plugins
 ###############################################################
+# Lazy load the NVM plugin
+export NVM_LAZY_LOAD=true
 plugins=(
+    # Defines custom git aliases
     git
-    bundler
-    dotenv
-    macos
-    rake
+    # Suggest while typing
     zsh-autosuggestions
-    last-working-dir
-    web-search
-    cloudfoundry
-    zsh-syntax-highlighting
+    # Manages NVM, the it's not required to install it. It also allows lazy loading
+    zsh-nvm
+    # Better search on the history
     zsh-history-substring-search
-    history
-    sudo
-    yarn
+    # Syntax highlighting in the terminal
+    zsh-syntax-highlighting
+    # Defines the z command to jump around to commonly used directories
     z
 )
 
@@ -78,15 +77,14 @@ function grebase() {
   git rebase "$(git_main_branch)"
 }
 
-commands() {
-    awk '{a[$4]++}END{for(i in a){print a[i] " " i}}'
-}
-
 bashman() {
     man bash | less -p "^       ${1} "
 }
 
+# Special function that runs before each prompt in zsh
+# See https://github.com/rothgar/mastering-zsh/blob/master/docs/config/hooks.md
 function precmd() {
+  # Print the current kubecontext
   if [[ "$(which kubectl)" ]]; then
     if kubectl config current-context >/dev/null 2>/dev/null; then
         current_kubecontext="$(kubectl config current-context | awk -F'/' '{print $NF}')"
@@ -140,5 +138,6 @@ function zle-line-finish {
 }
 zle -N zle-line-finish
 
+# TODO: how to make this update in real time? Right now it only executes when the prompt runs, but if I change the mode (by pressing esc) it will not reflect the changes.
 # PROMPT="${PROMPT}"$'${vim_mode}\n'
 PROMPT="${PROMPT}"$'\n'
