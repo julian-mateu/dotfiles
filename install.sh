@@ -165,8 +165,7 @@ setup_apt_get() {
 # Note: Installs Homebrew, configures shell environment, and sets up automatic updates
 setup_homebrew() {
     # shellcheck disable=SC2016
-    ask_for_confirmation "brew" "https://brew.sh/" \
-        '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
+    ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -206,8 +205,7 @@ setup_homebrew_services() {
 # Note: Installs Oh My Zsh and clones essential plugins for enhanced shell experience
 setup_oh_my_zsh_and_plugins() {
     # shellcheck disable=SC2016
-    ask_for_confirmation "oh-my-zsh" "https://github.com/ohmyzsh/ohmyzsh" \
-        'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+    ask_for_confirmation "oh-my-zsh" "https://github.com/ohmyzsh/ohmyzsh" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
     ask_for_confirmation "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md#oh-my-zsh" \
         git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
