@@ -88,6 +88,7 @@ main() {
 
 init_profile_file() {
     # Note that indentation with tabs is needed here!
+    # The EOS is a here-document that ends with the string EOS. Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
 		# SAFELOAD PATTERN
 		# ----------------
@@ -104,7 +105,7 @@ init_profile_file() {
 }
 
 setup_x_code() {
-    echo "Installing XCode command line tools, you might need to install XCode itself from the app store"
+    print_info "Installing XCode command line tools, you might need to install XCode itself from the app store"
     ask_for_confirmation "xcode" "https://developer.apple.com/xcode/" xcode-select --install
 }
 
@@ -113,8 +114,7 @@ setup_homebrew() {
     ask_for_confirmation "brew" "https://brew.sh/" \
         '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
 
-    # Note that indentation with tabs is needed here!
-    # The EOS is a here-document that ends with the string EOS. Using quotes to avoid interpolation.
+    # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
 		###############################################################
 		# => Homebrew configuration
@@ -250,7 +250,7 @@ install_python() {
     pyenv global "${PYTHON_VERSION}"
 
     export PYENV_ROOT="${HOME}/.pyenv"
-    export PATH="${PYENV_ROOT}/bin:${PATH}"
+    add_to_path "${PYENV_ROOT}/bin"
     eval "$(pyenv init --path)"
 
     pip install --upgrade pip setuptools
@@ -258,7 +258,7 @@ install_python() {
 
 setup_go() {
     ask_for_confirmation "go" "https://go.dev/doc/install" \
-        brew install go@${GOVERSION}
+        brew install "go@${GOVERSION}"
 
     # Note that indentation with tabs is needed here! Not using quotes to force interpolation.
     IFS='' read -r -d '' lines <<-EOS || true
@@ -417,7 +417,7 @@ install_docker() {
     elif [[ "${architecture}" = "arm64" ]]; then
         curl "https://desktop.docker.com/mac/main/arm64/Docker.dmg" -o "Docker.dmg"
     else
-        echo "unknown architecture ${architecture}. Please install docker manually."
+        print_error "unknown architecture ${architecture}. Please install docker manually."
     fi
     sudo hdiutil attach "./Docker.dmg"
     sudo cp -R "/Volumes/Docker/Docker.app" "/Applications"

@@ -1,29 +1,184 @@
-## Install
+# Julian Mateu's Dotfiles
 
-There is configuration for `zsh` so first of all switch your shell from the default `bash` to `zsh` on OSX:
-```bash
-chsh -s /bin/zsh
+A comprehensive collection of dotfiles and configuration scripts for setting up a modern macOS development environment. This repository provides a streamlined way to configure your shell, development tools, and system preferences.
+
+## 🚀 Features
+
+### Core Configuration
+
+- **ZSH with Oh My Zsh** - Enhanced shell with plugins and custom theme
+- **Custom ZSH Theme** - Real-time vim mode indicator, git status, and kubecontext display
+- **Utility Functions** - Centralized utilities for color output, file operations, and system detection
+- **Safeload Pattern** - Reliable dependency loading with clear error messages
+
+### Development Tools
+
+- **Python** - pyenv for version management with automatic brew wrapper
+- **Node.js** - nvm with lazy loading for fast startup
+- **Go** - Version management with Monzo-specific configuration
+- **Rust** - Cargo environment setup
+- **Java** - SDKMAN for JVM ecosystem management
+
+### Infrastructure & Cloud
+
+- **Kubernetes** - kubectl, minikube, helm, k9s, and Lens
+- **AWS** - AWS CLI and botoenv for credential management
+- **Terraform** - Infrastructure as code tooling
+- **Docker** - Container development environment
+
+### Development Environment
+
+- **Neovim** - Modern vim with custom configuration
+- **IDEs** - IntelliJ IDEA, VS Code, PyCharm, Android Studio
+- **Database Tools** - PostgreSQL, pgcli, Conduktor for Kafka
+- **Network Tools** - HTTPie, Insomnia, k6 for testing
+
+### System Utilities
+
+- **Homebrew** - Package manager with automatic updates
+- **Git** - Enhanced git configuration with hub integration
+- **Shell Tools** - ripgrep, fzf, tig, htop, and more
+- **Security** - GPG, git-secret for encrypted secrets
+
+## 📋 Prerequisites
+
+- macOS (tested on macOS 13+)
+- Administrator privileges (for some installations)
+- Internet connection for downloading tools
+
+## 🛠️ Installation
+
+### Quick Start
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/julianmateu/dotfiles.git
+   cd dotfiles
+   export DOTFILES_DIR=$(pwd)
+   ```
+
+2. **Run the installation script**:
+
+   ```bash
+   ./install.sh
+   ```
+
+3. **Set up configuration files**:
+
+   ```bash
+   ./setup.sh
+   ```
+
+4. **Reload your shell**:
+   ```bash
+   source ~/.zshrc
+   ```
+
+### Manual Setup
+
+If you prefer to set up components individually:
+
+1. **Install core utilities**:
+
+   ```bash
+   # Install Homebrew
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+   # Install Oh My Zsh
+   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+   ```
+
+2. **Copy configuration files (if you prefer symlinks, skip this step and go to step 3)**:
+
+   ```bash
+   # Copy shell configuration
+   cp zshrc ~/.zshrc
+   cp zshenv ~/.zshenv
+   cp zutils.zsh ~/.zutils.zsh
+
+   # Copy theme
+   cp julianmateu.zsh-theme ~/.oh-my-zsh/custom/themes/
+   ```
+
+3. **Set up symlinks** (optional):
+   ```bash
+   # Create symlinks for easy updates
+   ln -s ${DOTFILES_DIR}/zshrc ~/.zshrc
+   ln -s ${DOTFILES_DIR}/zshenv ~/.zshenv
+   ln -s ${DOTFILES_DIR}/zutils.zsh ~/.zutils.zsh
+   ln -s ${DOTFILES_DIR}/julianmateu.zsh-theme ~/.oh-my-zsh/custom/themes/
+   ```
+
+## 🎨 Customization
+
+### ZSH Theme
+
+The custom theme (`julianmateu.zsh-theme`) provides:
+
+- **Success indicator** - Changes color based on last command exit status
+- **Timestamp** - Shows current date, time, and timezone
+- **Directory** - Current directory name
+- **Git status** - Branch name and dirty/clean state
+- **Kubernetes context** - Current kubecontext (if available)
+- **Vim mode** - Real-time indicator showing [INS] or [CMD]
+
+### Custom dotfiles
+
+`zshrc_custom.zsh`, `zshenv_custom.zsh`, `zprofile_custom.zsh`, `aliases_custom.zsh` are custom files that will be igonred in this repo (in case you want to add secrets or machine-specific configuration). These are still symlinked in the `setup.sh` script and sourced in the non-custom files.
+
+#### Adding Custom Aliases
+
+Add your custom aliases to `aliases_custom.zsh`:
+
+```zsh
+# Your custom aliases
+alias myproject='cd ~/projects/myproject'
+alias deploy='./scripts/deploy.sh'
 ```
 
-Run the setup script. It will interactively prompt you to install dependencies. It will not override existing config files, just rename them as `#{file}.backup`.
-```bash
-./setup.sh
+### Plugin Configuration
+
+Modify the plugins list in `zshrc`:
+
+```zsh
+plugins=(
+    git
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    # Add your custom plugins here
+)
 ```
 
-**NOTE**: `brew doctor` showed a warning:
-> Warning: You have unlinked kegs in your Cellar
+## 🔧 Configuration Files
 
-so I ran
-`brew link kubernetes-cli`, and that failed because `/usr/local/bin/kubectl` already existed:
-```bash
-la /usr/local/bin/kubectl
-lrwxr-xr-x  1 root  admin    55B 23 Aug 22:01 /usr/local/bin/kubectl -> /Applications/Docker.app/Contents/Resources/bin/kubectl
-```
+### Core Files
 
-So I ran `brew link --overwrite --dry-run kubernetes-cli`
+- `zshenv` - Environment variables and system setup. This file is sourced in all zsh sessions, both login and non-login, interactive and non-interactive. It's the first file loaded, so it's suitable for setting environment variables that need to be available to all shells, such as `$PATH`.
+- `zprofile` - System-specific configuration (generated by install.sh). This file is sourced only in login shells. Login shells are typically started when you log in to your system, either directly or via ssh. It's a good place to set environment variables specific to login sessions, like those related to your user account, and it's also a place to execute commands that you only want to run once when you log in.
+- `zshrc` - Main ZSH configuration with plugins and theme. This file is sourced only in interactive shells. Interactive shells are shells that you interact with directly, like when you open a new terminal window. It's the place to set aliases, prompts, and other customizations that you want to apply to your interactive terminal sessions.
+- `zutils.zsh` - Utility functions for scripts and configuration.
+- `aliases.zsh` - Command shortcuts and aliases.
+- `julianmateu.zsh-theme` - Custom ZSH theme
 
-## Optional tricks
+### Setup Scripts
 
+- `install.sh` - Automated installation of development tools
+- `setup.sh` - Configuration file setup and symlink creation
+
+### Generated Files
+
+- `zprofile_custom.zsh` - System-specific configuration (generated by install.sh)
+
+## 📚 Documentation
+
+- [Configuration Style Guide](CONFIGURATION_STYLE_GUIDE.md) - Patterns and best practices
+- [Improvement Plan](IMPROVEMENT_PLAN.md) - Development roadmap and progress
+- [ZSH Manual](https://zsh.sourceforge.io/Doc/) - Official ZSH documentation
+- [Oh My Zsh Wiki](https://github.com/ohmyzsh/ohmyzsh/wiki) - Plugin and theme documentation
+
+
+## 🎉 Optional tricks
 
 ### Set up a case sensitive volume and symlink your source folder to it
 See [this article](https://brianboyko.medium.com/a-case-sensitive-src-folder-for-mac-programmers-176cc82a3830), which basically involves
@@ -45,12 +200,3 @@ tell application "System Events"
 end tell
 ```
 Then save and go to System Preferences -> Extensions -> Touch Bar -> Customize Control Strip and drag the "Quick Actions" icon to the touchbar. 
-
-## Sources
-This is based on some other sources for [dot files](https://github.com/afallou/dotfiles), [vimrc](https://github.com/amix/vimrc) and [oh-my-zsh](https://www.youtube.com/watch?v=MSPu-lYF-A8).
-
-## Files
-This repo contains the following dotfiles:
-- `zshenv`: sourced in all zsh sessions, both login and non-login, interactive and non-interactive. It's the first file loaded, so it's suitable for setting environment variables that need to be available to all shells, such as $PATH.
-- `zprofile`: sourced only in login shells. Login shells are typically started when you log in to your system, either directly or via ssh. It's a good place to set environment variables specific to login sessions, like those related to your user account, and it's also a place to execute commands that you only want to run once when you log in.
-- `zshrc`: sourced only in interactive shells. Interactive shells are shells that you interact with directly, like when you open a new terminal window. It's the place to set aliases, prompts, and other customizations that you want to apply to your interactive terminal sessions.
