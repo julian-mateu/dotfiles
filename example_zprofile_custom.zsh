@@ -1,7 +1,12 @@
-## ANSI COLORS
-ANSI_ESCAPE='\033'
-ANSI_COLOR_RED='[31m'
-ANSI_NO_COLOR='[m'
+# SAFELOAD PATTERN
+# ----------------
+# Load utility functions using the safeload pattern
+# ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
+# See: bash manual "Parameter Expansion" section
+source "${0%/*}/.zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    return 1
+}
 
 # brew
 eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -20,24 +25,15 @@ export PYENV_ROOT="${HOME}/.pyenv"
 export PATH="${PYENV_ROOT}/bin:${PATH}"
 eval "$(pyenv init --path)"
 
-function print_red() {
-  echo -e "${ANSI_ESCAPE}${ANSI_COLOR_RED}${@}${ANSI_ESCAPE}${ANSI_NO_COLOR}"
-}
-
 # pyenv adds *-config scripts and produces a brew warning
+# This wrapper temporarily switches to system Python to avoid conflicts
 function brew_wrapper() {
     current_version="$(pyenv global)"
     pyenv global system
-    print_red "Warning: changed pyenv version from ${current_version} to system\n"
+    echo -e "$(colorize "Warning: changed pyenv version from ${current_version} to system" red)"
     brew "${@}"
-    print_red "Warning: changed pyenv version from system to ${current_version}\n"
+    echo -e "$(colorize "Warning: changed pyenv version from system to ${current_version}" red)"
     pyenv global "${current_version}"
-    print_red "Warning: running brew update will update go version, make sure to go back to the desired one and update the minor exact version in the zprofile file"
+    echo -e "$(colorize "Warning: running brew update will update go version, make sure to go back to the desired one and update the minor exact version in the zprofile file" red)"
 }
 alias brew="brew_wrapper"
-
-# NVM
-export NVM_DIR="${HOME}/.nvm"
-[ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
-[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
-

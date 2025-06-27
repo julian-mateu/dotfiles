@@ -1,18 +1,26 @@
 #!/bin/bash
 set -e -o pipefail -u
 
+# SAFELOAD: Load utility functions - required for this script to work
+# See: zutils.zsh for ANSI color utilities and other functions
+# ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
+# See: bash manual "Parameter Expansion" section
+source "${0%/*}/zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    echo "Please ensure the dotfiles repository is properly set up." >&2
+    exit 1
+}
+
 PROFILE_FILE='./zprofile_custom.zsh'
-GREEN='\033[32m'
-RED='\033[31m'
-YELLOW='\033[33m'
-NC='\033[m' # No Color
 
 PYTHON_VERSION='3.11.3'
 SDK_JAVA_VERSION='20-open'
 NVM_VERSION='0.39.7'
 
 main() {
-    # OSX stuffx
+    init_profile_file
+
+    # OSX stuff
     setup_x_code
     setup_homebrew
     setup_homebrew_services
@@ -61,7 +69,24 @@ main() {
     ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
 
     # shellcheck disable=SC2016
-    echo -e "${GREEN}Done!${NC} you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
+    echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
+}
+
+init_profile_file() {
+    # Note that indentation with tabs is needed here!
+    IFS='' read -r -d '' lines <<-"EOS" || true
+		# SAFELOAD PATTERN
+		# ----------------
+		# Load utility functions using the safeload pattern
+		# ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
+		# See: bash manual "Parameter Expansion" section
+		source "${0%/*}/.zutils.zsh" || { 
+		    echo "Failed to load zutils.zsh" >&2
+		    return 1
+		}
+	EOS
+
+    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
 }
 
 setup_x_code() {
@@ -74,7 +99,7 @@ setup_homebrew() {
     ask_for_confirmation "brew" "https://brew.sh/" \
         '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"'
 
-# Note that indentation with tabs is needed here!
+    # Note that indentation with tabs is needed here!
     IFS='' read -r -d '' lines <<-"EOS" || true
 		# brew
 		eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -108,8 +133,8 @@ setup_oh_my_zsh_and_plugins() {
     ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" \
         git clone https://github.com/zsh-users/zsh-history-substring-search "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-history-substring-search"
 
-    ask_for_confirmation "zsh-nvm" "https://github.com/lukechilds/zsh-nvm" \
-        git clone https://github.com/lukechilds/zsh-nvm "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-nvm"
+    ask_for_confirmation "zsh nvm plugin" "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm" \
+        git clone https://github.com/ohmyzsh/ohmyzsh.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm"
 
 }
 
@@ -171,13 +196,15 @@ install_python() {
 		eval "$(pyenv init --path)"
 
 		# pyenv adds *-config scripts and produces a brew warning
+		# This wrapper temporarily switches to system Python to avoid conflicts
 		function brew_wrapper() {
 		    current_version="$(pyenv global)"
 		    pyenv global system
-		    echo -e "\033[31mWarning: changed pyenv version from ${current_version} to system\033[m\n"
+		    echo -e "$(colorize "Warning: changed pyenv version from ${current_version} to system" red)"
 		    brew "${@}"
-		    echo -e "\033[31mWarning: changed pyenv version from system to ${current_version} \033[m\n"
+		    echo -e "$(colorize "Warning: changed pyenv version from system to ${current_version}" red)"
 		    pyenv global "${current_version}"
+		    echo -e "$(colorize "Warning: running brew update will update go version, make sure to go back to the desired one and update the minor exact version in the zprofile file" red)"
 		}
 		alias brew="brew_wrapper"
 	EOS
@@ -208,19 +235,23 @@ setup_botoenv() {
 install_nvm() {
     curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
 
-    # Note that indentation with tabs is needed here!
-    IFS='' read -r -d '' lines <<-"EOS" || true
-		# NVM
-		export NVM_DIR="${HOME}/.nvm"
-		[ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
-		[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
-	EOS
+    # Only add the nvm sourcing if the plugin is not installed
+    if [[ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm" ]]; then
+        # Note that indentation with tabs is needed here!
+        IFS='' read -r -d '' lines <<-"EOS" || true
+			# NVM
+			export NVM_DIR="${HOME}/.nvm"
+			[ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
+			[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
+		EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+        append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
 
-    export NVM_DIR="${HOME}/.nvm"
-    [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
-    [ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
+        export NVM_DIR="${HOME}/.nvm"
+        [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
+        [ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
+    fi
+
 }
 
 setup_node() {
@@ -342,55 +373,6 @@ setup_slack() {
         trash "/Applications/Slack.app"
     ask_for_confirmation "slack" "https://www.slack.com" \
         brew install slack
-}
-
-append_lines_to_file_if_not_there() {
-    if [[ "${#}" -ne 2 ]]; then
-        echo "Illegal number of parameters ${0}: got ${#} but expected 2: ${*}" >&2
-        exit 2
-    fi
-    lines="${1}"
-    file="${2}"
-    while IFS= read -r line; do
-        if [[ "${line}" == "" ]]; then
-            echo "${line}" >>"${file}"
-        fi
-        grep -qxF "${line}" "${file}" || echo "${line}" >>"${file}"
-    done < <(echo "${lines}")
-
-}
-
-ask_for_confirmation() {
-    if [[ "${#}" -le 2 ]]; then
-        echo "Illegal number of parameters ${0}: got ${#} but expected at least 3: ${*}" >&2
-        return 2
-    fi
-
-    echo
-    echo -e "Do you want to install ${YELLOW}${1}${NC}? [y/n]"
-    echo -e " this will run: ${YELLOW}" "$(fmt_code "${@:3}")" "${NC}"
-    echo -e " see $(fmt_underline "${2}")"
-    read -p "" -n 1 -r REPLY
-    echo
-
-    if [[ "${REPLY}" =~ ^[Yy]$ ]]; then
-        "${@:3}"
-    fi
-}
-
-print_warning() {
-    echo -e "${RED}${*}${NC}"
-    read -p "press any key to continue..." -n 1 -r REPLY
-    echo
-}
-
-fmt_underline() {
-    printf '\033[4m%s\033[24m\n' "$*"
-}
-
-fmt_code() {
-    # shellcheck disable=SC2016 # backtic in single-quote
-    printf '`\033[38;5;247m%s%s`\n' "$*" "${NC}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

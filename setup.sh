@@ -1,15 +1,22 @@
 #! /bin/bash
 set -e -o pipefail
 
-YELLOW='\033[33m'
-NC='\033[m' # No Color
+# SAFELOAD: Load utility functions - required for this script to work
+# See: zutils.zsh for ANSI color utilities and other functions
+# ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
+# See: bash manual "Parameter Expansion" section
+source "${0%/*}/zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    echo "Please ensure the dotfiles repository is properly set up." >&2
+    exit 1
+}
 
 main() {
 
     parse_arguments "${@}"
 
     echo -e "Do you want to install dependencies (needed if setting up a new computer)? [y/n]"
-    echo -e " ${YELLOW}Warning: note that if the setup process fails because some command is not found, you might need to open a new shell and run ./install.sh again!${NC}"
+    echo -e " $(colorize "Warning: note that if the setup process fails because some command is not found, you might need to open a new shell and run ./install.sh again!" yellow)"
     read -p "" -n 1 -r REPLY
     echo
 
@@ -105,8 +112,8 @@ copy_files() {
     if [[ -n "${ZSH_CUSTOM+x}" ]]; then
         copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM}/themes/julianmateu.zsh-theme"
     else
-        echo -e "${YELLOW}Warning: did not copy the zsh theme as ZSH_CUSTOM variable does not exist${NC}"
-        echo -e " ${YELLOW}might need to run $(fmt_code "ZSH_CUSTOM=\$ZSH_CUSTOM ${0}") ${NC}"
+        echo -e "$(colorize "Warning: did not copy the zsh theme as ZSH_CUSTOM variable does not exist" yellow)"
+        echo -e " $(colorize "might need to run $(fmt_code "ZSH_CUSTOM=\$ZSH_CUSTOM ${0}")" yellow)"
     fi
 }
 
@@ -127,11 +134,7 @@ copy_file() {
     fi
 }
 
-fmt_code() {
-    # shellcheck disable=SC2016 # backtic in single-quote
-    printf '`\033[38;5;247m%s%s`\n' "$*" "${NC}"
-}
-
+# TODO: explain how this works:
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "${@}"
 fi
