@@ -403,4 +403,46 @@ remove_from_path() {
     export PATH=$(echo "${PATH}" | sed -E "s|:${directory}||g" | sed -E "s|^${directory}:||g")
     print_info "Removed ${directory} from PATH"
     return 0
+}
+
+###############################################################
+# => Package Installation Helpers
+###############################################################
+
+# install_packages_with_urls - Install packages with confirmation and URLs
+# Usage: install_packages_with_urls <package_array> <install_command>
+# Parameters:
+#   $1 - Array name containing packages in "name|url" format
+#   $2 - Install command template (e.g., "brew install" or "sudo apt-get install -y")
+# Returns: 0 on success
+# Note: This function provides a reusable pattern for installing packages with URLs
+#       Each package in the array should be in "name|url" format (using | as separator)
+#       The install command should use {name} as a placeholder for the package name
+install_packages_with_urls() {
+    local package_array_name="${1}"
+    local install_command_template="${2}"
+    
+    if [[ "${#}" -ne 2 ]]; then
+        print_error "install_packages_with_urls: Illegal number of parameters ${0}: got ${#} but expected 2: ${*}"
+        return 2
+    fi
+    
+    # Use indirect expansion to get the array contents
+    # ${!package_array_name[@]} gets the indices of the array
+    # ${!package_array_name[i]} gets the value at index i
+    local -a packages
+    eval "packages=(\"\${${package_array_name}[@]}\")"
+    
+    for package_info in "${packages[@]}"; do
+        # Split package_info into name and URL using parameter expansion
+        # ${package_info%%|*} removes the longest match of "|*" from the end (package name)
+        # ${package_info#*|} removes the shortest match of "*|" from the beginning (URL)
+        local package_name="${package_info%%|*}"
+        local package_url="${package_info#*|}"
+        
+        # Replace {name} placeholder with actual package name
+        local install_command="${install_command_template//\{name\}/${package_name}}"
+        
+        ask_for_confirmation "${package_name}" "${package_url}" ${install_command}
+    done
 } 

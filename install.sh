@@ -137,13 +137,24 @@ setup_x_code() {
 # setup_apt_get - Install apt-get dependencies
 # Usage: setup_apt_get
 # Returns: 0 on success, 1 on error
-# Note: Installs apt-get dependencies
+# Note: Installs essential Linux dependencies for development
 setup_apt_get() {
-    print_info "Installing apt-get dependencies"
-    ask_for_confirmation "apt-get" "https://ubuntu.com/server/docs/package-management" apt-get update -y
-    ask_for_confirmation "git" "https://git-scm.com/" apt-get install -y git
-    ask_for_confirmation "curl" "https://curl.se/" apt-get install -y curl
-    ask_for_confirmation "build-essential" "https://packages.ubuntu.com/search?suite=all&section=all&arch=amd64&keywords=build-essential" apt-get install -y build-essential
+    print_info "Installing Linux dependencies"
+    
+    # Update package list first
+    ask_for_confirmation "Update package list" "Update apt package database" sudo apt-get update -y
+    
+    # Install essential development tools with URLs
+    local apt_packages=(
+        "git|https://git-scm.com/"
+        "curl|https://curl.se/"
+        "wget|https://www.gnu.org/software/wget/"
+        "build-essential|https://packages.ubuntu.com/search?suite=all&section=all&arch=amd64&keywords=build-essential"
+        "zsh|https://www.zsh.org/"
+        "unzip|https://packages.ubuntu.com/search?keywords=unzip"
+    )
+    
+    install_packages_with_urls "apt_packages" "sudo apt-get install -y {name}"
 }
 
 # setup_homebrew - Install and configure Homebrew
@@ -238,13 +249,34 @@ setup_nvim() {
 # Returns: 0 on success, 1 on error
 # Note: Installs a comprehensive set of tools for development, system administration, and productivity
 setup_useful_tools() {
-    ask_for_confirmation "wget" "https://www.gnu.org/software/wget/" brew install wget
-    ask_for_confirmation "rg" "https://formulae.brew.sh/formula/ripgrep" brew install ripgrep
-    ask_for_confirmation "gsed" "https://formulae.brew.sh/formula/gnu-sed" brew install gsed
-    ask_for_confirmation "coreutils" "https://www.gnu.org/software/coreutils/" brew install coreutils
-    ask_for_confirmation "jq" "https://stedolan.github.io/jq/" brew install jq
-    ask_for_confirmation "GPG" "https://gnupg.org/" brew install gnupg
-    ask_for_confirmation "tree" "https://formulae.brew.sh/formula/tree" brew install tree
+    # Install useful tools with URLs
+    local brew_tools=(
+        "wget|https://www.gnu.org/software/wget/"
+        "ripgrep|https://formulae.brew.sh/formula/ripgrep"
+        "gnu-sed|https://formulae.brew.sh/formula/gnu-sed"
+        "coreutils|https://www.gnu.org/software/coreutils/"
+        "jq|https://stedolan.github.io/jq/"
+        "gnupg|https://gnupg.org/"
+        "tree|https://formulae.brew.sh/formula/tree"
+    )
+    
+    for tool_info in "${brew_tools[@]}"; do
+        # Split tool_info into name and URL using parameter expansion
+        # ${tool_info%%|*} removes the longest match of "|*" from the end (tool name)
+        # ${tool_info#*|} removes the shortest match of "*|" from the beginning (URL)
+        local tool_name="${tool_info%%|*}"
+        local tool_url="${tool_info#*|}"
+        
+        # Handle special cases where package name differs from tool name
+        local package_name="${tool_name}"
+        case "${tool_name}" in
+            "ripgrep") package_name="rg" ;;
+            "gnu-sed") package_name="gsed" ;;
+            "gnupg") package_name="gpg" ;;
+        esac
+        
+        ask_for_confirmation "${tool_name}" "${tool_url}" brew install "${package_name}"
+    done
 }
 
 ###############################################################
@@ -461,32 +493,50 @@ install_kubernetes() {
 # install_docker - Install Docker Desktop
 # Usage: install_docker
 # Returns: 0 on success, 1 on error
-# Note: Downloads and installs Docker Desktop for macOS based on system architecture
+# Note: Downloads and installs Docker Desktop for macOS and Linux based on system architecture
 install_docker() {
     print_info "Installing Docker Desktop"
 
     if is_macos; then
         print_info "Installing Docker Desktop for macOS"
+        local docker_dmg="Docker.dmg"
+        
         if is_intel; then
-            curl "https://desktop.docker.com/mac/main/amd64/Docker.dmg" -o "Docker.dmg"
+            curl -L "https://desktop.docker.com/mac/main/amd64/Docker.dmg" -o "${docker_dmg}"
         elif is_apple_silicon; then
-            curl "https://desktop.docker.com/mac/main/arm64/Docker.dmg" -o "Docker.dmg"
+            curl -L "https://desktop.docker.com/mac/main/arm64/Docker.dmg" -o "${docker_dmg}"
         else
-            print_error "unknown architecture $(get_architecture). Please install docker manually."
+            print_error "Unknown architecture $(get_architecture). Please install Docker manually."
+            return 1
         fi
-        sudo hdiutil attach "./Docker.dmg"
+        
+        # Install Docker Desktop
+        sudo hdiutil attach "./${docker_dmg}"
         sudo cp -R "/Volumes/Docker/Docker.app" "/Applications"
         sudo hdiutil unmount "/Volumes/Docker"
-        rm -rf "./Docker.dmg"
+        rm -rf "./${docker_dmg}"
+        
+        print_success "Docker Desktop installed successfully"
+        
     else
         print_info "Installing Docker Desktop for Linux"
         local architecture
         architecture="$(get_architecture)"
-        curl "https://desktop.docker.com/linux/main/${architecture}/docker-desktop-${architecture}.deb" -o "docker-desktop-${architecture}.deb"
-        sudo dpkg -i "docker-desktop-${architecture}.deb"
-        rm -rf "docker-desktop-${architecture}.deb"
+        local docker_deb="docker-desktop-${architecture}.deb"
+        
+        # Download Docker Desktop for Linux
+        curl -L "https://desktop.docker.com/linux/main/${architecture}/docker-desktop-${architecture}.deb" -o "${docker_deb}"
+        
+        # Install dependencies
+        sudo apt-get update
+        sudo apt-get install -y "./${docker_deb}"
+        
+        # Clean up
+        rm -rf "${docker_deb}"
+        
+        print_success "Docker Desktop installed successfully"
+        print_warning "You may need to log out and back in for Docker Desktop to work properly"
     fi
-
 }
 
 ###############################################################
@@ -503,22 +553,45 @@ setup_ides() {
 }
 
 # install_vscode - Install Visual Studio Code
-
 # Usage: install_vscode
 # Returns: 0 on success, 1 on error
-# Note: Installs Visual Studio Code via Homebrew Cask
+# Note: Installs Visual Studio Code via direct download for macOS and Linux
 install_vscode() {
     print_info "Installing Visual Studio Code"
+    
     if is_macos; then
-        curl "https://code.visualstudio.com/sha/download?build=stable&os=darwin-universal" -o "vscode.zip"
-        unzip "vscode.zip" -d "/Applications/Visual Studio Code.app"
-        rm -rf "vscode.zip"
+        local vscode_zip="vscode.zip"
+        local vscode_app="/Applications/Visual Studio Code.app"
+        
+        # Download VS Code for macOS
+        curl -L "https://code.visualstudio.com/sha/download?build=stable&os=darwin-universal" -o "${vscode_zip}"
+        
+        # Remove existing installation if present
+        if [[ -d "${vscode_app}" ]]; then
+            print_warning "Removing existing VS Code installation"
+            sudo rm -rf "${vscode_app}"
+        fi
+        
+        # Install VS Code
+        sudo unzip -q "${vscode_zip}" -d "/Applications/"
+        rm -rf "${vscode_zip}"
+        
+        print_success "Visual Studio Code installed successfully"
+        
     else
-        local architecture  
+        local architecture
         architecture="$(get_architecture)"
-        curl "https://code.visualstudio.com/sha/download?build=stable&os=linux-${architecture}" -o "vscode.deb"
-        sudo dpkg -i "vscode.deb"
-        rm -rf "vscode.deb"
+        local vscode_deb="vscode.deb"
+        
+        # Download VS Code for Linux
+        curl -L "https://code.visualstudio.com/sha/download?build=stable&os=linux-${architecture}" -o "${vscode_deb}"
+        
+        # Install VS Code
+        sudo dpkg -i "${vscode_deb}"
+        sudo apt-get install -f -y  # Fix any dependency issues
+        rm -rf "${vscode_deb}"
+        
+        print_success "Visual Studio Code installed successfully"
     fi
 }
 
@@ -534,44 +607,84 @@ setup_slack() {
 # install_obsidian - Install Obsidian
 # Usage: install_obsidian
 # Returns: 0 on success, 1 on error
-# Note: Installs Obsidian via Homebrew Cask
+# Note: Installs Obsidian via direct download for macOS and Linux
 install_obsidian() {
     print_info "Installing Obsidian"
+    
     if is_macos; then
-        curl "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg" -o "obsidian.dmg"
-        sudo hdiutil attach "./obsidian.dmg"
+        local obsidian_dmg="obsidian.dmg"
+        local obsidian_app="/Applications/Obsidian.app"
+        
+        # Download Obsidian for macOS
+        curl -L "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg" -o "${obsidian_dmg}"
+        
+        # Remove existing installation if present
+        if [[ -d "${obsidian_app}" ]]; then
+            print_warning "Removing existing Obsidian installation"
+            sudo rm -rf "${obsidian_app}"
+        fi
+        
+        # Install Obsidian
+        sudo hdiutil attach "./${obsidian_dmg}"
         sudo cp -R "/Volumes/Obsidian/Obsidian.app" "/Applications"
         sudo hdiutil unmount "/Volumes/Obsidian"
-        rm -rf "./obsidian.dmg"
+        rm -rf "./${obsidian_dmg}"
+        
+        print_success "Obsidian installed successfully"
+        
     else
         local architecture
         architecture="$(get_architecture)"
-        curl "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}-${architecture}.deb" -o "obsidian.deb"
-        sudo dpkg -i "obsidian.deb"
-        rm -rf "obsidian.deb"
+        local obsidian_deb="obsidian.deb"
+        
+        # Download Obsidian for Linux
+        curl -L "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}-${architecture}.deb" -o "${obsidian_deb}"
+        
+        # Install Obsidian
+        sudo dpkg -i "${obsidian_deb}"
+        sudo apt-get install -f -y  # Fix any dependency issues
+        rm -rf "${obsidian_deb}"
+        
+        print_success "Obsidian installed successfully"
     fi
 }
 
 # install_nerd_fonts - Install Nerd Fonts
 # Usage: install_nerd_fonts
 # Returns: 0 on success, 1 on error
-# Note: Installs Nerd Fonts via Homebrew Cask
+# Note: Installs Nerd Fonts via Homebrew Cask on macOS or direct download on Linux
 install_nerd_fonts() {
-    local font
-    font="0xProto"
-    local version
-    version="3.4.0"
+    local font="0xProto"
+    local version="3.4.0"
 
     print_info "Installing Nerd Fonts"
 
     if is_macos; then
+        # Install via Homebrew Cask on macOS
         brew tap homebrew/cask-fonts
         brew install --cask "font-$(echo ${font} | tr '[:upper:]' '[:lower:]')-nerd-font"
+        print_success "Nerd Fonts installed successfully via Homebrew"
+        
     else
-        curl "https://github.com/ryanoasis/nerd-fonts/releases/download/v${version}/${font}.zip" -o "${font}.zip"
-        unzip "${font}.zip" -d "${HOME}/.local/share/fonts"
+        # Install via direct download on Linux
+        local font_dir="${HOME}/.local/share/fonts"
+        local font_zip="${font}.zip"
+        
+        # Create font directory if it doesn't exist
+        mkdir -p "${font_dir}"
+        
+        # Download and install font
+        curl -L "https://github.com/ryanoasis/nerd-fonts/releases/download/v${version}/${font}.zip" -o "${font_zip}"
+        unzip -q "${font_zip}" -d "${font_dir}"
+        
+        # Update font cache
         fc-cache -fv
-        rm -rf "${font}.zip"
+        
+        # Clean up
+        rm -rf "${font_zip}"
+        
+        print_success "Nerd Fonts installed successfully"
+        print_info "Font cache updated. You may need to restart your terminal or applications to see the new fonts."
     fi
 }
 
