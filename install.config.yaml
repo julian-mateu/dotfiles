@@ -1,0 +1,183 @@
+# Installation Configuration
+# =========================
+# This file allows you to configure what tools and applications to install.
+# Set any section to 'true' to install, 'false' to skip, or 'ask' to prompt.
+#
+# Usage:
+#   ./install.sh --config install.config.yaml
+#   ./install.sh --dry-run  # Preview what would be installed
+#   ./install.sh --select   # Interactive selection mode
+
+# Core system setup
+system:
+  xcode: true # XCode command line tools
+  homebrew: true # Homebrew package manager
+  homebrew_services: true # Homebrew services
+
+# Shell and editor setup
+shell:
+  oh_my_zsh: true # Oh My Zsh framework
+  plugins:
+    zsh_autosuggestions: true
+    zsh_syntax_highlighting: true
+    zsh_history_substring_search: true
+    nvm: true
+  nvim: true # Neovim editor with custom config
+
+# Development tools (essential)
+dev_tools:
+  # Version managers
+  pyenv: true # Python version management
+  nvm: true # Node.js version management
+  rust: true # Rust toolchain
+  go: true # Go programming language
+
+  # Package managers and tools
+  hub: true # GitHub CLI
+  yarn: true # Yarn package manager
+  yalc: true # Local package development
+
+  # Build tools
+  gradle: true # Java build tool
+
+# Infrastructure and cloud
+infrastructure:
+  aws_cli: true # AWS Command Line Interface
+  botoenv: true # AWS credential management
+  terraform: true # Infrastructure as code
+
+  # Kubernetes ecosystem
+  kubernetes: true # Full Kubernetes toolset
+  docker: true # Docker Desktop
+  kubectl: true # Kubernetes CLI
+  minikube: true # Local Kubernetes cluster
+  helm: true # Kubernetes package manager
+  k9s: true # Kubernetes CLI tool
+  skaffold: true # Kubernetes development
+  telepresence: true # Kubernetes development
+  lens: true # Kubernetes IDE
+
+# Databases and messaging
+databases:
+  postgresql: true # PostgreSQL database
+  librdkafka: true # Kafka client library
+  conduktor: true # Kafka management UI
+
+# System utilities
+utilities:
+  # File and text processing
+  ripgrep: true # Fast grep alternative
+  git_lfs: true # Git large file storage
+  trash: true # Safe file deletion
+  coreutils: true # GNU core utilities
+  parallel: true # GNU parallel
+  gsed: true # GNU sed
+  watch: true # Command monitoring
+  pv: true # Pipe viewer
+  wget: true # Web downloader
+
+  # Development utilities
+  shellcheck: true # Shell script linting
+  jq: true # JSON processor
+  httpie: true # HTTP client
+  pgcli: true # PostgreSQL CLI
+  tig: true # Git repository browser
+  htop: true # Process viewer
+
+  # Testing and monitoring
+  k6: true # Load testing
+  insomnia: true # API testing
+
+  # Security
+  gnupg: true # GNU Privacy Guard
+  git_secret: true # Git encrypted secrets
+  paperkey: true # Paper key backup
+
+  # Other
+  gh: true # GitHub CLI
+  re2: true # Regular expression library
+  aspell: true # Spell checker
+  bloomrpc: true # gRPC client
+
+# Virtualization
+virtualization:
+  virtualbox: true # Virtual machine hypervisor
+  vagrant: true # Virtual machine management
+  vagrant_manager: true # Vagrant GUI
+
+# IDEs and editors
+ides:
+  intellij_idea_ce: true # IntelliJ IDEA Community Edition
+  vscode: true # Visual Studio Code
+  pycharm_ce: true # PyCharm Community Edition
+  android_studio: true # Android Studio
+
+# Communication
+communication:
+  slack: true # Slack messaging (reinstall via Homebrew)
+
+# Manual installations (documented but not automated)
+manual_installations:
+  # These require manual download and installation
+  docker_desktop: false # Docker Desktop (manual download)
+  obsidian: false # Obsidian notes (manual download)
+  notion: false # Notion (manual download)
+  spotify: false # Spotify (manual download)
+  zoom: false # Zoom (manual download)
+  chrome: false # Google Chrome (manual download)
+  firefox: false # Firefox (manual download)
+
+  # Development tools that need manual setup
+  xcode_full: false # Full XCode (from App Store)
+  android_sdk: false # Android SDK (manual setup)
+  flutter: false # Flutter SDK (manual setup)
+
+  # Cloud tools
+  gcloud: false # Google Cloud SDK (manual download)
+  azure_cli: false # Azure CLI (manual download)
+
+# Configuration options
+options:
+  # Installation behavior
+  interactive: true # Ask for confirmation for each tool
+  dry_run: false # Show what would be installed without doing it
+  force: false # Force reinstallation of existing tools
+
+  # System detection
+  detect_architecture: true # Auto-detect Intel vs Apple Silicon
+  detect_macos_version: true # Auto-detect macOS version
+
+  # Backup and safety
+  backup_existing: true # Backup existing configurations
+  create_symlinks: true # Create symlinks for easy updates
+
+  # Performance
+  parallel_install: false # Install multiple tools in parallel (experimental)
+
+  # Logging and output
+  verbose: false # Verbose output
+  log_file: "" # Log file path (empty = no logging)
+
+# Version specifications
+versions:
+  python: "3.11.3"
+  node_lts: true # Use LTS version
+  go: "1.24"
+  go_exact: "1.24.2"
+  java: "20-open"
+  nvm: "0.39.7"
+
+# Custom repositories and sources
+repositories:
+  nvim_config: "https://github.com/julianmateu/nvim-config.git"
+  homebrew_taps:
+    - "homebrew/services"
+    - "conduktor/brew"
+    - "datawire/blackbird"
+
+# Post-installation tasks
+post_install:
+  - "source ~/.zshrc"
+  - "brew doctor"
+  - "brew cleanup"
+  - "echo 'Installation complete! Please restart your terminal.'"

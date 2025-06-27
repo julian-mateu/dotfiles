@@ -288,12 +288,19 @@ is_macos() {
     [[ "$(uname)" == "Darwin" ]]
 }
 
+# get_architecture - Get system architecture
+# Usage: get_architecture
+# Returns: Architecture string (arm64, x86_64, etc.)
+get_architecture() {
+    uname -m
+}
+
 # is_apple_silicon - Check if running on Apple Silicon
 # Usage: is_apple_silicon
 # Returns: 0 if Apple Silicon, 1 otherwise
 # Note: uname -m returns "arm64" on Apple Silicon Macs
 is_apple_silicon() {
-    [[ "$(uname -m)" == "arm64" ]]
+    [[ "$(get_architecture)" == "arm64" ]]
 }
 
 # is_intel - Check if running on Intel Mac
@@ -301,14 +308,7 @@ is_apple_silicon() {
 # Returns: 0 if Intel, 1 otherwise
 # Note: uname -m returns "x86_64" on Intel Macs
 is_intel() {
-    [[ "$(uname -m)" == "x86_64" ]]
-}
-
-# get_architecture - Get system architecture
-# Usage: get_architecture
-# Returns: Architecture string (arm64, x86_64, etc.)
-get_architecture() {
-    uname -m
+    [[ "$(get_architecture)" == "x86_64" ]]
 }
 
 # get_macos_version - Get macOS version
