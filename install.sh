@@ -46,7 +46,6 @@ main() {
     fi
 
     setup_homebrew
-    setup_homebrew_services
 
     # ZSH
     setup_oh_my_zsh_and_plugins
@@ -180,19 +179,6 @@ setup_homebrew() {
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
 
     eval "$(/opt/homebrew/bin/brew shellenv)"
-
-    mkdir -p "${HOME}/Library/LaunchAgents"
-    ask_for_confirmation "brew automatic updates" "https://docs.brew.sh/Manpage#autoupdate-subcommand-interval-options" \
-        brew autoupdate start --upgrade
-}
-
-# setup_homebrew_services - Enable Homebrew services
-# Usage: setup_homebrew_services
-# Returns: 0 on success, 1 on error
-# Note: Taps the homebrew/services repository for service management
-setup_homebrew_services() {
-    ask_for_confirmation "homebrew services" "https://thoughtbot.com/blog/starting-and-stopping-background-services-with-homebrew" \
-        brew tap homebrew/services
 }
 
 ###############################################################
@@ -366,8 +352,8 @@ setup_go() {
 		# Monzo requires go 1.22, but brew will install the latest, so I need to manually add the old version to the path
 		GOVERSION='${GOVERSION}'
 		GOVERSION_EXACT='${GOVERSION_EXACT}'
-        add_to_path "/opt/homebrew/opt/go@\${GOVERSION}/bin"
-        export GOROOT="/opt/homebrew/Cellar/go/\${GOVERSION_EXACT}/libexec"
+		add_to_path "/opt/homebrew/opt/go@\${GOVERSION}/bin"
+		export GOROOT="/opt/homebrew/Cellar/go/\${GOVERSION_EXACT}/libexec"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
@@ -386,8 +372,8 @@ setup_rust() {
 		###############################################################
 		# => Rust configuration
 		###############################################################
-        # Cargo environment
-        source "${HOME}/.cargo/env"
+		# Cargo environment
+		source "${HOME}/.cargo/env"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
