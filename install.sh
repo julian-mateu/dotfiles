@@ -145,6 +145,7 @@ setup_apt_get() {
     ask_for_confirmation "Update package list" "Update apt package database" sudo apt-get update -y
     
     # Install essential development tools with URLs
+    # shellcheck disable=SC2034
     local apt_packages=(
         "git|https://git-scm.com/"
         "curl|https://curl.se/"

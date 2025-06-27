@@ -44,22 +44,25 @@ CSI="["
 
 # SGR (Select Graphic Rendition) color codes
 # See: https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-# Usage: ${SGR_COLORS[green]} yields 32
-# typeset -A creates an associative array (hash/dictionary) in zsh
-typeset -A SGR_COLORS
-SGR_COLORS=(
-  black 30
-  red 31
-  green 32
-  yellow 33
-  blue 34
-  magenta 35
-  cyan 36
-  white 37
-  reset 0
-  bold 1
-  underline 4
-)
+# Usage: get_sgr_color green yields 32
+# Note: Using function-based approach for bash/zsh compatibility
+get_sgr_color() {
+    local color_name="${1}"
+    case "${color_name}" in
+        black) echo "30" ;;
+        red) echo "31" ;;
+        green) echo "32" ;;
+        yellow) echo "33" ;;
+        blue) echo "34" ;;
+        magenta) echo "35" ;;
+        cyan) echo "36" ;;
+        white) echo "37" ;;
+        reset) echo "0" ;;
+        bold) echo "1" ;;
+        underline) echo "4" ;;
+        *) echo "${color_name}" ;;  # Return as-is if not recognized
+    esac
+}
 
 # Generates an ANSI escape code for the given SGR effects
 # Usage: sgr 32 1  # green + bold
@@ -76,16 +79,15 @@ sgr() {
 # Usage: colorize "hello" green bold
 # Parameters: $1 = text to colorize, $2+ = color names or SGR codes
 # Returns: Colorized text with reset at the end
-# Note: ${SGR_COLORS[$name]:-$name} - if name exists in array, use it; otherwise use name as-is
+# Note: Uses get_sgr_color function for bash/zsh compatibility
 colorize() {
   local text="${1}"; shift
   local codes=()
   for name in "${@}"; do
-    # ${SGR_COLORS[$name]:-$name} - parameter expansion with default value
-    # If $name exists as a key in SGR_COLORS, use its value; otherwise use $name as-is
-    codes+=("${SGR_COLORS[$name]:-$name}")
+    # Use get_sgr_color function to get the SGR code for the color name
+    codes+=("$(get_sgr_color "${name}")")
   done
-  printf "%s%s%s" "$(sgr ${codes[*]})" "${text}" "$(sgr ${SGR_COLORS[reset]})"
+  printf "%s%s%s" "$(sgr ${codes[*]})" "${text}" "$(sgr $(get_sgr_color reset))"
 }
 
 ###############################################################
@@ -273,7 +275,7 @@ fmt_code() {
 # Usage: fmt_underline <text>
 # Note: 24 is the SGR code to turn off underline
 fmt_underline() {
-    printf '%s%s%s\n' "$(sgr ${SGR_COLORS[underline]})" "$*" "$(sgr 24)$(sgr 0)"
+    printf '%s%s%s\n' "$(sgr $(get_sgr_color underline))" "$*" "$(sgr 24)$(sgr 0)"
 }
 
 ###############################################################
