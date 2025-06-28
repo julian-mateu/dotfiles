@@ -365,7 +365,7 @@ setup_go() {
 # Note: Installs Rust via rustup and configures Cargo environment
 setup_rust() {
     ask_for_confirmation "rust" "https://www.rust-lang.org/" \
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)"
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -612,8 +612,8 @@ install_obsidian() {
         
         # Install Obsidian
         sudo hdiutil attach "./${obsidian_dmg}"
-        sudo cp -R "/Volumes/Obsidian/Obsidian.app" "/Applications"
-        sudo hdiutil unmount "/Volumes/Obsidian"
+        sudo cp -R "/Volumes/Obsidian\ ${OBSIDIAN_VERSION}-universal/Obsidian.app" "/Applications"
+        sudo hdiutil unmount "/Volumes/Obsidian\ ${OBSIDIAN_VERSION}-universal"
         rm -rf "./${obsidian_dmg}"
         
         print_success "Obsidian installed successfully"
