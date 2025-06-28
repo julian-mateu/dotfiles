@@ -43,6 +43,8 @@ main() {
     if [[ ! -L "${HOME}/.gitconfig" ]]; then
         create_git_config
     fi
+
+    ssh_config
     copy_files
 }
 
@@ -138,6 +140,65 @@ create_git_config() {
 		    excludesFile = ~/.gitignore
 		    editor = nvim -f
 	EOF
+}
+
+# ssh_config - Create ssh configuration file
+# Usage: ssh_config
+# Returns: 0 on success, 1 on error
+# Note: Prompts for ssh keys if not provided via environment variables
+#       Uses here-document to create the sshconfig file
+ssh_config() {
+    if [[ ! -e "${HOME}/.ssh/config" ]]; then
+        print_info "Creating ${HOME}/.ssh/config"
+        mkdir -p "${HOME}/.ssh"
+        touch "${HOME}/.ssh/config"
+
+        tee "${HOME}/.ssh/config" <<-EOF
+			Host github.com-personal
+			  HostName github.com
+			  AddKeysToAgent yes
+			  UseKeychain yes
+			  IdentityFile ~/.ssh/id_ed25519-personal
+			
+			Host *
+			  AddKeysToAgent yes
+			  UseKeychain yes
+			  IdentityFile ~/.ssh/id_ed25519
+		EOF
+    fi
+
+    if [[ ! -e "${HOME}/.ssh/id_ed25519-personal" ]]; then
+        print_info "Creating ${HOME}/.ssh/id_ed25519-personal"
+        if [[ -z ${GIT_EMAIL_PERSONAL+x} ]]; then
+            read -p "Enter the email for your personal ssh key and press [ENTER]: " -r GIT_EMAIL_PERSONAL
+        fi
+        ssh-keygen -t ed25519 -C "${GIT_EMAIL_PERSONAL}" -f "${HOME}/.ssh/id_ed25519-personal"
+    fi
+
+    if [[ ! -e "${HOME}/.ssh/id_ed25519" ]]; then
+        print_info "Creating ${HOME}/.ssh/id_ed25519"
+        if [[ -z ${GIT_EMAIL_WORK+x} ]]; then
+            read -p "Enter the email for your work ssh key and press [ENTER]: " -r GIT_EMAIL_WORK
+        fi
+        ssh-keygen -t ed25519 -C "${GIT_EMAIL_WORK}" -f "${HOME}/.ssh/id_ed25519"
+    fi
+
+    print_info "Adding the ssh keys to the agent"
+    eval "$(ssh-agent -s)"
+    ssh-add "${HOME}/.ssh/id_ed25519-personal"
+    ssh-add "${HOME}/.ssh/id_ed25519"
+
+    PROFILE_FILE='./zprofile_custom.zsh'
+    IFS='' read -r -d '' lines <<-"EOS" || true
+		###############################################################
+		# => SSH configuration
+		###############################################################
+		eval "$(ssh-agent -s)"
+		ssh-add "${HOME}/.ssh/id_ed25519-personal"
+		ssh-add "${HOME}/.ssh/id_ed25519"
+	EOS
+    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    
 }
 
 ###############################################################
