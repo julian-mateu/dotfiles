@@ -194,8 +194,8 @@ ssh_config() {
 		# => SSH configuration
 		###############################################################
 		print_debug "$(eval "$(ssh-agent -s)")"
-		print_debug "$(ssh-add "${HOME}/.ssh/id_ed25519-personal")"
-		print_debug "$(ssh-add "${HOME}/.ssh/id_ed25519")"
+		print_debug "$(ssh-add "${HOME}/.ssh/id_ed25519-personal" 2>&1)"
+		print_debug "$(ssh-add "${HOME}/.ssh/id_ed25519" 2>&1)"
 	EOS
     append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
 }

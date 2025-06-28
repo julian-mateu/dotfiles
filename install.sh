@@ -687,7 +687,7 @@ install_nerd_fonts() {
     unzip -q "${font_zip}" -d "${font_dir}"
     
     if is_macos; then
-        open -b com.apple.FontBook "${font_dir}/*.*tf"
+        open -b com.apple.FontBook "${font_dir}"/*.*tf
     else
         # Update font cache
         fc-cache -fv
