@@ -1,27 +1,41 @@
 ###############################################################
-# Author: Julian Mateu - julianmateu@gmail.com
+# ZSH Aliases Configuration
+# ========================
+# This file contains all shell aliases organized by category.
+# Aliases are shortcuts that make common commands easier to type.
 #
-# Sections:
-#    -> Misc
-#    -> Filesystem Navigation
-#    -> OSX Filesystem
-#    -> Applications
-#    -> Networking
-#    -> Git
-#    -> Npm
-#    -> Yarn
-#    -> Docker
-#    -> Kubernetes
+# Alias Categories:
+# - Git aliases - shortcuts for common git operations
+# - Directory navigation - quick cd commands and path shortcuts
+# - Development tools - aliases for common dev workflows
+# - System utilities - shortcuts for system commands
+# - Docker/Kubernetes - container and orchestration shortcuts
+# - Network utilities - networking and connectivity commands
+# - File operations - file and directory management shortcuts
+# - Python/Node.js - language-specific development aliases
+#
+# Usage:
+# - Aliases are automatically loaded when zsh starts
+# - Use 'alias' command to see all current aliases
+# - Use 'unalias <name>' to remove a specific alias
+# - Use 'alias <name>="command"' to create new aliases
 #
 ###############################################################
+
+source "${HOME}/.zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    return 1
+}
+print_debug "sourcing aliases.zsh"
+
 
 ###############################################################
 # => Misc
 ###############################################################
+# OSX uses a different sed by default. See https://unix.stackexchange.com/a/131940
 alias sed="gsed"
 alias zshrc="code ~/.zshrc"
 alias update="source ~/.zshrc"
-alias topten="history | commands | sort -rn | head"
 alias dirs="dirs -v | head -10"
 alias usage="du -h -d1"
 alias runp="lsof -i "
@@ -50,8 +64,8 @@ alias deleteDSFiles="find . -name '.DS_Store' -type f -delete"
 # => Applications
 ###############################################################
 alias chrome='open -a "Google Chrome"'
-#alias code='open -a "Visual Studio Code"'
 alias c="code ."
+alias n="nvim ."
 
 ###############################################################
 # => Networking
@@ -66,52 +80,21 @@ alias enableipv6="networksetup -setv6automatic Wi-Fi && networksetup -setv6autom
 ###############################################################
 # => Git
 ###############################################################
-function gc { git commit -m "$@"; }
-alias gcm="git checkout master"
-alias gs="git switch"
-alias gl="git pull"
-alias gf="git fetch"
-alias gfa="git fetch --all"
-alias gf="git fetch origin"
-alias gp="git push"
-alias gd="git diff"
-alias ga="git add ."
-alias gb="git branch"
-alias gsbs="git --no-pager branch"
-alias gbr="git branch remote"
-alias gfr="git remote update"
-alias gbn="git checkout -B "
-alias grf="git reflog"
-alias grh="git reset HEAD~" # last commit
-alias gac="git add . && git commit -a -m "
-alias gsu="git push --set-upstream origin "
 alias glog="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --branches"
+alias lg="lazygit"
 
 ###############################################################
 # => Npm
 ###############################################################
 alias ni="npm install"
-alias nrs="npm run start -s --"
-alias nrb="npm run build -s --"
-alias nrd="npm run dev -s --"
-alias nrt="npm run test -s --"
-alias nrtw="npm run test:watch -s --"
-alias nrv="npm run validate -s --"
+alias nrs="npm run start"
+alias nrb="npm run build"
+alias nrd="npm run dev"
+alias nrt="npm run test"
+alias nrtw="npm run test:watch"
 alias rmn="rm -rf node_modules"
 alias flush-npm="rm -rf node_modules && npm i && echo NPM is done"
 alias npm-update="npx npm-check -u"
-
-###############################################################
-# => Yarn
-###############################################################
-alias yar="yarn run"      # lists all the scripts we have available
-alias yab="yarn build"    # build dist directory for each package
-alias yal="yarn lint:fix" # format source and auto-fix eslint issues
-alias yac="yarn commit"   # open a Q&A prompt to help construct valid commit messages
-alias yas="yarn start"
-alias yasb="yarn storybook:start" # start storybook
-alias yat="yarn test"             # run the unit tests*
-alias yatw="yarn test:watch"      #run the unit tests for files changed on save
 
 ###############################################################
 # => Docker
@@ -126,3 +109,10 @@ alias dockerrm="docker-compose rm --all"
 # => Kubernetes
 ###############################################################
 alias k="kubectl"
+alias kc="kubectl config use-context"
+alias kctx="kubectl config current-context"
+alias kgp="kubectl get pods"
+alias kgn="kubectl get nodes"
+alias kgs="kubectl get services"
+alias kd="kubectl describe"
+

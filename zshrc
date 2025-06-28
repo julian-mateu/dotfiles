@@ -1,5 +1,8 @@
 ###############################################################
-# Author: Julian Mateu - julianmateu@gmail.com
+# Main zsh configuration file
+# ==========================
+# This file sets up the basic zsh environment including Oh My Zsh,
+# plugins, theme, and custom functions.
 #
 # Sections:
 #    -> Environment variables
@@ -11,48 +14,71 @@
 #    -> Key bindings
 #
 ###############################################################
+source "${HOME}/.zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    return 1
+}
+print_debug "sourcing zshrc"
 
 ###############################################################
 # => Environment variables
 ###############################################################
+# zmodload zsh/zprof - Load the zprof module for profiling zsh startup time
+# See: zsh manual "The zsh/zprof Module" section
 zmodload zsh/zprof
 
 export ZSH="${HOME}/.oh-my-zsh"
 
 ZSH_THEME="julianmateu"
+# COMPLETION_WAITING_DOTS - Show dots while waiting for completion
 COMPLETION_WAITING_DOTS="true"
+# HIST_STAMPS - Format for history timestamps (yyyy-mm-dd)
 HIST_STAMPS="yyyy-mm-dd"
 
 ###############################################################
 # => Plugins
 ###############################################################
 plugins=(
+    # git - Defines custom git aliases and functions
+    # See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git
     git
-    bundler
-    dotenv
-    macos
-    rake
+    # zsh-autosuggestions - Suggest commands as you type based on history
+    # See: https://github.com/zsh-users/zsh-autosuggestions
     zsh-autosuggestions
-    last-working-dir
-    web-search
-    cloudfoundry
-    zsh-syntax-highlighting
+    # nvm - Manages NVM, allows lazy loading to avoid slow startup
+    # See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm
+    nvm
+    # zsh-history-substring-search - Better search on the history with arrow keys
+    # See: https://github.com/zsh-users/zsh-history-substring-search
     zsh-history-substring-search
-    history
-    sudo
-    yarn
+    # zsh-syntax-highlighting - Syntax highlighting in the terminal
+    # See: https://github.com/zsh-users/zsh-syntax-highlighting
+    zsh-syntax-highlighting
+    # z - Jump around to commonly used directories
+    # See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/z
     z
 )
+
+# NVM plugin
+# See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm
+# lazy yes - Lazy load the NVM plugin to avoid slow startup
+zstyle ':omz:plugins:nvm' lazy yes
+# autoload yes - Autoload the NVM plugin to avoid slow startup
+zstyle ':omz:plugins:nvm' autoload yes
+# lazy-cmd ... - Define extra commands that will trigger nvm load
+zstyle ':omz:plugins:nvm' lazy-cmd nvim # nvim used for Mason LSPs that require npm
 
 ###############################################################
 # => External files
 ###############################################################
+# Load Oh My Zsh core functionality
 source "${ZSH}/oh-my-zsh.sh"
-[[ -f "${HOME}/.zshrc_custom.zsh" ]] && source "${HOME}/.zshrc_custom.zsh"
 
 ###############################################################
 # => Options
 ###############################################################
+# setopt correct - Enable automatic command correction
+# See: zsh manual "Options" section, "CORRECT" option
 setopt correct
 
 ###############################################################
@@ -60,8 +86,12 @@ setopt correct
 ###############################################################
 function gcpr {
   # Create a PR in github for the current branch
+  # $? is the exit status of the last command
   if [ $? -eq 0 ]; then
+        # git remote -v shows all remotes, awk filters for 'fetch' lines
+        # sed transforms git URLs to web URLs
         github_url=$(git remote -v | awk '/fetch/{print $2}' | sed -Ee 's#(git@|git://)#http://#' -e 's@com:@com/@' -e 's%\.git$%%')
+        # git symbolic-ref HEAD gets the current branch name
         branch_name=$(git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
         pr_url=${github_url}"/compare/master..."${branch_name}
         open ${pr_url}
@@ -71,23 +101,31 @@ function gcpr {
 }
 
 function grebase() {
+  # Rebase current branch on main/master
+  # git branch --show-current shows the current branch name
   PREVIOUS_BRANCH="$(git branch --show-current)"
+  # git_main_branch is an Oh My Zsh function that returns 'main' or 'master'
   git checkout "$(git_main_branch)"
   git pull
   git checkout "${PREVIOUS_BRANCH}"
   git rebase "$(git_main_branch)"
 }
 
-commands() {
-    awk '{a[$4]++}END{for(i in a){print a[i] " " i}}'
-}
-
 bashman() {
+    # Search bash manual for specific function
+    # less -p "^       ${1} " - search for the function definition pattern
     man bash | less -p "^       ${1} "
 }
 
+# Special function that runs before each prompt in zsh
+# See: https://github.com/rothgar/mastering-zsh/blob/master/docs/config/hooks.md
+# precmd is called before each prompt is displayed
 function precmd() {
+  # Print the current kubecontext
+  # which kubectl - check if kubectl is available
   if [[ "$(which kubectl)" ]]; then
+    # kubectl config current-context - get current kubecontext
+    # awk -F'/' '{print $NF}' - split by '/' and print the last field
     if kubectl config current-context >/dev/null 2>/dev/null; then
         current_kubecontext="$(kubectl config current-context | awk -F'/' '{print $NF}')"
     fi
@@ -97,48 +135,85 @@ function precmd() {
 ###############################################################
 # => Aliases
 ###############################################################
-[[ -f "${HOME}/.aliases.zsh" ]] && source "${HOME}/.aliases.zsh"
-[[ -f "${HOME}/.aliases_custom.zsh" ]] && source "${HOME}/.aliases_custom.zsh"
+# Load aliases from external files
+source_if_exists "${HOME}/.aliases.zsh"
+source_if_exists "${HOME}/.aliases_custom.zsh"
 
 ###############################################################
 # => Key bindings
 ###############################################################
-# bind k and j for VI mode
+# bind k and j for VI mode in command mode
+# See: zsh manual "Keymaps" section
 bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
 
 # bind UP and DOWN arrow keys
+# zmodload zsh/terminfo - Load terminal info for key codes
 zmodload zsh/terminfo
-bindkey "${terminfo}[kcuu1]" history-substring-search-up
-bindkey "${terminfo}[kcud1]" history-substring-search-down
+# ${terminfo[kcuu1]} and ${terminfo[kcud1]} are terminal-specific up/down arrow codes
+bindkey "${terminfo[kcuu1]}" history-substring-search-up
+bindkey "${terminfo[kcud1]}" history-substring-search-down
 
 # Enable vi mode:
-# bindkey -v
+# bindkey -v - Enable vi keymap
+# set -o vi - Alternative way to enable vi mode
 set -o vi
-EDITOR=vim
+
+# Set the editor to nvim
+export EDITOR=nvim
+export VISUAL=nvim
 
 # Edit current command in Vim
-# bindkey '^xe' edit-command-line
+# bindkey '^xe' edit-command-line - Alternative binding
+# zle -N edit-command-line - Define the edit-command-line widget
 zle -N edit-command-line
+# bindkey -M vicmd v edit-command-line - Bind 'v' in command mode to edit command line
 bindkey -M vicmd v edit-command-line
 
 # perform parameter expansion/command substitution in prompt
+# setopt PROMPT_SUBST - Enable prompt substitution
+# See: zsh manual "Options" section, "PROMPT_SUBST" option
 setopt PROMPT_SUBST
 
+# Vim mode indicator variables
 vim_ins_mode="[INS]"
 vim_cmd_mode="[CMD]"
 vim_mode=$vim_ins_mode
 
+# zle-keymap-select - Called when keymap changes (insert/command mode)
+# See: zsh manual "Zle Widgets" section
 function zle-keymap-select {
+  # ${KEYMAP/vicmd/${vim_cmd_mode}} - substitute 'vicmd' with command mode indicator
+  # ${KEYMAP/(main|viins)/${vim_ins_mode}} - substitute 'main' or 'viins' with insert mode indicator
   vim_mode="${${KEYMAP/vicmd/${vim_cmd_mode}}/(main|viins)/${vim_ins_mode}}"
+  # zle reset-prompt - Redraw the prompt
   zle reset-prompt
 }
 zle -N zle-keymap-select
 
+# zle-line-finish - Called when a line is finished (Enter pressed)
 function zle-line-finish {
   vim_mode=$vim_ins_mode
 }
 zle -N zle-line-finish
 
-# PROMPT="${PROMPT}"$'${vim_mode}\n'
-PROMPT="${PROMPT}"$'\n'
+# zle-line-init - Called when a new line is started
+# This ensures real-time updates of vim mode indicator
+function zle-line-init {
+  vim_mode=$vim_ins_mode
+  zle reset-prompt
+}
+zle -N zle-line-init
+
+# Final prompt with vim mode indicator and newline
+# The vim_mode variable will be updated by the zle widgets above
+PROMPT="${PROMPT}"$'${vim_mode}\n'
+
+# Load custom zshrc if it exists
+source_if_exists "${HOME}/.zshrc_custom.zsh"
+
+# zprof - Print zsh startup profile
+# See: zsh manual "The zsh/zprof Module" section
+# Uncomment this line to print zsh startup profile:
+# zprof
+

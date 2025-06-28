@@ -1,12 +1,19 @@
+source "${HOME}/.zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    return 1
+}
+print_debug "sourcing zprofile"
+
 ###############################################################
 # => Environment variables
 ###############################################################
+add_to_path "${HOME}/bin"
 
-export PATH="${HOME}/bin:${PATH}"
+# Ignore duplicate entries in the history
 export HISTCONTROL="ignoreboth"
 
 ###############################################################
 # => Configurations for tools
 ###############################################################
+source_if_exists "${HOME}/.zprofile_custom.zsh"
 
-[[ -f "${HOME}/.zprofile_custom.zsh" ]] && source "${HOME}/.zprofile_custom.zsh"
