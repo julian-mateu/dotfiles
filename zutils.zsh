@@ -122,29 +122,31 @@ source_if_exists() {
 #   $1 - Lines to append (can be multiline)
 #   $2 - Target file path
 # Returns: 0 on success, 2 on parameter error
-# Note: This function preserves existing content and avoids duplicates
+# Note: This function preserves existing content and checks for entire blocks
 #       Uses process substitution < <(command) to feed command output to while loop
+#       Checks if the entire block exists before adding to prevent missing structural elements
 append_lines_to_file_if_not_there() {
-    # TODO: there's a bug here where the same line won't be added but it actually might make sense ( e.g. a closing brace in a single line, or duplicated lines for comment banners).
     if [[ "${#}" -ne 2 ]]; then
         print_error "append_lines_to_file_if_not_there: Illegal number of parameters ${0}: got ${#} but expected 2: ${*}"
         return 2
     fi
     local lines="${1}"
     local file="${2}"
-    # [[ ! -f "${file}" ]] && touch "${file}" - if file doesn't exist, create it
-    # && is short-circuit AND - second command only runs if first succeeds
+    
+    # Create file if it doesn't exist
     [[ ! -f "${file}" ]] && touch "${file}"
-    # Process substitution < <(echo "${lines}") feeds the output of echo to the while loop
-    while IFS= read -r line; do
-        if [[ "${line}" == "" ]]; then
-            echo "${line}" >>"${file}"
-        else
-            # grep -qxF: -q=quiet, -x=exact match, -F=fixed string (no regex)
-            # || is short-circuit OR - second command only runs if first fails
-            grep -qxF "${line}" "${file}" || echo "${line}" >>"${file}"
-        fi
-    done < <(echo "${lines}")
+    
+    # Check if the entire block already exists in the file
+    # Use grep with -z to treat the entire file as one string for multiline matching
+    # -q=quiet, -F=fixed string (no regex), -z=null-terminated strings
+    if grep -qzF "${lines}" "${file}"; then
+        print_info "Block already exists in ${file}, skipping"
+        return 0
+    fi
+    
+    # If block doesn't exist, append it
+    echo "${lines}" >> "${file}"
+    print_info "Added block to ${file}"
 }
 
 # backup_file - Create backup of existing file
@@ -213,7 +215,6 @@ create_symlink() {
 # Returns: 0 if confirmed and executed, 2 on parameter error
 # Note: Uses regex matching to validate user input
 ask_for_confirmation() {
-    # TODO: there's a bug here, any key that's not y will be treated as n. It should only accept those 2 and re-prompt (only the last line).
     if [[ "${#}" -le 2 ]]; then
         print_error "ask_for_confirmation: Illegal number of parameters ${0}: got ${#} but expected at least 3: ${*}"
         return 2
@@ -226,15 +227,22 @@ ask_for_confirmation() {
     print_info "Trying to install ${description}..."
     echo -e " This will run: $(colorize "$(fmt_code "${command_args[*]}")" yellow)"
     echo -e " See $(fmt_underline "${info_url}")"
-    print_info "Do you want to install ${description}? [y/n]" # TODO: this should be a question, not a command.
-    read -p "" -n 1 -r REPLY
-    echo
-    # [[ "${REPLY}" =~ ^[Yy]$ ]] - regex match for y or Y
-    # =~ is the regex matching operator in bash/zsh
-    # ^[Yy]$ matches exactly one character that is either Y or y
-    if [[ "${REPLY}" =~ ^[Yy]$ ]]; then
-        "${command_args[@]}"
-    fi
+    
+    # Loop until valid input is received
+    while true; do
+        print_info "Do you want to install ${description}? [y/n]"
+        read -p "" -n 1 -r REPLY
+        echo
+        if [[ "${REPLY}" =~ ^[Yy]$ ]]; then
+            "${command_args[@]}"
+            break
+        elif [[ "${REPLY}" =~ ^[Nn]$ ]]; then
+            print_info "Skipping ${description}"
+            break
+        else
+            print_error "Invalid input. Please enter 'y' or 'n'."
+        fi
+    done
 }
 
 ###############################################################

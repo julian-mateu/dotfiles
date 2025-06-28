@@ -21,6 +21,8 @@ NVM_VERSION='0.40.3'
 GOVERSION='1.24'
 GOVERSION_EXACT='1.24.2'
 OBSIDIAN_VERSION='1.8.10'
+ZOOM_VERSION='5.17.0.1341'
+SPOTIFY_VERSION='8.8.0.718'
 
 NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
@@ -86,7 +88,9 @@ main() {
     # Obsidian
     ask_for_confirmation "Obsidian" "https://obsidian.md/" install_obsidian
 
-    ## TODO: zoom, spotify.
+    # Additional Applications
+    ask_for_confirmation "Zoom" "https://zoom.us/" install_zoom
+    ask_for_confirmation "Spotify" "https://www.spotify.com/" install_spotify
 
     # Nerd Fonts
     ask_for_confirmation "Nerd Fonts" "https://www.nerdfonts.com/" install_nerd_fonts
@@ -641,6 +645,26 @@ install_obsidian() {
         
         print_success "Obsidian installed successfully"
     fi
+}
+
+# install_zoom - Install Zoom
+# Usage: install_zoom
+# Returns: 0 on success, 1 on error
+# Note: Installs Zoom via Homebrew Cask
+install_zoom() {
+    print_info "Installing Zoom"
+    brew install --cask zoom
+    print_success "Zoom installed successfully"
+}
+
+# install_spotify - Install Spotify
+# Usage: install_spotify
+# Returns: 0 on success, 1 on error
+# Note: Installs Spotify via Homebrew Cask
+install_spotify() {
+    print_info "Installing Spotify"
+    brew install --cask spotify
+    print_success "Spotify installed successfully"
 }
 
 # install_nerd_fonts - Install Nerd Fonts
