@@ -645,33 +645,25 @@ install_nerd_fonts() {
 
     print_info "Installing Nerd Fonts"
 
-    if is_macos; then
-        # Install via Homebrew Cask on macOS
-        brew tap homebrew/cask-fonts
-        brew install --cask "font-$(echo ${font} | tr '[:upper:]' '[:lower:]')-nerd-font"
-        print_success "Nerd Fonts installed successfully via Homebrew"
-        
-    else
-        # Install via direct download on Linux
-        local font_dir="${HOME}/.local/share/fonts"
-        local font_zip="${font}.zip"
-        
-        # Create font directory if it doesn't exist
-        mkdir -p "${font_dir}"
-        
-        # Download and install font
-        curl -L "https://github.com/ryanoasis/nerd-fonts/releases/download/v${version}/${font}.zip" -o "${font_zip}"
-        unzip -q "${font_zip}" -d "${font_dir}"
-        
-        # Update font cache
-        fc-cache -fv
-        
-        # Clean up
-        rm -rf "${font_zip}"
-        
-        print_success "Nerd Fonts installed successfully"
-        print_info "Font cache updated. You may need to restart your terminal or applications to see the new fonts."
-    fi
+    # Install via direct download on Linux
+    local font_dir="${HOME}/.local/share/fonts"
+    local font_zip="${font}.zip"
+    
+    # Create font directory if it doesn't exist
+    mkdir -p "${font_dir}"
+    
+    # Download and install font
+    curl -L "https://github.com/ryanoasis/nerd-fonts/releases/download/v${version}/${font}.zip" -o "${font_zip}"
+    unzip -q "${font_zip}" -d "${font_dir}"
+    
+    # Update font cache
+    fc-cache -fv
+    
+    # Clean up
+    rm -rf "${font_zip}"
+    
+    print_success "Nerd Fonts installed successfully"
+    print_info "Font cache updated. You may need to restart your terminal or applications to see the new fonts."
 }
 
 # Script execution guard

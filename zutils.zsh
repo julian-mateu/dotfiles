@@ -125,6 +125,7 @@ source_if_exists() {
 # Note: This function preserves existing content and avoids duplicates
 #       Uses process substitution < <(command) to feed command output to while loop
 append_lines_to_file_if_not_there() {
+    # TODO: there's a bug here where the same line won't be added but it actually might make sense ( e.g. a closing brace in a single line, or duplicated lines for comment banners).
     if [[ "${#}" -ne 2 ]]; then
         print_error "append_lines_to_file_if_not_there: Illegal number of parameters ${0}: got ${#} but expected 2: ${*}"
         return 2
