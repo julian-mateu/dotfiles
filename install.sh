@@ -86,12 +86,14 @@ main() {
     # Obsidian
     ask_for_confirmation "Obsidian" "https://obsidian.md/" install_obsidian
 
+    ## TODO: zoom, spotify.
+
     # Nerd Fonts
     ask_for_confirmation "Nerd Fonts" "https://www.nerdfonts.com/" install_nerd_fonts
 
     # Terminal Emulator
     if is_macos; then
-        ask_for_confirmation "iTerm2" "https://iterm2.com/" brew install --cask iterm2
+        ask_for_confirmation "iTerm2" "https://iterm2.com/" install_iterm2
     fi
 
     # shellcheck disable=SC2016
@@ -674,6 +676,32 @@ install_nerd_fonts() {
     
     print_success "Nerd Fonts installed successfully"
     print_info "Font cache updated. You may need to restart your terminal or applications to see the new fonts."
+}
+
+# install_iterm2 - Install iTerm2
+# Usage: install_iterm2
+# Returns: 0 on success, 1 on error
+# Note: Installs iTerm2 via direct download for macOS and Linux
+install_iterm2() {
+    print_info "Installing iTerm2"
+    ask_for_confirmation "iTerm2" "https://iterm2.com/" brew install --cask iterm2
+    ask_for_confirmation "iTerm2 shell integration" "https://iterm2.com/shell_integration.html" curl -L https://iterm2.com/shell_integration/zsh -o "${HOME}/.iterm2_shell_integration.zsh"
+
+    if [[ -f "${HOME}/.iterm2_shell_integration.zsh" ]]; then
+        print_info "Sourcing the iTerm2 shell integration"
+        # Note that indentation with tabs is needed here!
+        IFS='' read -r -d '' lines <<-"EOS" || true
+			###############################################################
+			# => iTerm2 configuration
+			###############################################################
+			source_if_exists "${HOME}/.iterm2_shell_integration.zsh"
+		EOS
+        append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    fi
+
+    ask_for_confirmation "iTerm2 profile" "" cp "${0%/*}/iterm2/iterm2_profile.json" "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/iterm2_profile.json"
+
+    print_info "You will need to make the profile the default in the preferences."
 }
 
 # Script execution guard

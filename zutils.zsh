@@ -213,6 +213,7 @@ create_symlink() {
 # Returns: 0 if confirmed and executed, 2 on parameter error
 # Note: Uses regex matching to validate user input
 ask_for_confirmation() {
+    # TODO: there's a bug here, any key that's not y will be treated as n. It should only accept those 2 and re-prompt (only the last line).
     if [[ "${#}" -le 2 ]]; then
         print_error "ask_for_confirmation: Illegal number of parameters ${0}: got ${#} but expected at least 3: ${*}"
         return 2
@@ -222,9 +223,10 @@ ask_for_confirmation() {
     shift 2
     local command_args=("${@}")
     echo
-    print_info "Do you want to install ${description}? [y/n]"
+    print_info "Trying to install ${description}..."
     echo -e " This will run: $(colorize "$(fmt_code "${command_args[*]}")" yellow)"
     echo -e " See $(fmt_underline "${info_url}")"
+    print_info "Do you want to install ${description}? [y/n]" # TODO: this should be a question, not a command.
     read -p "" -n 1 -r REPLY
     echo
     # [[ "${REPLY}" =~ ^[Yy]$ ]] - regex match for y or Y
