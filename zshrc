@@ -37,8 +37,6 @@ HIST_STAMPS="yyyy-mm-dd"
 ###############################################################
 # => Plugins
 ###############################################################
-# Lazy load the NVM plugin to avoid slow startup
-export NVM_LAZY_LOAD=true
 plugins=(
     # git - Defines custom git aliases and functions
     # See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git
@@ -59,12 +57,15 @@ plugins=(
     # See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/z
     z
 )
-# zstyle ':omz:plugins:nvm' lazy yes - Lazy load the NVM plugin to avoid slow startup
-# See: https://github.com/lukechilds/zsh-nvm#lazy-loading
+
+# NVM plugin
+# See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm
+# lazy yes - Lazy load the NVM plugin to avoid slow startup
 zstyle ':omz:plugins:nvm' lazy yes
-# zstyle ':omz:plugins:nvm' autoload yes - Autoload the NVM plugin to avoid slow startup
-# See: https://github.com/lukechilds/zsh-nvm#autoloading
+# autoload yes - Autoload the NVM plugin to avoid slow startup
 zstyle ':omz:plugins:nvm' autoload yes
+# lazy-cmd ... - Define extra commands that will trigger nvm load
+zstyle ':omz:plugins:nvm' lazy-cmd nvim # nvim used for Mason LSPs that require npm
 
 ###############################################################
 # => External files

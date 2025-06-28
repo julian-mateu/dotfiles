@@ -361,7 +361,7 @@ setup_go() {
 		# => Go configuration
 		###############################################################
 		# Go version management
-		# Monzo requires go 1.22, but brew will install the latest, so I need to manually add the old version to the path
+		# You might require a specific version, but brew will install the latest, so you need to manually add the old version to the path
 		GOVERSION='${GOVERSION}'
 		GOVERSION_EXACT='${GOVERSION_EXACT}'
 		add_to_path "/opt/homebrew/opt/go@\${GOVERSION}/bin"
@@ -385,7 +385,7 @@ setup_rust() {
 		# => Rust configuration
 		###############################################################
 		# Cargo environment
-		source "${HOME}/.cargo/env"
+		source_if_exists "${HOME}/.cargo/env"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"

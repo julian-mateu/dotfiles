@@ -74,6 +74,7 @@ alias enableipv6="networksetup -setv6automatic Wi-Fi && networksetup -setv6autom
 # => Git
 ###############################################################
 alias glog="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --branches"
+alias lg="lazygit"
 
 ###############################################################
 # => Npm
