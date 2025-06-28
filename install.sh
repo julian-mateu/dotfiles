@@ -89,6 +89,11 @@ main() {
     # Nerd Fonts
     ask_for_confirmation "Nerd Fonts" "https://www.nerdfonts.com/" install_nerd_fonts
 
+    # Terminal Emulator
+    if is_macos; then
+        ask_for_confirmation "iTerm2" "https://iterm2.com/" brew install --cask iterm2
+    fi
+
     # shellcheck disable=SC2016
     echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
 }
@@ -244,6 +249,7 @@ setup_useful_tools() {
         "jq|https://stedolan.github.io/jq/"
         "gnupg|https://gnupg.org/"
         "tree|https://formulae.brew.sh/formula/tree"
+        "lazygit|https://github.com/jesseduffield/lazygit"
     )
     
     for tool_info in "${brew_tools[@]}"; do
@@ -656,8 +662,12 @@ install_nerd_fonts() {
     curl -L "https://github.com/ryanoasis/nerd-fonts/releases/download/v${version}/${font}.zip" -o "${font_zip}"
     unzip -q "${font_zip}" -d "${font_dir}"
     
-    # Update font cache
-    fc-cache -fv
+    if is_macos; then
+        open -b com.apple.FontBook "${font_dir}/*.*tf"
+    else
+        # Update font cache
+        fc-cache -fv
+    fi
     
     # Clean up
     rm -rf "${font_zip}"
