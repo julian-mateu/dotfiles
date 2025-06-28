@@ -22,6 +22,13 @@
 #
 ###############################################################
 
+source "${HOME}/.zutils.zsh" || { 
+    echo "Failed to load zutils.zsh" >&2
+    return 1
+}
+print_debug "sourcing aliases.zsh"
+
+
 ###############################################################
 # => Misc
 ###############################################################
@@ -108,3 +115,4 @@ alias kgp="kubectl get pods"
 alias kgn="kubectl get nodes"
 alias kgs="kubectl get services"
 alias kd="kubectl describe"
+

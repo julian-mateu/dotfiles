@@ -2,6 +2,8 @@
 
 A comprehensive collection of dotfiles and configuration scripts for setting up a modern macOS development environment. This repository provides a streamlined way to configure your shell, development tools, and system preferences.
 
+My nvim configuration is in [the `nvim-config` repo](https://github.com/julianmateu/nvim-config)
+
 ## 🚀 Features
 
 ### Core Configuration

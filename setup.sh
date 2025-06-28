@@ -16,6 +16,7 @@ source "${0%/*}/zutils.zsh" || {
 
 # Global variables
 FORCE_FLAG=""
+ZPROFILE_CUSTOM_FILE='./zprofile_custom.zsh'
 
 ###############################################################
 # => Main function
@@ -188,17 +189,15 @@ ssh_config() {
     ssh-add "${HOME}/.ssh/id_ed25519-personal"
     ssh-add "${HOME}/.ssh/id_ed25519"
 
-    PROFILE_FILE='./zprofile_custom.zsh'
     IFS='' read -r -d '' lines <<-"EOS" || true
 		###############################################################
 		# => SSH configuration
 		###############################################################
-		eval "$(ssh-agent -s)"
-		ssh-add "${HOME}/.ssh/id_ed25519-personal"
-		ssh-add "${HOME}/.ssh/id_ed25519"
+		print_debug "$(eval "$(ssh-agent -s)")"
+		print_debug "$(ssh-add "${HOME}/.ssh/id_ed25519-personal")"
+		print_debug "$(ssh-add "${HOME}/.ssh/id_ed25519")"
 	EOS
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
-    
+    append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
 }
 
 ###############################################################

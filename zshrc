@@ -18,6 +18,7 @@ source "${HOME}/.zutils.zsh" || {
     echo "Failed to load zutils.zsh" >&2
     return 1
 }
+print_debug "sourcing zshrc"
 
 ###############################################################
 # => Environment variables
@@ -72,8 +73,6 @@ zstyle ':omz:plugins:nvm' lazy-cmd nvim # nvim used for Mason LSPs that require 
 ###############################################################
 # Load Oh My Zsh core functionality
 source "${ZSH}/oh-my-zsh.sh"
-# Load custom zshrc if it exists
-source_if_exists "${HOME}/.zshrc_custom.zsh"
 
 ###############################################################
 # => Options
@@ -210,7 +209,11 @@ zle -N zle-line-init
 # The vim_mode variable will be updated by the zle widgets above
 PROMPT="${PROMPT}"$'${vim_mode}\n'
 
+# Load custom zshrc if it exists
+source_if_exists "${HOME}/.zshrc_custom.zsh"
+
 # zprof - Print zsh startup profile
 # See: zsh manual "The zsh/zprof Module" section
 # Uncomment this line to print zsh startup profile:
 # zprof
+

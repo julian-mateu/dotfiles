@@ -13,16 +13,18 @@ source "${0%/*}/zutils.zsh" || {
 }
 
 # Configuration variables
-PROFILE_FILE='./zprofile_custom.zsh'
+ZPROFILE_CUSTOM_FILE='./zprofile_custom.zsh'
+ZSHENV_CUSTOM_FILE='./zshenv_custom.zsh'
+ZSHRC_CUSTOM_FILE='./zshrc_custom.zsh'
 
 PYTHON_VERSION='3.13.1'
-SDK_JAVA_VERSION='20-open'
+SDK_JAVA_VERSION='24-open'
 NVM_VERSION='0.40.3'
 GOVERSION='1.24'
 GOVERSION_EXACT='1.24.2'
 OBSIDIAN_VERSION='1.8.10'
-ZOOM_VERSION='5.17.0.1341'
-SPOTIFY_VERSION='8.8.0.718'
+DISPLAYLINK_DATE="2025-06"
+DISPLAYLINK_VERSION="1.12.4"
 
 NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
@@ -36,7 +38,7 @@ NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 # Returns: 0 on success, 1 on error
 # Note: Orchestrates the entire installation process for development tools
 main() {
-    init_profile_file
+    init_custom_files
 
     # Check OS and install dependencies
     if is_macos; then
@@ -98,6 +100,7 @@ main() {
     # Terminal Emulator
     if is_macos; then
         ask_for_confirmation "iTerm2" "https://iterm2.com/" install_iterm2
+        ask_for_confirmation "DisplayLink Manager" "https://www.synaptics.com/products/displaylink-graphics/downloads/macos" install_displaylink
     fi
 
     # shellcheck disable=SC2016
@@ -105,15 +108,15 @@ main() {
 }
 
 ###############################################################
-# => Profile file initialization
+# => Custom file initialization
 ###############################################################
 
-# init_profile_file - Initialize the profile file with safeload pattern
-# Usage: init_profile_file
+# init_custom_files - Initialize the custom dotfiles .z{shenv,shrc,profile}_custom.zsh with safeload pattern
+# Usage: init_custom_files
 # Returns: 0 on success, 1 on error
-# Note: Creates zprofile_custom.zsh with safeload pattern for utility functions
+# Note: Creates z{shenv,shrc,profile}_custom.zsh with safeload pattern for utility functions
 #       Uses here-document with tab indentation for proper heredoc formatting
-init_profile_file() {
+init_custom_files() {
     # Note that indentation with tabs is needed here!
     # The EOS is a here-document that ends with the string EOS. Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -128,7 +131,19 @@ init_profile_file() {
 		}
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
+
+    for file in "${ZPROFILE_CUSTOM_FILE}" "${ZSHENV_CUSTOM_FILE}" "${ZSHRC_CUSTOM_FILE}"; do
+      # ${parameter%%word} is a parameter expansion that removes the trailing "word" from the parameter.
+      local file_basename
+      file_basename="${file%%.zsh}"
+      IFS='' read -r -d '' lines <<-EOS || true
+			print_debug "sourcing ${file_basename}"
+		EOS
+      append_lines_to_file_if_not_there "${lines}" "${file}"
+    done
 }
 
 ###############################################################
@@ -187,7 +202,7 @@ setup_homebrew() {
 		eval "$(/opt/homebrew/bin/brew shellenv)"
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 
     eval "$(/opt/homebrew/bin/brew shellenv)"
 }
@@ -294,7 +309,7 @@ install_hub() {
 		eval "$(hub alias -s)"
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
 # install_python - Install Python with pyenv and configure environment
@@ -331,7 +346,7 @@ install_python() {
 		alias brew="brew_wrapper"
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 
     pyenv install "${PYTHON_VERSION}"
     pyenv global "${PYTHON_VERSION}"
@@ -368,7 +383,7 @@ setup_go() {
 		export GOROOT="/opt/homebrew/Cellar/go/\${GOVERSION_EXACT}/libexec"
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
 # setup_rust - Install Rust and configure Cargo environment
@@ -388,7 +403,7 @@ setup_rust() {
 		source_if_exists "${HOME}/.cargo/env"
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
 ###############################################################
@@ -415,8 +430,9 @@ install_nvm() {
 			[ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
 			[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 		EOS
-
-        append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+        
+        # Appending to the profile file, as this would be too slow on every shell
+        append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
     fi
 }
 
@@ -450,7 +466,7 @@ install_sdk_man() {
 		[[ -s "${HOME}/.sdkman/bin/sdkman-init.sh" ]] && source "${HOME}/.sdkman/bin/sdkman-init.sh"
 	EOS
 
-    append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
 # setup_java_openjdk - Install Java OpenJDK via SDKMAN
@@ -459,8 +475,9 @@ install_sdk_man() {
 # Note: Installs Java OpenJDK using SDKMAN (may require manual execution in separate terminal)
 setup_java_openjdk() {
     print_warning "sdk might not work inside a script so you might need to run the following command in a separate terminal..."
+    # Using zsh to ensure that the sdk command is defined.
     ask_for_confirmation "java_20_openjdk" "https://sdkman.io/usage" \
-        sdk install java "${SDK_JAVA_VERSION}"
+        /bin/zsh -c "sdk install java ${SDK_JAVA_VERSION}"
 }
 
 ###############################################################
@@ -720,12 +737,29 @@ install_iterm2() {
 			###############################################################
 			source_if_exists "${HOME}/.iterm2_shell_integration.zsh"
 		EOS
-        append_lines_to_file_if_not_there "${lines}" "${PROFILE_FILE}"
+        append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
     fi
 
     ask_for_confirmation "iTerm2 profile" "" cp "${0%/*}/iterm2/iterm2_profile.json" "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/iterm2_profile.json"
 
     print_info "You will need to make the profile the default in the preferences."
+}
+
+install_displaylink() {
+  print_info "Installing DisplayLink Manager..."
+  local displaylink_file="./display-link.zip"
+  curl -L -o "${displaylink_file}" "https://www.synaptics.com/sites/default/files/exe_files/${DISPLAYLINK_DATE}/DisplayLink%20Manager%20Graphics%20Connectivity${DISPLAYLINK_VERSION}-EXE.zip"
+
+  unzip "${displaylink_file}"
+  local display_link_pkg
+  display_link_pkg="$(ls DisplayLinkManager-*.pkg)"
+
+  sudo installer -verbose -pkg "${display_link_pkg}" -target /
+
+  rm -rf "${display_link_pkg}"
+  rm -rf "${displaylink_file}"
+
+  print_success "DisplayLink Manager successfully installed"
 }
 
 # Script execution guard

@@ -17,6 +17,12 @@
 # See: bash manual "Parameter Expansion" section
 ###############################################################
 
+# This pattern would avoid multiple imports. However this might be required for scripts to work, so it's commented.
+#[[ "${ZUTILS_SOURCED+x}" ]] && return 0
+#export ZUTILS_SOURCED=true
+
+# If this variable is set, the print_debug function will print output.
+# export PRINT_DEBUG_ZSH=true
 
 ###############################################################
 # ANSI Escape Codes and SGR Color Utilities
@@ -274,6 +280,16 @@ print_info() {
     echo -e "$(colorize "$*" blue)"
 }
 
+# print_debug - Print the message only if the DEBUG env variable is set
+# Usage: print_debug <message>
+print_debug() {
+  # ${var+x} is a parameter expansion which evaluates to nothing if var is unset,
+  # and substitutes the string x otherwise.
+  if [[ "${PRINT_DEBUG_ZSH+x}" ]]; then
+    print_info "$*"
+  fi
+}
+
 # fmt_code - Format text as code with colors (gray)
 # Usage: fmt_code <text>
 # Note: 38;5;247 is a gray color in 256-color mode
@@ -396,7 +412,7 @@ add_to_path() {
     # The colons ensure we match complete path components, not partial matches
     if [[ ":${PATH}:" != *":${directory}:"* ]]; then
         export PATH="${directory}:${PATH}"
-        print_info "Added ${directory} to PATH"
+        print_debug "Added ${directory} to PATH"
     fi
     return 0
 }
@@ -457,3 +473,5 @@ install_packages_with_urls() {
         ask_for_confirmation "${package_name}" "${package_url}" "${cmd_parts[@]}"
     done
 } 
+
+print_debug "sourcing zutils.zsh"
