@@ -178,6 +178,8 @@ setup_apt_get() {
         "curl|https://curl.se/"
         "wget|https://www.gnu.org/software/wget/"
         "build-essential|https://packages.ubuntu.com/search?suite=all&section=all&arch=amd64&keywords=build-essential"
+        "procps|https://launchpad.net/ubuntu/+source/procps"
+        "file|https://launchpad.net/ubuntu/+source/file"
         "zsh|https://www.zsh.org/"
         "unzip|https://packages.ubuntu.com/search?keywords=unzip"
     )
@@ -190,18 +192,38 @@ setup_apt_get() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Homebrew, configures shell environment, and sets up automatic updates
 setup_homebrew() {
-    # shellcheck disable=SC2016
-    ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
-    # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
-    IFS='' read -r -d '' lines <<-"EOS" || true
-		###############################################################
-		# => Homebrew configuration
-		###############################################################
-		# Initialize Homebrew environment
-		# See: https://brew.sh/
-		eval "$(/opt/homebrew/bin/brew shellenv)"
-	EOS
+    if is_macos; then
+        # shellcheck disable=SC2016
+        ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+        # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
+        IFS='' read -r -d '' lines <<-"EOS" || true
+				###############################################################
+				# => Homebrew configuration
+				###############################################################
+				# Initialize Homebrew environment
+				# See: https://brew.sh/
+				eval "$(/opt/homebrew/bin/brew shellenv)"
+			EOS
+    else
+        sudo mkdir -p /home/linuxbrew/.linuxbrew && sudo git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew
+        sudo chown -R ubuntu /home/linuxbrew/.linuxbrew
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        brew update --force --quiet
+        chmod -R go-w "$(brew --prefix)/share/zsh"
+    
+        # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
+        IFS='' read -r -d '' lines <<-"EOS" || true
+				###############################################################
+				# => Homebrew configuration
+				###############################################################
+				# Initialize Homebrew environment
+				# See: https://brew.sh/
+				eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+			EOS
+    fi
+
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 
@@ -224,13 +246,13 @@ setup_oh_my_zsh_and_plugins() {
         git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
 
     ask_for_confirmation "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md" \
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
 
-    ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" \
+    ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" 
         git clone https://github.com/zsh-users/zsh-history-substring-search "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-history-substring-search"
 
     ask_for_confirmation "zsh nvm plugin" "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm" \
-        git clone https://github.com/ohmyzsh/ohmyzsh.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm"
+        git clone https://github.com/ohmyzsh/ohmyzsh "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm"
 }
 
 ###############################################################
@@ -511,7 +533,7 @@ install_kubernetes() {
 # Returns: 0 on success, 1 on error
 # Note: Downloads and installs Docker Desktop for macOS and Linux based on system architecture
 install_docker() {
-    print_info "Installing Docker Desktop"
+    print_info "Installing Docker"
 
     if is_macos; then
         print_info "Installing Docker Desktop for macOS"
@@ -535,23 +557,29 @@ install_docker() {
         print_success "Docker Desktop installed successfully"
         
     else
-        print_info "Installing Docker Desktop for Linux"
-        local architecture
-        architecture="$(get_architecture)"
-        local docker_deb="docker-desktop-${architecture}.deb"
-        
-        # Download Docker Desktop for Linux
-        curl -L "https://desktop.docker.com/linux/main/${architecture}/docker-desktop-${architecture}.deb" -o "${docker_deb}"
-        
-        # Install dependencies
-        sudo apt-get update
-        sudo apt-get install -y "./${docker_deb}"
-        
-        # Clean up
-        rm -rf "${docker_deb}"
-        
-        print_success "Docker Desktop installed successfully"
-        print_warning "You may need to log out and back in for Docker Desktop to work properly"
+        print_info "Installing Docker Engine for Linux"
+
+        for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove -y "${pkg}"; done
+
+        # Add Docker's official GPG key:
+        sudo apt-get update -y
+        sudo apt-get install -y ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+        # Add the repository to Apt sources:
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+          $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update -y
+
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+        sudo usermod -aG docker "${USER}"
+
+        print_info "Docker Engine installed successfully"
     fi
 }
 
@@ -591,24 +619,19 @@ install_vscode() {
         # Install VS Code
         sudo unzip -q "${vscode_zip}" -d "/Applications/"
         rm -rf "${vscode_zip}"
-        
-        print_success "Visual Studio Code installed successfully"
-        
+    
     else
-        local architecture
-        architecture="$(get_architecture)"
-        local vscode_deb="vscode.deb"
-        
-        # Download VS Code for Linux
-        curl -L "https://code.visualstudio.com/sha/download?build=stable&os=linux-${architecture}" -o "${vscode_deb}"
-        
-        # Install VS Code
-        sudo dpkg -i "${vscode_deb}"
-        sudo apt-get install -f -y  # Fix any dependency issues
-        rm -rf "${vscode_deb}"
-        
-        print_success "Visual Studio Code installed successfully"
+        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+        sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+        echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+        rm -f packages.microsoft.gpg
+
+        sudo apt install -y apt-transport-https
+        sudo apt update
+        sudo apt install -y code # or code-insiders
+       
     fi
+    print_success "Visual Studio Code installed successfully"
 }
 
 # setup_slack - Reinstall Slack via Homebrew

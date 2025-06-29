@@ -37,6 +37,8 @@ JM_ERROR_COLOR="%{$fg_bold[red]%}"
 JM_TIME_WRAPPER_COLOR="%{$fg_bold[white]%}"
 JM_TIME_COLOR="%{$fg_bold[yellow]%}"
 
+JM_HOST_COLOR="%{$fg_bold[blue]%}"
+
 JM_DIR_COLOR="%{$fg_bold[cyan]%}"
 
 JM_GIT_BRANCH_WRAPPER_COLOR="%{$fg_bold[blue]%}"
@@ -59,6 +61,9 @@ JM_SUCCESS_INDICATOR="➜"
 JM_TIME_OPEN="["
 JM_TIME_FORMAT="%D{%F}T%*%D{%z}"
 JM_TIME_CLOSE="]"
+
+# Host format - %n is the username, %m is the hostname up to the first dot
+JM_HOST_FORMAT="%u@%m"
 
 # Directory format - %c shows current directory name
 JM_DIR_FORMAT="%c"
@@ -83,6 +88,9 @@ JM_TIME_OPEN_PROMPT="${JM_TIME_WRAPPER_COLOR}${JM_TIME_OPEN}"
 JM_TIME_CLOSE_PROMPT="${JM_TIME_WRAPPER_COLOR}${JM_TIME_CLOSE}"
 JM_TIME_INFO="${JM_TIME_COLOR}${JM_TIME_FORMAT}"
 JM_TIME="${JM_TIME_OPEN_PROMPT}${JM_TIME_INFO}${JM_TIME_CLOSE_PROMPT}%{${reset_color}%}"
+
+# Host component
+JM_HOST="${JM_HOST_COLOR}${JM_HOST_FORMAT}%{${reset_color}%}"
 
 # Directory component
 JM_DIR="${JM_DIR_COLOR}${JM_DIR_FORMAT}%{${reset_color}%}"
@@ -109,7 +117,7 @@ ZSH_THEME_GIT_PROMPT_SUFFIX="%{${reset_color}%}"
 # Note the single quotes to prevent variables to be evaluated when setting the variable
 ###############################################################
 # Static part of the prompt (doesn't change)
-JM_PROMPT_STATIC="${JM_SUCCESS} ${JM_TIME} ${JM_DIR} ${JM_KUBECONTEXT_COLOR}"
+JM_PROMPT_STATIC="${JM_SUCCESS} ${JM_TIME} ${JM_HOST} ${JM_DIR} ${JM_KUBECONTEXT_COLOR}"
 
 # Final prompt with dynamic components:
 # ${current_kubecontext} - set by precmd function in zshrc
