@@ -494,6 +494,9 @@ install_sdk_man() {
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
+
+    export SDKMAN_DIR="${HOME}/.sdkman"
+    [[ -s "${HOME}/.sdkman/bin/sdkman-init.sh" ]] && source "${HOME}/.sdkman/bin/sdkman-init.sh"
 }
 
 # setup_java_openjdk - Install Java OpenJDK via SDKMAN
