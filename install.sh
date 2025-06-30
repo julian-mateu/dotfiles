@@ -672,8 +672,8 @@ install_obsidian() {
         
         # Install Obsidian
         sudo hdiutil attach "./${obsidian_dmg}"
-        sudo cp -R "/Volumes/Obsidian\ ${OBSIDIAN_VERSION}-universal/Obsidian.app" "/Applications"
-        sudo hdiutil unmount "/Volumes/Obsidian\ ${OBSIDIAN_VERSION}-universal"
+        sudo cp -R "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" "/Applications"
+        sudo hdiutil unmount "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal"
         rm -rf "./${obsidian_dmg}"
         
         print_success "Obsidian installed successfully"
