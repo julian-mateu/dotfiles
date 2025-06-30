@@ -184,21 +184,8 @@ plugins=(
 
 ### Set up a case sensitive volume and symlink your source folder to it
 See [this article](https://brianboyko.medium.com/a-case-sensitive-src-folder-for-mac-programmers-176cc82a3830), which basically involves
-creating an `APFS Case Sensitive` volume with Mac's Disk Utility, and then creating a symlink, e.g.:
+creating an `APFS Case Sensitive` (unencrypted) volume with **Mac's Disk Utility** (using the + symbol in the volume group at the top), and then creating a symlink, e.g.:
 ```bash
 ln -s /Volumes/sourcecode ~/src
 ```
 
-### Add shortcut to touchbar to toggle between dark and light modes
-
-See [this article](https://appleinsider.com/articles/18/06/14/how-to-toggle-dark-mode-with-a-keyboard-shortcut-or-the-touch-barhttps://appleinsider.com/articles/18/06/14/how-to-toggle-dark-mode-with-a-keyboard-shortcut-or-the-touch-bar). The "Workflows" option was renamed to "Quick Actions", last version I tired is Big Sur 11.2.3
-
-It essentially is copying this script into Automator -> Quick Action -> Run AppleScript:
-```applescript
-tell application "System Events"
-	tell appearance preferences
-		set dark mode to not dark mode
-	end tell
-end tell
-```
-Then save and go to System Preferences -> Extensions -> Touch Bar -> Customize Control Strip and drag the "Quick Actions" icon to the touchbar. 
