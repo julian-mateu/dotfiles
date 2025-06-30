@@ -457,6 +457,10 @@ install_nvm() {
         # Appending to the profile file, as this would be too slow on every shell
         append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
     fi
+
+    export NVM_DIR="${HOME}/.nvm"
+    [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
+    [ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 }
 
 # setup_node - Install Node.js LTS version
