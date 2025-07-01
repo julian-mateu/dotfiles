@@ -93,7 +93,7 @@ colorize() {
     # Use get_sgr_color function to get the SGR code for the color name
     codes+=("$(get_sgr_color "${name}")")
   done
-  printf "%s%s%s" "$(sgr ${codes[*]})" "${text}" "$(sgr $(get_sgr_color reset))"
+  printf "%s%s%s" "$(sgr "${codes[*]}")" "${text}" "$(sgr "$(get_sgr_color reset)")"
 }
 
 ###############################################################
