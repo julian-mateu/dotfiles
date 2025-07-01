@@ -207,6 +207,7 @@ setup_homebrew() {
 				eval "$(/opt/homebrew/bin/brew shellenv)"
 			EOS
     else
+        # See https://docs.brew.sh/Homebrew-on-Linux and https://docs.brew.sh/Installation#alternative-installs
         sudo mkdir -p /home/linuxbrew/.linuxbrew && sudo git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew
         sudo chown -R ubuntu /home/linuxbrew/.linuxbrew
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -628,6 +629,7 @@ install_vscode() {
         rm -rf "${vscode_zip}"
     
     else
+        # See https://code.visualstudio.com/docs/setup/linux
         wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
         sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
         echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
