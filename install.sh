@@ -271,6 +271,9 @@ setup_useful_tools() {
         "gnupg|https://gnupg.org/"
         "tree|https://formulae.brew.sh/formula/tree"
         "lazygit|https://github.com/jesseduffield/lazygit"
+        "tmux|https://github.com/jesseduffield/lazygit"
+        "fzf|https://github.com/junegunn/fzf"
+        "bat|https://github.com/sharkdp/bat"
     )
     
     for tool_info in "${brew_tools[@]}"; do
