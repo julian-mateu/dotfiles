@@ -200,6 +200,17 @@ setup_homebrew() {
         # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
         IFS='' read -r -d '' lines <<-"EOS" || true
 				###############################################################
+				# => Homebrew final configuration
+				###############################################################
+				# Need to ensure brew is at the top of the path to avoid using older version of binaries from the OS
+				export PATH="/opt/homebrew/bin:${PATH}"
+			EOS
+
+        append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
+
+        # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
+        IFS='' read -r -d '' lines <<-"EOS" || true
+				###############################################################
 				# => Homebrew configuration
 				###############################################################
 				# Initialize Homebrew environment
