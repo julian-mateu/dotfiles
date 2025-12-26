@@ -61,12 +61,8 @@ plugins=(
 
 # NVM plugin
 # See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm
-# lazy yes - Lazy load the NVM plugin to avoid slow startup
-zstyle ':omz:plugins:nvm' lazy yes
-# autoload yes - Autoload the NVM plugin to avoid slow startup
+zstyle ':omz:plugins:nvm' lazy no
 zstyle ':omz:plugins:nvm' autoload yes
-# lazy-cmd ... - Define extra commands that will trigger nvm load
-zstyle ':omz:plugins:nvm' lazy-cmd nvim # nvim used for Mason LSPs that require npm
 
 ###############################################################
 # => External files
