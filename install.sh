@@ -20,8 +20,8 @@ ZSHRC_CUSTOM_FILE='./zshrc_custom.zsh'
 PYTHON_VERSION='3.13.1'
 SDK_JAVA_VERSION='24-open'
 NVM_VERSION='0.40.3'
-GOVERSION='1.24'
-GOVERSION_EXACT='1.24.2'
+GOVERSION='1.25'
+GOVERSION_EXACT='1.25.4'
 OBSIDIAN_VERSION='1.8.10'
 DISPLAYLINK_DATE="2025-06"
 DISPLAYLINK_VERSION="1.12.4"
@@ -418,6 +418,8 @@ setup_go() {
 		GOVERSION='${GOVERSION}'
 		GOVERSION_EXACT='${GOVERSION_EXACT}'
 		add_to_path "/opt/homebrew/opt/go@\${GOVERSION}/bin"
+		## if GOPATH and GOBIN are not set, they default to ~/go and ~/go/bin
+		add_to_path "\${HOME}/go/bin"
 		export GOROOT="/opt/homebrew/Cellar/go/\${GOVERSION_EXACT}/libexec"
 	EOS
 
