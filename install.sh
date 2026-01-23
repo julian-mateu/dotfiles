@@ -550,9 +550,10 @@ setup_dotnet() {
 		###############################################################
 		# .NET SDK configuration
 		# See: https://learn.microsoft.com/en-us/dotnet/core/install/macos
-		# dotnet@${DOTNET_VERSION} is keg-only, so we need to add it to PATH manually
-		export DOTNET_ROOT="/opt/homebrew/opt/dotnet@${DOTNET_VERSION}/libexec"
-		add_to_path "/opt/homebrew/opt/dotnet@${DOTNET_VERSION}/bin"
+		# dotnet is keg-only, so we need to add it to PATH manually
+		DOTNET_VERSION='${DOTNET_VERSION}'
+		export DOTNET_ROOT="/opt/homebrew/opt/dotnet@\${DOTNET_VERSION}/libexec"
+		add_to_path "/opt/homebrew/opt/dotnet@\${DOTNET_VERSION}/bin"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
