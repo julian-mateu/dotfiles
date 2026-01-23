@@ -421,10 +421,10 @@ setup_go() {
 		# You might require a specific version, but brew will install the latest, so you need to manually add the old version to the path
 		GOVERSION='${GOVERSION}'
 		GOVERSION_EXACT='${GOVERSION_EXACT}'
-		add_to_path "/opt/homebrew/opt/go@\${GOVERSION}/bin"
+		add_to_path "\${HOMEBREW_PREFIX}/opt/go@\${GOVERSION}/bin"
 		## if GOPATH and GOBIN are not set, they default to ~/go and ~/go/bin
 		add_to_path "\${HOME}/go/bin"
-		export GOROOT="/opt/homebrew/Cellar/go/\${GOVERSION_EXACT}/libexec"
+		export GOROOT="\${HOMEBREW_PREFIX}/Cellar/go/\${GOVERSION_EXACT}/libexec"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
@@ -552,8 +552,8 @@ setup_dotnet() {
 		# See: https://learn.microsoft.com/en-us/dotnet/core/install/macos
 		# dotnet is keg-only, so we need to add it to PATH manually
 		DOTNET_VERSION='${DOTNET_VERSION}'
-		export DOTNET_ROOT="/opt/homebrew/opt/dotnet@\${DOTNET_VERSION}/libexec"
-		add_to_path "/opt/homebrew/opt/dotnet@\${DOTNET_VERSION}/bin"
+		export DOTNET_ROOT="\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/libexec"
+		add_to_path "\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/bin"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
