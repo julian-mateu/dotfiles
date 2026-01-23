@@ -25,6 +25,7 @@ GOVERSION_EXACT='1.25.4'
 OBSIDIAN_VERSION='1.8.10'
 DISPLAYLINK_DATE="2025-06"
 DISPLAYLINK_VERSION="1.12.4"
+DOTNET_VERSION='8'
 
 NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
@@ -77,6 +78,9 @@ main() {
     # Java
     ask_for_confirmation "sdk_man" "https://sdkman.io/install" install_sdk_man
     setup_java_openjdk
+
+    # .NET
+    setup_dotnet
 
     # Kubernetes
     ask_for_confirmation "kubernetes" "https://kubernetes.io/" install_kubernetes
@@ -525,6 +529,33 @@ setup_java_openjdk() {
     # Using zsh to ensure that the sdk command is defined.
     ask_for_confirmation "java_20_openjdk" "https://sdkman.io/usage" \
         /bin/zsh -c "sdk install java ${SDK_JAVA_VERSION}"
+}
+
+###############################################################
+# => .NET setup
+###############################################################
+
+# setup_dotnet - Install .NET SDK via Homebrew
+# Usage: setup_dotnet
+# Returns: 0 on success, 1 on error
+# Note: Installs .NET SDK and configures environment variables
+setup_dotnet() {
+    ask_for_confirmation "dotnet" "https://dotnet.microsoft.com/" \
+        brew install "dotnet@${DOTNET_VERSION}"
+
+    # Note that indentation with tabs is needed here! Not using quotes to force interpolation.
+    IFS='' read -r -d '' lines <<-EOS || true
+		###############################################################
+		# => .NET configuration
+		###############################################################
+		# .NET SDK configuration
+		# See: https://learn.microsoft.com/en-us/dotnet/core/install/macos
+		# dotnet@${DOTNET_VERSION} is keg-only, so we need to add it to PATH manually
+		export DOTNET_ROOT="/opt/homebrew/opt/dotnet@${DOTNET_VERSION}/libexec"
+		add_to_path "/opt/homebrew/opt/dotnet@${DOTNET_VERSION}/bin"
+	EOS
+
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
 ###############################################################
