@@ -243,7 +243,12 @@ setup_homebrew() {
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    # Make brew available in the current shell for the rest of the install script
+    if is_macos; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    fi
 }
 
 ###############################################################
