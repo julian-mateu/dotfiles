@@ -74,3 +74,12 @@ source "${HOME}/.zutils.zsh" || {
 - Neovim config is in a separate repo: https://github.com/julianmateu/nvim-config
 - Scripts use `set -e -o pipefail` for fail-fast behavior
 - The `${0%/*}` pattern extracts the script's directory for relative sourcing
+
+## Cross-Platform Patterns
+
+- Use `${HOMEBREW_PREFIX}` for Homebrew paths (set by `brew shellenv`)
+- Use `${HOMEBREW_PREFIX}/opt/<formula>` for version-agnostic paths (symlinks to active version)
+- Use `brew pin <formula>` to prevent auto-upgrades when version stability is needed
+- Platform detection: `is_macos`, `is_apple_silicon`, `is_intel` functions in `zutils.zsh`
+- macOS Homebrew: `/opt/homebrew` (Apple Silicon) or `/usr/local` (Intel)
+- Linux Homebrew: `/home/linuxbrew/.linuxbrew`
