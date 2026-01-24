@@ -20,8 +20,6 @@ ZSHRC_CUSTOM_FILE='./zshrc_custom.zsh'
 PYTHON_VERSION='3.13.1'
 SDK_JAVA_VERSION='24-open'
 NVM_VERSION='0.40.3'
-GOVERSION='1.25'
-GOVERSION_EXACT='1.25.4'
 OBSIDIAN_VERSION='1.8.10'
 DISPLAYLINK_DATE="2025-06"
 DISPLAYLINK_VERSION="1.12.4"
@@ -409,27 +407,26 @@ install_python() {
 # => Go and Rust setup
 ###############################################################
 
-# setup_go - Install Go with version management
+# setup_go - Install Go via Homebrew
 # Usage: setup_go
 # Returns: 0 on success, 1 on error
-# Note: Installs specific Go version for Monzo compatibility and configures environment
+# Note: Installs Go and configures environment. Use 'brew pin go' to prevent auto-upgrades.
 setup_go() {
     ask_for_confirmation "go" "https://go.dev/doc/install" \
-        brew install "go@${GOVERSION}"
+        brew install go
 
-    # Note that indentation with tabs is needed here! Not using quotes to force interpolation.
-    IFS='' read -r -d '' lines <<-EOS || true
+    # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
+    IFS='' read -r -d '' lines <<-"EOS" || true
 		###############################################################
 		# => Go configuration
 		###############################################################
-		# Go version management
-		# You might require a specific version, but brew will install the latest, so you need to manually add the old version to the path
-		GOVERSION='${GOVERSION}'
-		GOVERSION_EXACT='${GOVERSION_EXACT}'
-		add_to_path "\${HOMEBREW_PREFIX}/opt/go@\${GOVERSION}/bin"
-		## if GOPATH and GOBIN are not set, they default to ~/go and ~/go/bin
-		add_to_path "\${HOME}/go/bin"
-		export GOROOT="\${HOMEBREW_PREFIX}/Cellar/go@\${GOVERSION}/\${GOVERSION_EXACT}/libexec"
+		# Go environment using Homebrew's opt/ symlinks (version-agnostic)
+		# The opt/go symlink always points to the active Go installation
+		# TIP: Use 'brew pin go' to prevent auto-upgrades when you need version stability
+		add_to_path "${HOMEBREW_PREFIX}/opt/go/bin"
+		# GOPATH and GOBIN default to ~/go and ~/go/bin if not set
+		add_to_path "${HOME}/go/bin"
+		export GOROOT="${HOMEBREW_PREFIX}/opt/go/libexec"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
