@@ -1,191 +1,92 @@
 # Julian Mateu's Dotfiles
 
-A comprehensive collection of dotfiles and configuration scripts for setting up a modern macOS development environment. This repository provides a streamlined way to configure your shell, development tools, and system preferences.
+Configuration scripts for setting up a macOS/Linux development environment.
 
-My nvim configuration is in [the `nvim-config` repo](https://github.com/julianmateu/nvim-config)
+Neovim config: [nvim-config repo](https://github.com/julianmateu/nvim-config)
 
-## 🚀 Features
+## Quick Start
 
-### Core Configuration
-
-- **ZSH with Oh My Zsh** - Enhanced shell with plugins and custom theme
-- **Custom ZSH Theme** - Real-time vim mode indicator, git status, and kubecontext display
-- **Utility Functions** - Centralized utilities for color output, file operations, and system detection
-- **Safeload Pattern** - Reliable dependency loading with clear error messages
-
-### Development Tools
-
-- **Python** - pyenv for version management with automatic brew wrapper
-- **Node.js** - nvm with lazy loading for fast startup
-- **Go** - Version management with Monzo-specific configuration
-- **Rust** - Cargo environment setup
-- **Java** - SDKMAN for JVM ecosystem management
-
-### Infrastructure & Cloud
-
-- **Kubernetes** - kubectl, minikube, helm, k9s, and Lens
-- **AWS** - AWS CLI and botoenv for credential management
-- **Terraform** - Infrastructure as code tooling
-- **Docker** - Container development environment
-
-### Development Environment
-
-- **Neovim** - Modern vim with custom configuration
-- **IDEs** - IntelliJ IDEA, VS Code, PyCharm, Android Studio
-- **Database Tools** - PostgreSQL, pgcli, Conduktor for Kafka
-- **Network Tools** - HTTPie, Insomnia, k6 for testing
-
-### System Utilities
-
-- **Homebrew** - Package manager with automatic updates
-- **Git** - Enhanced git configuration with hub integration
-- **Shell Tools** - ripgrep, fzf, tig, htop, and more
-- **Security** - GPG, git-secret for encrypted secrets
-
-## 📋 Prerequisites
-
-- macOS (tested on macOS 13+)
-- Administrator privileges (for some installations)
-- Internet connection for downloading tools
-
-## 🛠️ Installation
-
-### Quick Start
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/julianmateu/dotfiles.git
-   cd dotfiles
-   export DOTFILES_DIR=$(pwd)
-   ```
-
-2. **Run the installation script**:
-
-   ```bash
-   ./install.sh
-   ```
-
-3. **Set up configuration files**:
-
-   ```bash
-   ./setup.sh
-   ```
-
-4. **Reload your shell**:
-   ```bash
-   source ~/.zshrc
-   ```
-
-### Manual Setup
-
-If you prefer to set up components individually:
-
-1. **Install core utilities**:
-
-   ```bash
-   # Install Homebrew
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-
-   # Install Oh My Zsh
-   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-   ```
-
-2. **Copy configuration files (if you prefer symlinks, skip this step and go to step 3)**:
-
-   ```bash
-   # Copy shell configuration
-   cp zshrc ~/.zshrc
-   cp zshenv ~/.zshenv
-   cp zutils.zsh ~/.zutils.zsh
-
-   # Copy theme
-   cp julianmateu.zsh-theme ~/.oh-my-zsh/custom/themes/
-   ```
-
-3. **Set up symlinks** (optional):
-   ```bash
-   # Create symlinks for easy updates
-   ln -s ${DOTFILES_DIR}/zshrc ~/.zshrc
-   ln -s ${DOTFILES_DIR}/zshenv ~/.zshenv
-   ln -s ${DOTFILES_DIR}/zutils.zsh ~/.zutils.zsh
-   ln -s ${DOTFILES_DIR}/julianmateu.zsh-theme ~/.oh-my-zsh/custom/themes/
-   ```
-
-## 🎨 Customization
-
-### ZSH Theme
-
-The custom theme (`julianmateu.zsh-theme`) provides:
-
-- **Success indicator** - Changes color based on last command exit status
-- **Timestamp** - Shows current date, time, and timezone
-- **Directory** - Current directory name
-- **Git status** - Branch name and dirty/clean state
-- **Kubernetes context** - Current kubecontext (if available)
-- **Vim mode** - Real-time indicator showing [INS] or [CMD]
-
-### Custom dotfiles
-
-`zshrc_custom.zsh`, `zshenv_custom.zsh`, `zprofile_custom.zsh`, `aliases_custom.zsh` are custom files that will be igonred in this repo (in case you want to add secrets or machine-specific configuration). These are still symlinked in the `setup.sh` script and sourced in the non-custom files.
-
-#### Adding Custom Aliases
-
-Add your custom aliases to `aliases_custom.zsh`:
-
-```zsh
-# Your custom aliases
-alias myproject='cd ~/projects/myproject'
-alias deploy='./scripts/deploy.sh'
+```bash
+git clone https://github.com/julianmateu/dotfiles.git
+cd dotfiles
+./install.sh    # Install tools (interactive, pick what you need)
+./setup.sh      # Create symlinks to home directory
+source ~/.zshrc # Reload shell
 ```
 
-### Plugin Configuration
+## What's Included
 
-Modify the plugins list in `zshrc`:
+### Shell
+- **ZSH + Oh My Zsh** with plugins (autosuggestions, syntax-highlighting, history-substring-search)
+- **Custom theme** with vim mode indicator, git status, kubecontext, timestamps
+- **Utility library** (`zutils.zsh`) for colors, logging, file operations
 
-```zsh
-plugins=(
-    git
-    zsh-autosuggestions
-    zsh-syntax-highlighting
-    # Add your custom plugins here
-)
+### Languages
+- **Python** - pyenv with brew wrapper
+- **Node.js** - nvm with lazy loading
+- **Go** - Homebrew (use `brew pin go` for version stability)
+- **Rust** - rustup/cargo
+- **Java** - SDKMAN
+- **.NET** - Homebrew
+
+### Tools
+- **Editors**: Neovim, VS Code
+- **Containers**: Docker, kubectl, k9s, helm
+- **Terminal**: iTerm2 (macOS), Nerd Fonts
+- **CLI**: ripgrep, fzf, lazygit, tmux, jq, bat, GNU coreutils
+
+### Apps (optional)
+Slack, Zoom, Spotify, Chrome, Obsidian
+
+## Architecture
+
+### Shell Loading Order
+
+`zshenv` → `zprofile` → `zshrc`
+
+| File | When | Purpose |
+|------|------|---------|
+| `zshenv` | All shells | Environment variables (PATH, etc.) |
+| `zprofile` | Login shells | One-time login setup |
+| `zshrc` | Interactive | Plugins, theme, aliases, keybindings |
+
+### Customization
+
+Machine-specific configs go in `*_custom.zsh` files (gitignored):
+- `zshenv_custom.zsh` - Environment (Homebrew, pyenv, Go, etc.)
+- `zshrc_custom.zsh` - Interactive shell customizations
+- `zprofile_custom.zsh` - Login shell customizations
+- `aliases_custom.zsh` - Personal aliases
+
+These are created by `install.sh` and symlinked by `setup.sh`.
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `zutils.zsh` | Utility functions (colors, `add_to_path`, `source_if_exists`, etc.) |
+| `aliases.zsh` | Command shortcuts |
+| `julianmateu.zsh-theme` | Custom prompt theme |
+| `install.sh` | Tool installation (interactive) |
+| `setup.sh` | Symlink creation (`-f` to force overwrite) |
+
+## Tips
+
+### Prevent Homebrew Auto-Upgrades
+
+```bash
+brew pin go      # Pin a formula
+brew unpin go    # Allow upgrades again
 ```
 
-## 🔧 Configuration Files
+### Case-Sensitive Volume (macOS)
 
-### Core Files
-
-- `zshenv` - Environment variables and system setup. This file is sourced in all zsh sessions, both login and non-login, interactive and non-interactive. It's the first file loaded, so it's suitable for setting environment variables that need to be available to all shells, such as `$PATH`.
-- `zprofile` - System-specific configuration (generated by install.sh). This file is sourced only in login shells. Login shells are typically started when you log in to your system, either directly or via ssh. It's a good place to set environment variables specific to login sessions, like those related to your user account, and it's also a place to execute commands that you only want to run once when you log in.
-- `zshrc` - Main ZSH configuration with plugins and theme. This file is sourced only in interactive shells. Interactive shells are shells that you interact with directly, like when you open a new terminal window. It's the place to set aliases, prompts, and other customizations that you want to apply to your interactive terminal sessions.
-- `zutils.zsh` - Utility functions for scripts and configuration.
-- `aliases.zsh` - Command shortcuts and aliases.
-- `julianmateu.zsh-theme` - Custom ZSH theme
-
-### Setup Scripts
-
-- `install.sh` - Automated installation of development tools
-- `setup.sh` - Configuration file setup and symlink creation
-
-### Generated Files
-
-- `zprofile_custom.zsh` - System-specific configuration (generated by install.sh)
-
-## 📚 Documentation
-
-- [Configuration Style Guide](CONFIGURATION_STYLE_GUIDE.md) - Patterns and best practices
-- [Improvement Plan](IMPROVEMENT_PLAN.md) - Development roadmap and progress
-- [ZSH Manual](https://zsh.sourceforge.io/Doc/) - Official ZSH documentation
-- [Oh My Zsh Wiki](https://github.com/ohmyzsh/ohmyzsh/wiki) - Plugin and theme documentation
-
-
-## 🎉 Optional tricks
-
-### Set up a case sensitive volume and symlink your source folder to it
-See [this article](https://brianboyko.medium.com/a-case-sensitive-src-folder-for-mac-programmers-176cc82a3830), which basically involves
-creating an `APFS Case Sensitive` (unencrypted) volume with **Mac's Disk Utility** (using the + symbol in the volume group at the top), and then creating a symlink, e.g.:
+For projects requiring case-sensitivity, create an APFS Case Sensitive volume in Disk Utility and symlink:
 ```bash
 ln -s /Volumes/sourcecode ~/src
 ```
 
+## External References
+
+- [ZSH Manual](https://zsh.sourceforge.io/Doc/)
+- [Oh My Zsh Wiki](https://github.com/ohmyzsh/ohmyzsh/wiki)
