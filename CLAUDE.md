@@ -68,16 +68,6 @@ source "${HOME}/.zutils.zsh" || {
 - `print_info/warning/error/success/debug` - Colored output helpers
 - `is_macos`, `is_apple_silicon`, `is_intel` - System detection
 
-### Version Configuration
-
-Tool versions are defined at the top of `install.sh`:
-```bash
-PYTHON_VERSION='3.13.1'
-SDK_JAVA_VERSION='24-open'
-NVM_VERSION='0.40.3'
-GOVERSION='1.25'
-```
-
 ## Important Notes
 
 - `sed` is aliased to `gsed` (GNU sed) - use this when writing shell scripts

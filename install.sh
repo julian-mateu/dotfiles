@@ -207,7 +207,7 @@ setup_homebrew() {
 				# => Homebrew final configuration
 				###############################################################
 				# Need to ensure brew is at the top of the path to avoid using older version of binaries from the OS
-				export PATH="/opt/homebrew/bin:${PATH}"
+				export PATH="${HOMEBREW_PREFIX}/bin:${PATH}"
 			EOS
 
         append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
@@ -224,7 +224,7 @@ setup_homebrew() {
     else
         # See https://docs.brew.sh/Homebrew-on-Linux and https://docs.brew.sh/Installation#alternative-installs
         sudo mkdir -p /home/linuxbrew/.linuxbrew && sudo git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew
-        sudo chown -R ubuntu /home/linuxbrew/.linuxbrew
+        sudo chown -R "${USER}" /home/linuxbrew/.linuxbrew
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew update --force --quiet
         chmod -R go-w "$(brew --prefix)/share/zsh"
@@ -429,7 +429,7 @@ setup_go() {
 		add_to_path "\${HOMEBREW_PREFIX}/opt/go@\${GOVERSION}/bin"
 		## if GOPATH and GOBIN are not set, they default to ~/go and ~/go/bin
 		add_to_path "\${HOME}/go/bin"
-		export GOROOT="\${HOMEBREW_PREFIX}/Cellar/go/\${GOVERSION_EXACT}/libexec"
+		export GOROOT="\${HOMEBREW_PREFIX}/Cellar/go@\${GOVERSION}/\${GOVERSION_EXACT}/libexec"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
