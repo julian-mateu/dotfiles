@@ -199,6 +199,14 @@ setup_homebrew() {
         # shellcheck disable=SC2016
         ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
+        # Determine Homebrew path based on architecture
+        # Apple Silicon: /opt/homebrew, Intel: /usr/local
+        if is_apple_silicon; then
+            BREW_PATH="/opt/homebrew"
+        else
+            BREW_PATH="/usr/local"
+        fi
+
         # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
         IFS='' read -r -d '' lines <<-"EOS" || true
 				###############################################################
@@ -210,14 +218,14 @@ setup_homebrew() {
 
         append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
 
-        # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
-        IFS='' read -r -d '' lines <<-"EOS" || true
+        # Note that indentation with tabs is needed here! Not using quotes to force interpolation.
+        IFS='' read -r -d '' lines <<-EOS || true
 				###############################################################
 				# => Homebrew configuration
 				###############################################################
 				# Initialize Homebrew environment
 				# See: https://brew.sh/
-				eval "$(/opt/homebrew/bin/brew shellenv)"
+				eval "\$(${BREW_PATH}/bin/brew shellenv)"
 			EOS
     else
         # See https://docs.brew.sh/Homebrew-on-Linux and https://docs.brew.sh/Installation#alternative-installs
@@ -243,7 +251,7 @@ setup_homebrew() {
 
     # Make brew available in the current shell for the rest of the install script
     if is_macos; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
+        eval "$(${BREW_PATH}/bin/brew shellenv)"
     else
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     fi
@@ -568,7 +576,7 @@ setup_dotnet() {
 # install_kubernetes - Install Kubernetes development tools
 # Usage: install_kubernetes
 # Returns: 0 on success, 1 on error
-# Note: Installs comprehensive set of Kubernetes tools including kubectl, minikube, helm, etc.
+# Note: Installs Docker, kubectl, k9s, and helm. Minikube can be added separately if needed.
 install_kubernetes() {
     print_warning "$(cat <<-EOS
 		Before installing Kubernetes, it is advised to first install docker desktop: $(fmt_underline https://docs.docker.com/desktop/mac/install/)
