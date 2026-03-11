@@ -138,10 +138,21 @@ append_lines_to_file_if_not_there() {
     fi
     local lines="${1}"
     local file="${2}"
-    
+
+    # Dry-run mode: show what would be written and whether it already exists
+    if [[ "${DOTFILES_DRY_RUN:-false}" == "true" ]]; then
+        if [[ -f "${file}" ]] && perl -0777 -sne '/$text/ or exit 1' -- -text="${lines}" "${file}" 2>/dev/null; then
+            print_success "[DRY RUN] Block already exists in ${file}"
+        else
+            print_warning "[DRY RUN] Would add to ${file}:"
+            print_info "$(fmt_code "${lines}")"
+        fi
+        return 0
+    fi
+
     # Create file if it doesn't exist
     [[ ! -f "${file}" ]] && touch "${file}"
-    
+
     # Check if the entire block already exists in the file
     # The -0777 option causes perl to slurp the whole file in memory. -0digits uses octal digits to define a record separator.
     #  As there's no valid 777 character, this will read the whole file as a single "line".
@@ -151,7 +162,7 @@ append_lines_to_file_if_not_there() {
         print_info "$(fmt_code "${lines}")"
         return 0
     fi
-    
+
     # If block doesn't exist, append it
     echo "${lines}" >> "${file}"
     print_info "Added block to ${file}"
@@ -221,7 +232,7 @@ create_symlink() {
 #   $2 - URL for more information
 #   $3+ - Command and arguments to execute if confirmed
 # Returns: 0 if confirmed and executed, 2 on parameter error
-# Note: Uses regex matching to validate user input
+# Note: Respects DOTFILES_DRY_RUN (skips install) and DOTFILES_CI (auto-accepts)
 ask_for_confirmation() {
     if [[ "${#}" -le 2 ]]; then
         print_error "ask_for_confirmation: Illegal number of parameters ${0}: got ${#} but expected at least 3: ${*}"
@@ -235,7 +246,20 @@ ask_for_confirmation() {
     print_info "Trying to install ${description}..."
     echo -e " This will run: $(colorize "$(fmt_code "${command_args[*]}")" yellow)"
     echo -e " See $(fmt_underline "${info_url}")"
-    
+
+    # Dry-run mode: show what would run but skip execution
+    if [[ "${DOTFILES_DRY_RUN:-false}" == "true" ]]; then
+        print_warning "[DRY RUN] Would install: ${description}"
+        return 0
+    fi
+
+    # CI mode: auto-accept all prompts
+    if [[ "${DOTFILES_CI:-false}" == "true" ]]; then
+        print_info "CI mode: auto-accepting ${description}"
+        "${command_args[@]}"
+        return $?
+    fi
+
     # Loop until valid input is received
     while true; do
         print_info "Do you want to install ${description}? [y/n]"

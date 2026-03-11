@@ -16,6 +16,7 @@ source "${0%/*}/zutils.zsh" || {
 ZPROFILE_CUSTOM_FILE='./zprofile_custom.zsh'
 ZSHENV_CUSTOM_FILE='./zshenv_custom.zsh'
 ZSHRC_CUSTOM_FILE='./zshrc_custom.zsh'
+DOTFILES_DRY_RUN="${DOTFILES_DRY_RUN:-false}"
 
 PYTHON_VERSION='3.13.1'
 SDK_JAVA_VERSION='24-open'
@@ -32,11 +33,19 @@ NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 ###############################################################
 
 # main - Main entry point for the installation script
-# Usage: main [arguments...]
+# Usage: main [--dry-run] [arguments...]
 # Parameters: Command line arguments passed to the script
 # Returns: 0 on success, 1 on error
 # Note: Orchestrates the entire installation process for development tools
+#       Use --dry-run to show what config blocks WOULD be written without installing anything
 main() {
+    # Parse --dry-run flag
+    if [[ "${1:-}" == "--dry-run" ]]; then
+        DOTFILES_DRY_RUN="true"
+        shift
+        print_warning "DRY RUN: showing config blocks that would be written (no installs)"
+    fi
+
     init_custom_files
 
     # Check OS and install dependencies
@@ -104,6 +113,10 @@ main() {
         ask_for_confirmation "iTerm2" "https://iterm2.com/" install_iterm2
         ask_for_confirmation "DisplayLink Manager" "https://www.synaptics.com/products/displaylink-graphics/downloads/macos" install_displaylink
     fi
+
+    # CLI tools with shell config
+    setup_claude_code
+    setup_devs_cli
 
     # shellcheck disable=SC2016
     echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
@@ -808,6 +821,50 @@ install_displaylink() {
   rm -rf "${displaylink_file}"
 
   print_success "DisplayLink Manager successfully installed"
+}
+
+###############################################################
+# => CLI tools with shell configuration
+###############################################################
+
+# setup_claude_code - Configure Claude Code CLI PATH
+# Usage: setup_claude_code
+# Returns: 0 on success, 1 on error
+# Note: Claude Code installs to ~/.local/bin. This adds it to PATH.
+setup_claude_code() {
+    ask_for_confirmation "Claude Code CLI" "https://docs.anthropic.com/en/docs/claude-code" \
+        true  # No install command - just configure PATH if user has it
+
+    # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
+    IFS='' read -r -d '' lines <<-"EOS" || true
+		###############################################################
+		# => Claude Code configuration
+		###############################################################
+		# Claude Code CLI
+		# See: https://docs.anthropic.com/en/docs/claude-code
+		add_to_path_if_exists "${HOME}/.local/bin"
+	EOS
+
+    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
+}
+
+# setup_devs_cli - Configure Devs CLI completions
+# Usage: setup_devs_cli
+# Returns: 0 on success, 1 on error
+# Note: Adds Devs CLI dynamic completions to zshrc_custom
+setup_devs_cli() {
+    ask_for_confirmation "Devs CLI completions" "Devs CLI dynamic zsh completions" \
+        true  # No install command - just configure completions
+
+    # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
+    IFS='' read -r -d '' lines <<-"EOS" || true
+		###############################################################
+		# => Devs CLI dynamic completions
+		###############################################################
+		source <(COMPLETE=zsh devs)
+	EOS
+
+    append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
 }
 
 # Script execution guard
