@@ -292,8 +292,12 @@ setup_homebrew() {
 			EOS
     else
         # See https://docs.brew.sh/Homebrew-on-Linux and https://docs.brew.sh/Installation#alternative-installs
-        sudo mkdir -p /home/linuxbrew/.linuxbrew && sudo git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew
-        sudo chown -R "${USER}" /home/linuxbrew/.linuxbrew
+        if [[ ! -d /home/linuxbrew/.linuxbrew/bin ]]; then
+            sudo mkdir -p /home/linuxbrew/.linuxbrew && sudo git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew
+            sudo chown -R "${USER}" /home/linuxbrew/.linuxbrew
+        else
+            print_success "Homebrew already installed on Linux"
+        fi
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         brew update --force --quiet
         chmod -R go-w "$(brew --prefix)/share/zsh"
@@ -445,7 +449,7 @@ install_python() {
     pyenv global "${PYTHON_VERSION}"
 
     export PYENV_ROOT="${HOME}/.pyenv"
-    add_to_path "${PYENV_ROOT}/bin"
+    add_to_path_if_exists "${PYENV_ROOT}/bin"
     eval "$(pyenv init --path)"
 
     pip install --upgrade pip setuptools

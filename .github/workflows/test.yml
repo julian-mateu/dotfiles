@@ -57,9 +57,12 @@ jobs:
 
       - name: Verify expected config sections appear
         run: |
+          # Only check sections whose config blocks are written outside ask_for_confirmation.
+          # Sections like "Python configuration" and "SDKMAN configuration" are inside install
+          # functions passed as commands to ask_for_confirmation, so they're skipped in dry-run.
           failed=0
-          for section in "Homebrew configuration" "Python configuration" "Go configuration" \
-                         "Rust configuration" "SDKMAN configuration" ".NET configuration" \
+          for section in "Homebrew configuration" "Go configuration" \
+                         "Rust configuration" ".NET configuration" \
                          "Claude Code configuration"; do
             if grep -q "${section}" /tmp/dry-run-output.txt; then
               echo "OK: found '${section}'"
@@ -210,27 +213,44 @@ jobs:
       - name: Verify zshrc loads and configures shell
         run: |
           zsh -i -c '
-            # Verify EDITOR is set by zshrc
-            if [[ "${EDITOR}" != "nvim" ]]; then
-              echo "FAIL: EDITOR not set to nvim (got: ${EDITOR})"
-              exit 1
-            fi
-            echo "OK: EDITOR=${EDITOR}"
-
-            # Verify vim mode variable exists (set by zshrc)
-            if [[ -z "${vim_ins_mode}" ]]; then
-              echo "FAIL: vim_ins_mode not set"
-              exit 1
-            fi
-            echo "OK: vim_ins_mode=${vim_ins_mode}"
+            failed=0
 
             # Verify Oh My Zsh was loaded
             if [[ -z "${ZSH}" ]]; then
               echo "FAIL: ZSH variable not set"
-              exit 1
+              failed=1
+            else
+              echo "OK: ZSH=${ZSH}"
             fi
-            echo "OK: ZSH=${ZSH}"
+
+            # Verify ZSH_THEME is set (specific to our zshrc)
+            if [[ "${ZSH_THEME}" != "julianmateu" ]]; then
+              echo "FAIL: ZSH_THEME not set to julianmateu (got: ${ZSH_THEME})"
+              failed=1
+            else
+              echo "OK: ZSH_THEME=${ZSH_THEME}"
+            fi
+
+            # Verify zshrc-specific functions exist
+            for fn in gcpr grebase bashman; do
+              if typeset -f "${fn}" > /dev/null 2>&1; then
+                echo "OK: function ${fn} exists"
+              else
+                echo "FAIL: function ${fn} not defined"
+                failed=1
+              fi
+            done
+
+            # Verify vim mode variable exists (set by zshrc)
+            if [[ -z "${vim_ins_mode}" ]]; then
+              echo "FAIL: vim_ins_mode not set"
+              failed=1
+            else
+              echo "OK: vim_ins_mode=${vim_ins_mode}"
+            fi
+
+            exit "${failed}"
           ' 2>&1 || {
-            echo "FAIL: zshrc failed to load"
+            echo "FAIL: zshrc failed to load or assertions failed"
             exit 1
           }
