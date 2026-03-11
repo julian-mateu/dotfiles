@@ -54,16 +54,23 @@ alias ..l="cd ../ && ll"
 
 
 ###############################################################
-# => OSX Filesystem
+# => Filesystem
 ###############################################################
-alias showFiles="defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app"
-alias hideFiles="defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app"
 alias deleteDSFiles="find . -name '.DS_Store' -type f -delete"
+
+if is_macos; then
+    alias showFiles="defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app"
+    alias hideFiles="defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app"
+fi
 
 ###############################################################
 # => Applications
 ###############################################################
-alias chrome='open -a "Google Chrome"'
+if is_macos; then
+    alias chrome='open -a "Google Chrome"'
+else
+    alias chrome='xdg-open "https://google.com"'
+fi
 alias c="code ."
 alias n="nvim ."
 
@@ -72,10 +79,13 @@ alias n="nvim ."
 ###############################################################
 alias myip="curl http://ipecho.net/plain; echo"
 alias pg="echo 'Pinging Google' && ping www.google.com"
-alias flushdns="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder"
-## IPv6 can mess up with connections, so these are shortcuts to disable/enable. See https://stackoverflow.com/a/51544596
-alias disableipv6="networksetup -setv6off Ethernet && networksetup -setv6off Wi-Fi"
-alias enableipv6="networksetup -setv6automatic Wi-Fi && networksetup -setv6automatic Ethernet"
+
+if is_macos; then
+    alias flushdns="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder"
+    ## IPv6 can mess up with connections, so these are shortcuts to disable/enable. See https://stackoverflow.com/a/51544596
+    alias disableipv6="networksetup -setv6off Ethernet && networksetup -setv6off Wi-Fi"
+    alias enableipv6="networksetup -setv6automatic Wi-Fi && networksetup -setv6automatic Ethernet"
+fi
 
 ###############################################################
 # => Git

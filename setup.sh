@@ -154,18 +154,31 @@ ssh_config() {
         mkdir -p "${HOME}/.ssh"
         touch "${HOME}/.ssh/config"
 
-        tee "${HOME}/.ssh/config" <<-EOF
-			Host github.com-personal
-			  HostName github.com
-			  AddKeysToAgent yes
-			  UseKeychain yes
-			  IdentityFile ~/.ssh/id_ed25519-personal
-			
-			Host *
-			  AddKeysToAgent yes
-			  UseKeychain yes
-			  IdentityFile ~/.ssh/id_ed25519
-		EOF
+        if is_macos; then
+            tee "${HOME}/.ssh/config" <<-EOF
+				Host github.com-personal
+				  HostName github.com
+				  AddKeysToAgent yes
+				  UseKeychain yes
+				  IdentityFile ~/.ssh/id_ed25519-personal
+
+				Host *
+				  AddKeysToAgent yes
+				  UseKeychain yes
+				  IdentityFile ~/.ssh/id_ed25519
+			EOF
+        else
+            tee "${HOME}/.ssh/config" <<-EOF
+				Host github.com-personal
+				  HostName github.com
+				  AddKeysToAgent yes
+				  IdentityFile ~/.ssh/id_ed25519-personal
+
+				Host *
+				  AddKeysToAgent yes
+				  IdentityFile ~/.ssh/id_ed25519
+			EOF
+        fi
     fi
 
     if [[ ! -e "${HOME}/.ssh/id_ed25519-personal" ]]; then

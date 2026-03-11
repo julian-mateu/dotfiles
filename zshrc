@@ -91,7 +91,11 @@ function gcpr {
         # git symbolic-ref HEAD gets the current branch name
         branch_name=$(git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
         pr_url=${github_url}"/compare/main..."${branch_name}
-        open ${pr_url}
+        if is_macos; then
+            open "${pr_url}"
+        else
+            xdg-open "${pr_url}"
+        fi
     else
         echo 'failed to open a pull request.'
     fi

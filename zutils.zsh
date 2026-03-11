@@ -396,19 +396,42 @@ is_directory() {
 # => Path Management
 ###############################################################
 
-# add_to_path - Add directory to PATH if not already present
+# add_to_path - Add directory to PATH if not already present (strict)
 # Usage: add_to_path <directory>
 # Parameters:
 #   $1 - Directory to add to PATH
 # Returns: 0 on success, 1 if directory doesn't exist
-# Note: Uses parameter expansion to check if directory is already in PATH
-#       [[ ":$PATH:" != *":$directory:"* ]] - pattern matching with wildcards
+# Note: Prints an error if the directory doesn't exist. Use add_to_path_if_exists
+#       for optional directories that may not be present (e.g., tools not yet installed).
 add_to_path() {
     local directory="${1}"
     if [[ ! -d "${directory}" ]]; then
         print_error "add_to_path: Directory does not exist: ${directory}"
         return 1
     fi
+    _prepend_to_path "${directory}"
+}
+
+# add_to_path_if_exists - Add directory to PATH if it exists, silently skip otherwise
+# Usage: add_to_path_if_exists <directory>
+# Parameters:
+#   $1 - Directory to add to PATH
+# Returns: 0 always (silent skip for missing directories)
+# Note: Use this for optional tool directories that may not be installed.
+#       Use add_to_path for directories that MUST exist.
+add_to_path_if_exists() {
+    local directory="${1}"
+    if [[ ! -d "${directory}" ]]; then
+        return 0
+    fi
+    _prepend_to_path "${directory}"
+}
+
+# _prepend_to_path - Internal helper to prepend directory to PATH if not already present
+# Usage: _prepend_to_path <directory>
+# Note: Not intended for direct use - use add_to_path or add_to_path_if_exists instead
+_prepend_to_path() {
+    local directory="${1}"
     # [[ ":$PATH:" != *":$directory:"* ]] - check if directory is not already in PATH
     # * is a wildcard that matches any sequence of characters
     # The colons ensure we match complete path components, not partial matches

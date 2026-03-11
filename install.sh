@@ -358,7 +358,7 @@ install_python() {
 		# PyEnv configuration
 		# See: https://github.com/pyenv/pyenv#installation
 		export PYENV_ROOT="${HOME}/.pyenv"
-		add_to_path "${PYENV_ROOT}/bin"
+		add_to_path_if_exists "${PYENV_ROOT}/bin"
 		eval "$(pyenv init --path)"
 
 		# pyenv adds *-config scripts and produces a brew warning
@@ -407,9 +407,9 @@ setup_go() {
 		# Go environment using Homebrew's opt/ symlinks (version-agnostic)
 		# The opt/go symlink always points to the active Go installation
 		# TIP: Use 'brew pin go' to prevent auto-upgrades when you need version stability
-		add_to_path "${HOMEBREW_PREFIX}/opt/go/bin"
+		add_to_path_if_exists "${HOMEBREW_PREFIX}/opt/go/bin"
 		# GOPATH and GOBIN default to ~/go and ~/go/bin if not set
-		add_to_path "${HOME}/go/bin"
+		add_to_path_if_exists "${HOME}/go/bin"
 		export GOROOT="${HOMEBREW_PREFIX}/opt/go/libexec"
 	EOS
 
@@ -539,8 +539,8 @@ setup_dotnet() {
 		# dotnet is keg-only, so we need to add it to PATH manually
 		DOTNET_VERSION='${DOTNET_VERSION}'
 		export DOTNET_ROOT="\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/libexec"
-		add_to_path "\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/bin"
-		add_to_path "${HOME}/.dotnet/tools"
+		add_to_path_if_exists "\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/bin"
+		add_to_path_if_exists "${HOME}/.dotnet/tools"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
