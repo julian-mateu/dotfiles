@@ -91,27 +91,32 @@ main() {
     # Kubernetes
     ask_for_confirmation "kubernetes" "https://kubernetes.io/" install_kubernetes
 
-    # IDEs
-    setup_ides
+    # GUI applications - skip in CI mode
+    if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
+        # IDEs
+        setup_ides
 
-    # Slack
-    ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
+        # Slack
+        ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
 
-    # Obsidian
-    ask_for_confirmation "Obsidian" "https://obsidian.md/" install_obsidian
+        # Obsidian
+        ask_for_confirmation "Obsidian" "https://obsidian.md/" install_obsidian
 
-    # Additional Applications
-    ask_for_confirmation "Zoom" "https://zoom.us/" brew install --cask zoom
-    ask_for_confirmation "Spotify" "https://www.spotify.com/" brew install --cask spotify
-    ask_for_confirmation "Google Chrome" "https://www.google.com/chrome/" brew install --cask google-chrome
+        # Additional Applications
+        ask_for_confirmation "Zoom" "https://zoom.us/" brew install --cask zoom
+        ask_for_confirmation "Spotify" "https://www.spotify.com/" brew install --cask spotify
+        ask_for_confirmation "Google Chrome" "https://www.google.com/chrome/" brew install --cask google-chrome
 
-    # Nerd Fonts
-    ask_for_confirmation "Nerd Fonts" "https://www.nerdfonts.com/" install_nerd_fonts
+        # Nerd Fonts
+        ask_for_confirmation "Nerd Fonts" "https://www.nerdfonts.com/" install_nerd_fonts
 
-    # Terminal Emulator
-    if is_macos; then
-        ask_for_confirmation "iTerm2" "https://iterm2.com/" install_iterm2
-        ask_for_confirmation "DisplayLink Manager" "https://www.synaptics.com/products/displaylink-graphics/downloads/macos" install_displaylink
+        # Terminal Emulator
+        if is_macos; then
+            ask_for_confirmation "iTerm2" "https://iterm2.com/" install_iterm2
+            ask_for_confirmation "DisplayLink Manager" "https://www.synaptics.com/products/displaylink-graphics/downloads/macos" install_displaylink
+        fi
+    else
+        print_info "CI mode: skipping GUI applications"
     fi
 
     # CLI tools with shell config
@@ -827,13 +832,13 @@ install_displaylink() {
 # => CLI tools with shell configuration
 ###############################################################
 
-# setup_claude_code - Configure Claude Code CLI PATH
+# setup_claude_code - Install and configure Claude Code CLI
 # Usage: setup_claude_code
 # Returns: 0 on success, 1 on error
-# Note: Claude Code installs to ~/.local/bin. This adds it to PATH.
+# Note: Installs via Homebrew cask and adds ~/.local/bin to PATH
 setup_claude_code() {
     ask_for_confirmation "Claude Code CLI" "https://docs.anthropic.com/en/docs/claude-code" \
-        true  # No install command - just configure PATH if user has it
+        brew install --cask claude-code
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true

@@ -1,0 +1,137 @@
+name: Test Dotfiles
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+      - name: Run shellcheck on bash scripts
+        run: shellcheck -x install.sh setup.sh
+      - name: Run shellcheck on zsh files (as bash, best-effort)
+        run: shellcheck -x -s bash --severity=warning zutils.zsh aliases.zsh || true
+
+  dry-run:
+    name: Dry Run (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify dry-run mode works
+        run: ./install.sh --dry-run
+
+  setup:
+    name: Setup (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run setup.sh with test git config
+        env:
+          GIT_NAME: "Test User"
+          GIT_EMAIL: "test@example.com"
+          GIT_EMAIL_PERSONAL: "personal@example.com"
+          GIT_EMAIL_WORK: "work@example.com"
+        run: |
+          # setup.sh prompts interactively - answer "no" to install.sh, then let it create configs
+          echo "n" | ./setup.sh
+
+      - name: Verify symlinks created
+        run: |
+          echo "Checking symlinks..."
+          for file in zshrc zshenv zprofile zutils.zsh aliases.zsh; do
+            if [[ -L "${HOME}/.${file}" ]]; then
+              echo "OK: ~/.${file} -> $(readlink "${HOME}/.${file}")"
+            else
+              echo "MISSING: ~/.${file}"
+              exit 1
+            fi
+          done
+
+      - name: Verify CLAUDE.md NOT symlinked
+        run: |
+          if [[ -L "${HOME}/.CLAUDE.md" ]]; then
+            echo "FAIL: ~/.CLAUDE.md should not be symlinked"
+            exit 1
+          fi
+          echo "OK: ~/.CLAUDE.md not present"
+
+      - name: Verify global_gitignore symlinked
+        run: |
+          if [[ -L "${HOME}/.global_gitignore" ]]; then
+            echo "OK: ~/.global_gitignore -> $(readlink "${HOME}/.global_gitignore")"
+          else
+            echo "MISSING: ~/.global_gitignore"
+            exit 1
+          fi
+
+      - name: Verify gitconfig references global_gitignore
+        run: |
+          if grep -q 'global_gitignore' "${HOME}/.gitconfig"; then
+            echo "OK: gitconfig references global_gitignore"
+          else
+            echo "FAIL: gitconfig should reference global_gitignore"
+            cat "${HOME}/.gitconfig"
+            exit 1
+          fi
+
+  smoke-test:
+    name: Shell Smoke Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install zsh if needed
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh
+
+      - name: Create minimal custom files
+        run: |
+          # Create minimal custom files so sourcing doesn't fail
+          for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh aliases_custom.zsh; do
+            cat > "./${file}" << 'CUSTOMEOF'
+          source "${HOME}/.zutils.zsh" || { echo "Failed to load zutils.zsh" >&2; return 1; }
+          CUSTOMEOF
+          done
+
+      - name: Create symlinks manually for smoke test
+        run: |
+          for file in zshrc zshenv zprofile zutils.zsh aliases.zsh \
+                      zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh aliases_custom.zsh; do
+            ln -sf "${PWD}/${file}" "${HOME}/.${file}"
+          done
+          ln -sf "${PWD}/global_gitignore" "${HOME}/.global_gitignore"
+
+      - name: Install Oh My Zsh (required by zshrc)
+        run: |
+          sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+          # Install theme
+          mkdir -p "${HOME}/.oh-my-zsh/custom/themes"
+          cp julianmateu.zsh-theme "${HOME}/.oh-my-zsh/custom/themes/"
+
+      - name: Verify zsh config loads without errors
+        run: |
+          # Source zshenv and zprofile (non-interactive)
+          zsh -c 'source ~/.zshenv && echo "zshenv OK"'
+          zsh -c 'source ~/.zprofile && echo "zprofile OK"'
+          # Source full interactive config (zshrc includes oh-my-zsh)
+          zsh -i -c 'echo "zshrc OK"' 2>&1 || {
+            echo "FAIL: zshrc failed to load"
+            exit 1
+          }
