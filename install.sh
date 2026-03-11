@@ -59,8 +59,7 @@ main() {
     # Misc tools
     ask_for_confirmation "useful tools" "more info in the command if you accept" setup_useful_tools
 
-    # GIT & Python
-    ask_for_confirmation "hub" "https://hub.github.com/" install_hub
+    # Python
     ask_for_confirmation "pyenv-python" "https://github.com/pyenv/pyenv#installation" install_python
 
     # Go
@@ -321,9 +320,10 @@ setup_useful_tools() {
         "gnupg|https://gnupg.org/"
         "tree|https://formulae.brew.sh/formula/tree"
         "lazygit|https://github.com/jesseduffield/lazygit"
-        "tmux|https://github.com/jesseduffield/lazygit"
+        "tmux|https://github.com/tmux/tmux"
         "fzf|https://github.com/junegunn/fzf"
         "bat|https://github.com/sharkdp/bat"
+        "gh|https://cli.github.com/"
     )
     
     for tool_info in "${brew_tools[@]}"; do
@@ -332,38 +332,14 @@ setup_useful_tools() {
         # ${tool_info#*|} removes the shortest match of "*|" from the beginning (URL)
         local tool_name="${tool_info%%|*}"
         local tool_url="${tool_info#*|}"
-        
-        # Handle special cases where package name differs from tool name
-        local package_name="${tool_name}"
-        case "${tool_name}" in
-            "ripgrep") package_name="rg" ;;
-            "gnu-sed") package_name="gsed" ;;
-            "gnupg") package_name="gpg" ;;
-        esac
-        
-        ask_for_confirmation "${tool_name}" "${tool_url}" brew install "${package_name}"
+
+        ask_for_confirmation "${tool_name}" "${tool_url}" brew install "${tool_name}"
     done
 }
 
 ###############################################################
 # => Git and Python setup
 ###############################################################
-
-# install_hub - Install GitHub CLI hub and configure aliases
-# Usage: install_hub
-# Returns: 0 on success, 1 on error
-# Note: Installs hub and configures git aliases for GitHub integration
-install_hub() {
-    brew install hub
-
-    # Note that indentation with tabs is needed here!
-    IFS='' read -r -d '' lines <<-"EOS" || true
-		# hub
-		eval "$(hub alias -s)"
-	EOS
-
-    append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
-}
 
 # install_python - Install Python with pyenv and configure environment
 # Usage: install_python
@@ -559,7 +535,7 @@ setup_dotnet() {
 		# => .NET configuration
 		###############################################################
 		# .NET SDK configuration
-		# See: https://learn.microsoft.com/en-us/dotnet/core/install/macos
+		# See: https://learn.microsoft.com/en-us/dotnet/core/install/
 		# dotnet is keg-only, so we need to add it to PATH manually
 		DOTNET_VERSION='${DOTNET_VERSION}'
 		export DOTNET_ROOT="\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/libexec"

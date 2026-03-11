@@ -25,7 +25,8 @@ print_debug "sourcing zshrc"
 ###############################################################
 # zmodload zsh/zprof - Load the zprof module for profiling zsh startup time
 # See: zsh manual "The zsh/zprof Module" section
-zmodload zsh/zprof
+# Set ZSH_PROFILE=true to enable profiling, then call `zprof` after shell loads
+[[ -n "${ZSH_PROFILE}" ]] && zmodload zsh/zprof
 
 export ZSH="${HOME}/.oh-my-zsh"
 
@@ -117,9 +118,9 @@ bashman() {
 # See: https://github.com/rothgar/mastering-zsh/blob/master/docs/config/hooks.md
 # precmd is called before each prompt is displayed
 function precmd() {
-  # Print the current kubecontext
-  # which kubectl - check if kubectl is available
-  if [[ "$(which kubectl)" ]]; then
+  # Set the current kubecontext for the prompt
+  # is_command_available uses `command -v` (POSIX-compliant, unlike `which`)
+  if is_command_available kubectl; then
     # kubectl config current-context - get current kubecontext
     # awk -F'/' '{print $NF}' - split by '/' and print the last field
     if kubectl config current-context >/dev/null 2>/dev/null; then
@@ -215,6 +216,6 @@ autoload -Uz compinit && compinit
 
 # zprof - Print zsh startup profile
 # See: zsh manual "The zsh/zprof Module" section
-# Uncomment this line to print zsh startup profile:
-# zprof
+# To profile shell startup: ZSH_PROFILE=true zsh -c 'zprof'
+[[ -n "${ZSH_PROFILE}" ]] && zprof
 

@@ -214,7 +214,7 @@ copy_files() {
         if [[ ! -d "${name}" ]]; then
             target="${HOME}/.${name}"
             # =~ ^(install.sh|setup.sh|README.md|julianmateu.zsh-theme)$ - regex match to exclude files
-            if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md|julianmateu.zsh-theme)$ ]]; then
+            if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md|CLAUDE.md|julianmateu.zsh-theme)$ ]]; then
                 copy_file "${PWD}/${name}" "${target}"
             fi
         fi
