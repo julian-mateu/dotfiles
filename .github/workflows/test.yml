@@ -35,8 +35,52 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: Verify dry-run mode works
-        run: ./install.sh --dry-run
+      - name: Run dry-run and capture output
+        run: |
+          ./install.sh --dry-run 2>&1 | tee /tmp/dry-run-output.txt
+
+      - name: Verify dry-run mode is active
+        run: |
+          # Must contain the dry-run banner
+          grep -q "DRY RUN" /tmp/dry-run-output.txt || {
+            echo "FAIL: output missing DRY RUN banner"
+            exit 1
+          }
+          echo "OK: DRY RUN banner present"
+
+          # Must contain [DRY RUN] markers for skipped installs
+          grep -q "\[DRY RUN\] Would install:" /tmp/dry-run-output.txt || {
+            echo "FAIL: output missing [DRY RUN] Would install markers"
+            exit 1
+          }
+          echo "OK: [DRY RUN] Would install markers present"
+
+      - name: Verify expected config sections appear
+        run: |
+          failed=0
+          for section in "Homebrew configuration" "Python configuration" "Go configuration" \
+                         "Rust configuration" "SDKMAN configuration" ".NET configuration" \
+                         "Claude Code configuration"; do
+            if grep -q "${section}" /tmp/dry-run-output.txt; then
+              echo "OK: found '${section}'"
+            else
+              echo "FAIL: missing config section '${section}'"
+              failed=1
+            fi
+          done
+          if [[ "${failed}" -ne 0 ]]; then
+            echo "Some expected config sections are missing from dry-run output!"
+            exit 1
+          fi
+
+      - name: Verify dry-run did not actually install anything
+        run: |
+          # Should NOT contain "CI mode: auto-accepting" (that's real install mode)
+          if grep -q "CI mode: auto-accepting" /tmp/dry-run-output.txt; then
+            echo "FAIL: dry-run appears to be actually installing things"
+            exit 1
+          fi
+          echo "OK: no actual installations detected"
 
   setup:
     name: Setup (${{ matrix.os }})
@@ -137,13 +181,56 @@ jobs:
           mkdir -p "${HOME}/.oh-my-zsh/custom/themes"
           cp julianmateu.zsh-theme "${HOME}/.oh-my-zsh/custom/themes/"
 
-      - name: Verify zsh config loads without errors
+      - name: Verify zshenv loads and zutils functions exist
         run: |
-          # Source zshenv and zprofile (non-interactive)
-          zsh -c 'source ~/.zshenv && echo "zshenv OK"'
-          zsh -c 'source ~/.zprofile && echo "zprofile OK"'
-          # Source full interactive config (zshrc includes oh-my-zsh)
-          zsh -i -c 'echo "zshrc OK"' 2>&1 || {
+          zsh -c '
+            source ~/.zshenv
+            # Verify zutils.zsh was loaded by checking its functions exist
+            for fn in source_if_exists add_to_path add_to_path_if_exists colorize print_info is_macos; do
+              if ! typeset -f "${fn}" > /dev/null; then
+                echo "FAIL: function ${fn} not defined after sourcing zshenv"
+                exit 1
+              fi
+              echo "OK: function ${fn} exists"
+            done
+          '
+
+      - name: Verify zprofile loads and sets expected variables
+        run: |
+          zsh -c '
+            source ~/.zprofile
+            # Verify HISTCONTROL is set by zprofile
+            if [[ "${HISTCONTROL}" != "ignoreboth" ]]; then
+              echo "FAIL: HISTCONTROL not set to ignoreboth (got: ${HISTCONTROL})"
+              exit 1
+            fi
+            echo "OK: HISTCONTROL=${HISTCONTROL}"
+          '
+
+      - name: Verify zshrc loads and configures shell
+        run: |
+          zsh -i -c '
+            # Verify EDITOR is set by zshrc
+            if [[ "${EDITOR}" != "nvim" ]]; then
+              echo "FAIL: EDITOR not set to nvim (got: ${EDITOR})"
+              exit 1
+            fi
+            echo "OK: EDITOR=${EDITOR}"
+
+            # Verify vim mode variable exists (set by zshrc)
+            if [[ -z "${vim_ins_mode}" ]]; then
+              echo "FAIL: vim_ins_mode not set"
+              exit 1
+            fi
+            echo "OK: vim_ins_mode=${vim_ins_mode}"
+
+            # Verify Oh My Zsh was loaded
+            if [[ -z "${ZSH}" ]]; then
+              echo "FAIL: ZSH variable not set"
+              exit 1
+            fi
+            echo "OK: ZSH=${ZSH}"
+          ' 2>&1 || {
             echo "FAIL: zshrc failed to load"
             exit 1
           }
