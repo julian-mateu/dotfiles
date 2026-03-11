@@ -48,22 +48,63 @@ main() {
 
     init_custom_files
 
-    # Check OS and install dependencies
-    if is_macos; then
-        print_info "Installing macOS dependencies"
-        setup_x_code
+    # System setup - these run commands directly (not via ask_for_confirmation),
+    # so they need an explicit dry-run guard
+    if [[ "${DOTFILES_DRY_RUN}" != "true" ]]; then
+        # Check OS and install dependencies
+        if is_macos; then
+            print_info "Installing macOS dependencies"
+            setup_x_code
+        else
+            print_info "Installing Linux dependencies"
+            setup_apt_get
+        fi
+
+        setup_homebrew
+
+        # ZSH
+        setup_oh_my_zsh_and_plugins
+
+        # Nvim
+        setup_nvim
     else
-        print_info "Installing Linux dependencies"
-        setup_apt_get
+        print_warning "[DRY RUN] Skipping system setup (xcode/apt, homebrew, oh-my-zsh, nvim)"
+        # Still write the homebrew config blocks in dry-run mode
+        if is_macos; then
+            if is_apple_silicon; then
+                BREW_PATH="/opt/homebrew"
+            else
+                BREW_PATH="/usr/local"
+            fi
+            IFS='' read -r -d '' lines <<-"EOS" || true
+				###############################################################
+				# => Homebrew final configuration
+				###############################################################
+				# Need to ensure brew is at the top of the path to avoid using older version of binaries from the OS
+				export PATH="${HOMEBREW_PREFIX}/bin:${PATH}"
+			EOS
+            append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
+
+            IFS='' read -r -d '' lines <<-EOS || true
+				###############################################################
+				# => Homebrew configuration
+				###############################################################
+				# Initialize Homebrew environment
+				# See: https://brew.sh/
+				eval "\$(${BREW_PATH}/bin/brew shellenv)"
+			EOS
+        else
+            IFS='' read -r -d '' lines <<-"EOS" || true
+				###############################################################
+				# => Homebrew configuration
+				###############################################################
+				# Initialize Homebrew environment
+				# See: https://brew.sh/
+				eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+			EOS
+        fi
+        append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
     fi
-
-    setup_homebrew
-
-    # ZSH
-    setup_oh_my_zsh_and_plugins
-
-    # Nvim
-    setup_nvim
 
     # Misc tools
     ask_for_confirmation "useful tools" "more info in the command if you accept" setup_useful_tools
@@ -835,10 +876,16 @@ install_displaylink() {
 # setup_claude_code - Install and configure Claude Code CLI
 # Usage: setup_claude_code
 # Returns: 0 on success, 1 on error
-# Note: Installs via Homebrew cask and adds ~/.local/bin to PATH
+# Note: Installs via Homebrew cask (macOS) or curl installer (Linux), adds ~/.local/bin to PATH
 setup_claude_code() {
-    ask_for_confirmation "Claude Code CLI" "https://docs.anthropic.com/en/docs/claude-code" \
-        brew install --cask claude-code
+    if is_macos; then
+        ask_for_confirmation "Claude Code CLI" "https://docs.anthropic.com/en/docs/claude-code" \
+            brew install --cask claude-code
+    else
+        # shellcheck disable=SC2016
+        ask_for_confirmation "Claude Code CLI" "https://docs.anthropic.com/en/docs/claude-code" \
+            bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
+    fi
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true

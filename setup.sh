@@ -233,7 +233,8 @@ copy_files() {
         fi
     done
 
-    # global_gitignore gets its own target path (not .global_gitignore)
+    # global_gitignore is excluded from the loop above because its source name
+    # doesn't match the .{name} convention (source has no dot, target does)
     copy_file "${PWD}/global_gitignore" "${HOME}/.global_gitignore"
 
     if [[ -n "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}" ]]; then

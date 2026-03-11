@@ -39,14 +39,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Pre-create SSH keys (skip interactive passphrase prompts)
+        run: |
+          mkdir -p "${HOME}/.ssh"
+          ssh-keygen -t ed25519 -C "test@example.com" -f "${HOME}/.ssh/id_ed25519-personal" -N ""
+          ssh-keygen -t ed25519 -C "test@example.com" -f "${HOME}/.ssh/id_ed25519" -N ""
+
       - name: Run setup.sh with test git config
         env:
           GIT_NAME: "Test User"
           GIT_EMAIL: "test@example.com"
-          GIT_EMAIL_PERSONAL: "personal@example.com"
-          GIT_EMAIL_WORK: "work@example.com"
         run: |
-          # setup.sh prompts interactively - answer "no" to install.sh, then let it create configs
+          # Answer "no" to install.sh prompt; ssh keys already exist so ssh_config skips keygen
           echo "n" | ./setup.sh
 
       - name: Verify symlinks created

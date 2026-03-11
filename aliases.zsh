@@ -69,7 +69,7 @@ fi
 if is_macos; then
     alias chrome='open -a "Google Chrome"'
 else
-    alias chrome='xdg-open "https://google.com"'
+    alias chrome='google-chrome-stable'
 fi
 alias c="code ."
 alias n="nvim ."

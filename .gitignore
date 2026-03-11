@@ -4,3 +4,5 @@ zprofile_custom.zsh
 zshrc_custom.zsh
 zshenv_custom.zsh
 aliases_custom.zsh
+# Also in global_gitignore, but kept here so contributors without setup.sh don't commit it
+.DS_Store
