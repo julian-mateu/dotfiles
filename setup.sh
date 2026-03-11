@@ -138,7 +138,7 @@ create_git_config() {
 		[pull]
 		    ff = only
 		[core]
-		    excludesFile = ~/.gitignore
+		    excludesFile = ~/.global_gitignore
 		    editor = nvim -f
 	EOF
 }
@@ -226,12 +226,15 @@ copy_files() {
     for name in *; do
         if [[ ! -d "${name}" ]]; then
             target="${HOME}/.${name}"
-            # =~ ^(install.sh|setup.sh|README.md|julianmateu.zsh-theme)$ - regex match to exclude files
-            if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md|CLAUDE.md|julianmateu.zsh-theme)$ ]]; then
+            # Exclude files that are handled separately or shouldn't be symlinked as dotfiles
+            if ! [[ "${name}" =~ ^(install.sh|setup.sh|README.md|CLAUDE.md|global_gitignore|julianmateu.zsh-theme)$ ]]; then
                 copy_file "${PWD}/${name}" "${target}"
             fi
         fi
     done
+
+    # global_gitignore gets its own target path (not .global_gitignore)
+    copy_file "${PWD}/global_gitignore" "${HOME}/.global_gitignore"
 
     if [[ -n "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}" ]]; then
         copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/julianmateu.zsh-theme"

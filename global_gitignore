@@ -1,0 +1,21 @@
+# Global gitignore - applied across all git repositories
+# This file is symlinked to ~/.global_gitignore by setup.sh
+# and referenced by gitconfig core.excludesFile
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Environment files
+.env.local
+.env.*.local
