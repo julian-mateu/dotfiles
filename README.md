@@ -14,6 +14,14 @@ cd dotfiles
 source ~/.zshrc # Reload shell
 ```
 
+## Advanced Usage
+
+```bash
+./install.sh --dry-run       # Preview what config blocks would be written (no installs)
+DOTFILES_CI=true ./install.sh  # Non-interactive mode: auto-accepts all prompts, skips GUI apps
+ZSH_PROFILE=true zsh -i -c ''    # Profile shell startup time
+```
+
 ## What's Included
 
 ### Shell

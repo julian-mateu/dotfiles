@@ -7,7 +7,7 @@ print_debug "sourcing zprofile"
 ###############################################################
 # => Environment variables
 ###############################################################
-add_to_path "${HOME}/bin"
+add_to_path_if_exists "${HOME}/bin"
 
 # Ignore duplicate entries in the history
 export HISTCONTROL="ignoreboth"

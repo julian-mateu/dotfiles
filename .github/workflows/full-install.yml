@@ -1,0 +1,139 @@
+# Full Install CI
+# ================
+# End-to-end test of install.sh + setup.sh on a fresh machine.
+# Runs on version tags (v*) and manual dispatch.
+# Matrix: macOS + Ubuntu with independent failure (fail-fast: false).
+# Verifies critical tools are installed and zsh config loads cleanly.
+
+name: Full Install
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  full-install:
+    name: Full Install (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Homebrew downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps
+          key: brew-${{ runner.os }}-${{ hashFiles('install.sh') }}
+          restore-keys: brew-${{ runner.os }}-
+
+      - name: Pre-create directories and SSH keys
+        run: |
+          mkdir -p "${HOME}/bin"
+          mkdir -p "${HOME}/.ssh"
+          ssh-keygen -t ed25519 -C "ci@test" -f "${HOME}/.ssh/id_ed25519-personal" -N ""
+          ssh-keygen -t ed25519 -C "ci@test" -f "${HOME}/.ssh/id_ed25519" -N ""
+
+      - name: Install zsh (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh
+
+      - name: Run install.sh in CI mode
+        env:
+          DOTFILES_CI: "true"
+        run: ./install.sh
+
+      - name: Verify critical tools
+        run: |
+          echo "=== Verifying critical tools ==="
+          failed=0
+          for tool in brew rg gsed jq fzf bat gh nvim go rustc node; do
+            if command -v "${tool}" &>/dev/null; then
+              echo "OK: ${tool} ($(command -v "${tool}"))"
+            else
+              echo "FAIL: ${tool} not found"
+              failed=1
+            fi
+          done
+
+          # Python via pyenv
+          if [[ -x "${HOME}/.pyenv/shims/python" ]] || command -v python3 &>/dev/null; then
+            echo "OK: python"
+          else
+            echo "FAIL: python not found"
+            failed=1
+          fi
+
+          if [[ "${failed}" -ne 0 ]]; then
+            echo "Some critical tools are missing!"
+            exit 1
+          fi
+
+      - name: Verify best-effort tools (warn only)
+        run: |
+          echo "=== Verifying best-effort tools ==="
+          for tool in sdk java dotnet kubectl; do
+            if command -v "${tool}" &>/dev/null; then
+              echo "OK: ${tool}"
+            else
+              echo "WARN: ${tool} not found (best-effort)"
+            fi
+          done
+
+          # SDKMAN is a function, check the directory
+          if [[ -d "${HOME}/.sdkman" ]]; then
+            echo "OK: SDKMAN directory exists"
+          else
+            echo "WARN: SDKMAN not installed (best-effort)"
+          fi
+
+      - name: Run setup.sh
+        env:
+          GIT_NAME: "CI Test User"
+          GIT_EMAIL: "ci@test.example.com"
+        run: |
+          # SSH keys already exist, answer "no" to install.sh prompt
+          echo "n" | ./setup.sh
+
+      - name: Verify symlinks
+        run: |
+          echo "=== Verifying symlinks ==="
+          for file in zshrc zshenv zprofile zutils.zsh aliases.zsh; do
+            if [[ -L "${HOME}/.${file}" ]]; then
+              echo "OK: ~/.${file} -> $(readlink "${HOME}/.${file}")"
+            else
+              echo "FAIL: ~/.${file} not symlinked"
+              exit 1
+            fi
+          done
+
+      - name: Install Oh My Zsh theme
+        run: |
+          mkdir -p "${HOME}/.oh-my-zsh/custom/themes"
+          ln -sf "${PWD}/julianmateu.zsh-theme" "${HOME}/.oh-my-zsh/custom/themes/julianmateu.zsh-theme"
+
+      - name: Verify zsh config loads
+        run: |
+          # Create minimal custom files for the smoke test
+          for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh aliases_custom.zsh; do
+            if [[ ! -L "${HOME}/.${file}" ]]; then
+              cat > "./${file}" << 'EOF'
+          source "${HOME}/.zutils.zsh" || { echo "Failed to load zutils.zsh" >&2; return 1; }
+          EOF
+              ln -sf "${PWD}/${file}" "${HOME}/.${file}"
+            fi
+          done
+
+          zsh -c 'source ~/.zshenv && echo "zshenv OK"'
+          zsh -c 'source ~/.zprofile && echo "zprofile OK"'
+          zsh -i -c 'echo "zshrc OK"' 2>&1 || {
+            echo "FAIL: zshrc failed to load"
+            exit 1
+          }

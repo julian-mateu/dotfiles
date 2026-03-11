@@ -216,6 +216,11 @@ init_custom_files() {
 # Returns: 0 on success, 1 on error
 # Note: Prompts user to install XCode command line tools via xcode-select
 setup_x_code() {
+    # Check if Xcode CLI tools are already installed (xcode-select -p returns 0 if installed)
+    if xcode-select -p &>/dev/null; then
+        print_success "XCode command line tools already installed"
+        return 0
+    fi
     print_info "Installing XCode command line tools, you might need to install XCode itself from the app store."
     print_error "If a pop up appears, click 'Install' and then 'Agree', and wait for it to finish before proceeding."
     ask_for_confirmation "xcode" "https://developer.apple.com/xcode/" xcode-select --install
@@ -481,7 +486,7 @@ setup_go() {
 # Note: Installs Rust via rustup and configures Cargo environment
 setup_rust() {
     ask_for_confirmation "rust" "https://www.rust-lang.org/" \
-        sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)"
+        sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -571,9 +576,9 @@ install_sdk_man() {
 # Note: Installs Java OpenJDK using SDKMAN (may require manual execution in separate terminal)
 setup_java_openjdk() {
     print_warning "sdk might not work inside a script so you might need to run the following command in a separate terminal..."
-    # Using zsh to ensure that the sdk command is defined.
+    # Source sdkman-init.sh in the subprocess so the sdk function is available
     ask_for_confirmation "java_20_openjdk" "https://sdkman.io/usage" \
-        /bin/zsh -c "sdk install java ${SDK_JAVA_VERSION}"
+        /bin/zsh -c "source \"\${HOME}/.sdkman/bin/sdkman-init.sh\" && sdk install java ${SDK_JAVA_VERSION}"
 }
 
 ###############################################################
@@ -613,21 +618,28 @@ setup_dotnet() {
 # Usage: install_kubernetes
 # Returns: 0 on success, 1 on error
 # Note: Installs Docker, kubectl, k9s, and helm. Minikube can be added separately if needed.
+#       Docker install is skipped in CI mode (requires GUI/systemd).
 install_kubernetes() {
-    print_warning "$(cat <<-EOS
-		Before installing Kubernetes, it is advised to first install docker desktop: $(fmt_underline https://docs.docker.com/desktop/mac/install/)
-		However, it is possible to use hyperkit $(fmt_underline https://minikube.sigs.k8s.io/docs/drivers/hyperkit/)
-	EOS
-    )"
-    ask_for_confirmation "docker" "https://docs.docker.com/desktop" \
-        install_docker
+    if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
+        print_warning "$(cat <<-EOS
+			Before installing Kubernetes, it is advised to first install docker desktop: $(fmt_underline https://docs.docker.com/desktop/mac/install/)
+			However, it is possible to use hyperkit $(fmt_underline https://minikube.sigs.k8s.io/docs/drivers/hyperkit/)
+		EOS
+        )"
+        ask_for_confirmation "docker" "https://docs.docker.com/desktop" \
+            install_docker
+    else
+        print_info "CI mode: skipping Docker install"
+    fi
     ask_for_confirmation "kubectl" "https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/#install-with-homebrew-on-macos" \
         brew install kubectl
     ask_for_confirmation "k9s" "https://k9scli.io/" \
         brew install k9s
     ask_for_confirmation "helm" "https://helm.sh/" \
         brew install helm
-    print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
+    if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
+        print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
+    fi
 }
 
 # install_docker - Install Docker Desktop

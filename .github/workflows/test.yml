@@ -1,3 +1,11 @@
+# Test Dotfiles CI
+# ================
+# Runs on push/PR to main. Jobs:
+#   1. shellcheck   - Lint bash/zsh scripts
+#   2. dry-run      - Verify --dry-run mode on macOS + Ubuntu
+#   3. setup        - Test setup.sh symlink creation on macOS + Ubuntu
+#   4. smoke-test   - Verify zsh config loads without errors on macOS + Ubuntu
+
 name: Test Dotfiles
 
 on:

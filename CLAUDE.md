@@ -61,7 +61,8 @@ source "${HOME}/.zutils.zsh" || {
 ### Key Utility Functions (zutils.zsh)
 
 - `source_if_exists <path>` - Safely source a file if it exists
-- `add_to_path <dir>` - Add directory to PATH if not already present
+- `add_to_path <dir>` - Add directory to PATH if not already present (errors if missing)
+- `add_to_path_if_exists <dir>` - Add to PATH if directory exists, silently skip otherwise
 - `append_lines_to_file_if_not_there <lines> <file>` - Idempotent file appending
 - `ask_for_confirmation <desc> <url> <cmd...>` - Interactive install prompts
 - `colorize <text> <color> [style...]` - Terminal color output
@@ -74,6 +75,12 @@ source "${HOME}/.zutils.zsh" || {
 - Neovim config is in a separate repo: https://github.com/julianmateu/nvim-config
 - Scripts use `set -e -o pipefail` for fail-fast behavior
 - The `${0%/*}` pattern extracts the script's directory for relative sourcing
+
+## Environment Variables
+
+- `DOTFILES_DRY_RUN=true` - Preview config blocks without installing (also via `--dry-run` flag)
+- `DOTFILES_CI=true` - Non-interactive mode: auto-accepts all prompts, skips GUI apps
+- `ZSH_PROFILE=true` - Enable zsh startup profiling (run `ZSH_PROFILE=true zsh -i -c ''`)
 
 ## Cross-Platform Patterns
 
