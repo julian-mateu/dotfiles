@@ -60,7 +60,12 @@ jobs:
           fi
           echo "=== Verifying critical tools ==="
           failed=0
-          for tool in brew rg gsed jq fzf bat gh nvim go rustc node; do
+          # gsed is macOS-only (on Linux, sed is GNU sed natively)
+          tools="brew rg jq fzf bat gh nvim go rustc node"
+          if [[ "$(uname)" == "Darwin" ]]; then
+            tools="${tools} gsed"
+          fi
+          for tool in ${tools}; do
             if command -v "${tool}" &>/dev/null; then
               echo "OK: ${tool} ($(command -v "${tool}"))"
             else

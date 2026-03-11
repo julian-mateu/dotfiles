@@ -382,8 +382,6 @@ setup_useful_tools() {
     local brew_tools=(
         "wget|https://www.gnu.org/software/wget/"
         "ripgrep|https://formulae.brew.sh/formula/ripgrep"
-        "gnu-sed|https://formulae.brew.sh/formula/gnu-sed"
-        "coreutils|https://www.gnu.org/software/coreutils/"
         "jq|https://stedolan.github.io/jq/"
         "gnupg|https://gnupg.org/"
         "tree|https://formulae.brew.sh/formula/tree"
@@ -393,6 +391,16 @@ setup_useful_tools() {
         "bat|https://github.com/sharkdp/bat"
         "gh|https://cli.github.com/"
     )
+
+    # gnu-sed and coreutils: install via Homebrew on macOS only.
+    # On Linux these are already available natively (sed, coreutils package).
+    # Compiling them from source via Linuxbrew can take 20+ minutes.
+    if is_macos; then
+        brew_tools+=(
+            "gnu-sed|https://formulae.brew.sh/formula/gnu-sed"
+            "coreutils|https://www.gnu.org/software/coreutils/"
+        )
+    fi
     
     for tool_info in "${brew_tools[@]}"; do
         # Split tool_info into name and URL using parameter expansion
