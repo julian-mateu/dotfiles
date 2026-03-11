@@ -1,0 +1,52 @@
+# shellcheck shell=bash
+# dotfiles.conf - Installation configuration
+# ============================================
+# Copy to dotfiles.conf and customize, then run:
+#   ./install.sh --config dotfiles.conf
+#
+# Or use a built-in profile:
+#   ./install.sh --profile minimal    # Core tools only
+#   ./install.sh --profile backend    # + Java, .NET, K8s, Docker
+#   ./install.sh --profile full       # + GUI apps, fonts, IDE
+#
+# Without --config or --profile, install.sh runs interactively (current behavior).
+# Combine with --dry-run to preview: ./install.sh --dry-run --profile full
+
+# System setup
+INSTALL_HOMEBREW=true
+INSTALL_OH_MY_ZSH=true
+INSTALL_NVIM=true
+
+# Development tools (brew packages: ripgrep, jq, fzf, bat, gh, etc.)
+INSTALL_USEFUL_TOOLS=true
+
+# Language runtimes
+INSTALL_PYTHON=true
+PYTHON_VERSION="3.13.1"
+INSTALL_GO=true
+INSTALL_RUST=true
+INSTALL_NODE=true
+NVM_VERSION="0.40.3"
+INSTALL_JAVA=true
+SDK_JAVA_VERSION="24-open"
+INSTALL_DOTNET=true
+DOTNET_VERSION="8"
+
+# Containers
+INSTALL_KUBERNETES=true
+INSTALL_DOCKER=true
+
+# GUI applications (always skipped in CI)
+INSTALL_VSCODE=true
+INSTALL_SLACK=false
+INSTALL_OBSIDIAN=false
+INSTALL_ZOOM=false
+INSTALL_SPOTIFY=false
+INSTALL_CHROME=false
+INSTALL_NERD_FONTS=true
+INSTALL_ITERM2=true        # macOS only
+INSTALL_DISPLAYLINK=false  # macOS only
+
+# CLI tools with shell config
+INSTALL_CLAUDE_CODE=true
+INSTALL_DEVS_CLI=true
