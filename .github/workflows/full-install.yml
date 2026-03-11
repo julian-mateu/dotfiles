@@ -52,6 +52,12 @@ jobs:
 
       - name: Verify critical tools
         run: |
+          # Homebrew isn't in PATH for new shell steps on Linux
+          if [[ -d /home/linuxbrew/.linuxbrew ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          elif [[ -d /opt/homebrew ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+          fi
           echo "=== Verifying critical tools ==="
           failed=0
           for tool in brew rg gsed jq fzf bat gh nvim go rustc node; do
@@ -78,6 +84,11 @@ jobs:
 
       - name: Verify best-effort tools (warn only)
         run: |
+          if [[ -d /home/linuxbrew/.linuxbrew ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          elif [[ -d /opt/homebrew ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+          fi
           echo "=== Verifying best-effort tools ==="
           for tool in sdk java dotnet kubectl; do
             if command -v "${tool}" &>/dev/null; then
