@@ -237,10 +237,11 @@ copy_files() {
     # doesn't match the .{name} convention (source has no dot, target does)
     copy_file "${PWD}/global_gitignore" "${HOME}/.global_gitignore"
 
-    if [[ -n "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}" ]]; then
-        copy_file "${PWD}/julianmateu.zsh-theme" "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/julianmateu.zsh-theme"
+    local themes_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes"
+    if [[ -d "${themes_dir}" ]]; then
+        copy_file "${PWD}/julianmateu.zsh-theme" "${themes_dir}/julianmateu.zsh-theme"
     else
-        print_warning "Did not copy the zsh theme as the zsh custom directory does not exist"
+        print_warning "Did not copy the zsh theme as the themes directory does not exist: ${themes_dir}"
     fi
 }
 
