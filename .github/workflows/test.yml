@@ -160,6 +160,14 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y zsh
 
+      - name: Install Oh My Zsh (required by zshrc)
+        run: |
+          # Install OMZ first - it overwrites ~/.zshrc with its default template.
+          # We re-create our symlinks after so our zshrc takes precedence.
+          sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+          mkdir -p "${HOME}/.oh-my-zsh/custom/themes"
+          cp julianmateu.zsh-theme "${HOME}/.oh-my-zsh/custom/themes/"
+
       - name: Create minimal custom files
         run: |
           # Create minimal custom files so sourcing doesn't fail
@@ -169,20 +177,13 @@ jobs:
           CUSTOMEOF
           done
 
-      - name: Create symlinks manually for smoke test
+      - name: Create symlinks (after OMZ install to override its default zshrc)
         run: |
           for file in zshrc zshenv zprofile zutils.zsh aliases.zsh \
                       zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh aliases_custom.zsh; do
             ln -sf "${PWD}/${file}" "${HOME}/.${file}"
           done
           ln -sf "${PWD}/global_gitignore" "${HOME}/.global_gitignore"
-
-      - name: Install Oh My Zsh (required by zshrc)
-        run: |
-          sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-          # Install theme
-          mkdir -p "${HOME}/.oh-my-zsh/custom/themes"
-          cp julianmateu.zsh-theme "${HOME}/.oh-my-zsh/custom/themes/"
 
       - name: Verify zshenv loads and zutils functions exist
         run: |
