@@ -208,6 +208,11 @@ PROMPT="${PROMPT}"$'${vim_mode}\n'
 # Load custom zshrc if it exists
 source_if_exists "${HOME}/.zshrc_custom.zsh"
 
+# Load completions
+fpath=(~/.zfunc $fpath)
+autoload -Uz compinit && compinit
+
+
 # zprof - Print zsh startup profile
 # See: zsh manual "The zsh/zprof Module" section
 # Uncomment this line to print zsh startup profile:
