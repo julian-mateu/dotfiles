@@ -564,6 +564,7 @@ setup_dotnet() {
 		DOTNET_VERSION='${DOTNET_VERSION}'
 		export DOTNET_ROOT="\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/libexec"
 		add_to_path "\${HOMEBREW_PREFIX}/opt/dotnet@\${DOTNET_VERSION}/bin"
+		add_to_path "${HOME}/.dotnet/tools"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
