@@ -3,7 +3,9 @@
 # End-to-end test of install.sh + setup.sh on a fresh machine.
 # Runs on version tags (v*) and manual dispatch.
 # Matrix: macOS + Ubuntu with independent failure (fail-fast: false).
-# Verifies critical tools are installed and zsh config loads cleanly.
+# Verifies critical tools are installed and functional (via version commands),
+# checks that config sections are written to custom files, validates
+# idempotency (no duplicates on re-run), and confirms zsh config loads cleanly.
 
 name: Full Install
 
@@ -60,30 +62,46 @@ jobs:
           fi
           echo "=== Verifying critical tools ==="
           failed=0
-          # gsed is macOS-only (on Linux, sed is GNU sed natively)
-          tools="brew rg jq fzf bat gh nvim go rustc node"
-          if [[ "$(uname)" == "Darwin" ]]; then
-            tools="${tools} gsed"
-          fi
-          for tool in ${tools}; do
-            if command -v "${tool}" &>/dev/null; then
-              echo "OK: ${tool} ($(command -v "${tool}"))"
+
+          check_tool() {
+            local name="$1"
+            shift
+            if output=$("$@" 2>&1); then
+              echo "OK: ${name} => ${output}"
             else
-              echo "FAIL: ${tool} not found"
+              echo "FAIL: ${name} ('$*' failed)"
               failed=1
             fi
-          done
+          }
+
+          check_tool "brew"   brew   --version
+          check_tool "rg"     rg     --version
+          check_tool "jq"     jq     --version
+          check_tool "fzf"    fzf    --version
+          check_tool "bat"    bat    --version
+          check_tool "gh"     gh     --version
+          check_tool "nvim"   nvim   --version
+          check_tool "go"     go     version
+          check_tool "rustc"  rustc  --version
+          check_tool "node"   node   --version
+
+          # gsed is macOS-only (on Linux, sed is GNU sed natively)
+          if [[ "$(uname)" == "Darwin" ]]; then
+            check_tool "gsed" gsed --version
+          fi
 
           # Python via pyenv
-          if [[ -x "${HOME}/.pyenv/shims/python" ]] || command -v python3 &>/dev/null; then
-            echo "OK: python"
+          if [[ -x "${HOME}/.pyenv/shims/python" ]]; then
+            check_tool "python (pyenv)" "${HOME}/.pyenv/shims/python" --version
+          elif command -v python3 &>/dev/null; then
+            check_tool "python3" python3 --version
           else
             echo "FAIL: python not found"
             failed=1
           fi
 
           if [[ "${failed}" -ne 0 ]]; then
-            echo "Some critical tools are missing!"
+            echo "Some critical tools are missing or non-functional!"
             exit 1
           fi
 
@@ -109,6 +127,72 @@ jobs:
           else
             echo "WARN: SDKMAN not installed (best-effort)"
           fi
+
+      - name: Verify config file content
+        run: |
+          echo "=== Verifying config blocks in custom files ==="
+          failed=0
+          for section in "Homebrew configuration" "Go configuration" "Rust configuration" \
+                         ".NET configuration" "Claude Code configuration"; do
+              found=0
+              for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
+                  if [[ -f "./${file}" ]] && grep -q "${section}" "./${file}"; then
+                      found=1
+                      break
+                  fi
+              done
+              if [[ "${found}" -eq 1 ]]; then
+                  echo "OK: '${section}' found in custom files"
+              else
+                  echo "FAIL: '${section}' missing from custom files"
+                  failed=1
+              fi
+          done
+          if [[ "${failed}" -ne 0 ]]; then
+              echo "Some expected config sections are missing!"
+              exit 1
+          fi
+
+      - name: Verify idempotency
+        env:
+          DOTFILES_CI: "true"
+        run: |
+          echo "=== Counting config markers before second run ==="
+          count_markers() {
+            local total=0
+            for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
+              if [[ -f "./${file}" ]]; then
+                local headers
+                headers=$(grep -c '###############' "./${file}" 2>/dev/null || true)
+                local arrows
+                arrows=$(grep -c '# =>' "./${file}" 2>/dev/null || true)
+                total=$(( total + headers + arrows ))
+              fi
+            done
+            echo "${total}"
+          }
+
+          before=$(count_markers)
+          echo "Marker count before re-run: ${before}"
+
+          echo "=== Running install.sh a second time ==="
+          ./install.sh
+
+          after=$(count_markers)
+          echo "Marker count after re-run: ${after}"
+
+          if [[ "${before}" -ne "${after}" ]]; then
+            echo "FAIL: Marker count changed from ${before} to ${after} — config blocks were duplicated!"
+            echo "=== Diff of custom files ==="
+            for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
+              if [[ -f "./${file}" ]]; then
+                echo "--- ${file} ---"
+                cat "./${file}"
+              fi
+            done
+            exit 1
+          fi
+          echo "OK: Idempotency verified (marker count unchanged: ${before})"
 
       - name: Run setup.sh
         env:
