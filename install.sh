@@ -308,9 +308,9 @@ init_custom_files() {
     append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
 
     for file in "${ZPROFILE_CUSTOM_FILE}" "${ZSHENV_CUSTOM_FILE}" "${ZSHRC_CUSTOM_FILE}"; do
-      # ${parameter%%word} is a parameter expansion that removes the trailing "word" from the parameter.
+      # basename strips directory prefix and .zsh suffix → "zprofile_custom"
       local file_basename
-      file_basename="${file%%.zsh}"
+      file_basename="$(basename "${file}" .zsh)"
       IFS='' read -r -d '' lines <<-EOS || true
 			print_debug "sourcing ${file_basename}"
 		EOS
