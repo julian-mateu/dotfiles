@@ -4,5 +4,7 @@ zprofile_custom.zsh
 zshrc_custom.zsh
 zshenv_custom.zsh
 aliases_custom.zsh
+# User config file for install.sh (copy from dotfiles.conf.example)
+dotfiles.conf
 # Also in global_gitignore, but kept here so contributors without setup.sh don't commit it
 .DS_Store

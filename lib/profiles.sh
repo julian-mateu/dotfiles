@@ -1,6 +1,7 @@
 #!/bin/bash
 # Built-in profiles for dotfiles install
 # Sourced by install.sh via lib/config.sh
+# shellcheck disable=SC2034  # INSTALL_* variables used via indirect expansion in registry.sh
 
 # Set all INSTALL_* variables to false (baseline)
 _reset_all_install_vars() {

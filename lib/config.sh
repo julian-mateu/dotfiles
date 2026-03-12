@@ -1,6 +1,7 @@
 #!/bin/bash
 # Configuration loading for dotfiles install
 # Sourced by install.sh - not meant to be run standalone
+# shellcheck disable=SC2034  # Variables used via indirect expansion in registry.sh
 
 # Parse command-line arguments for config/profile support
 # Sets: CONFIG_FILE, PROFILE, DOTFILES_DRY_RUN
@@ -55,12 +56,14 @@ parse_arguments() {
 load_configuration() {
     if [[ -n "${CONFIG_FILE}" ]]; then
         print_info "Loading config from: ${CONFIG_FILE}"
+        # shellcheck disable=SC1090  # Config file path is user-provided
         source "${CONFIG_FILE}"
     elif [[ -n "${PROFILE}" ]]; then
         print_info "Loading profile: ${PROFILE}"
-        load_profile "${PROFILE}"
+        load_profile "${PROFILE}" || return $?
     elif [[ -f "./dotfiles.conf" ]]; then
         print_info "Loading config from: ./dotfiles.conf"
+        # shellcheck disable=SC1091  # dotfiles.conf is user-created, not tracked
         source "./dotfiles.conf"
     else
         return 1  # No config found - caller should fall back to interactive

@@ -6,11 +6,18 @@ set -e -o pipefail
 # ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
 # See: bash manual "Parameter Expansion" section
 # shellcheck disable=SC1091
-source "${0%/*}/zutils.zsh" || { 
+source "${0%/*}/zutils.zsh" || {
     echo "Failed to load zutils.zsh" >&2
     echo "Please ensure the dotfiles repository is properly set up." >&2
     exit 1
 }
+
+# shellcheck disable=SC1091
+source "${0%/*}/lib/config.sh" || { echo "Failed to load lib/config.sh" >&2; exit 1; }
+# shellcheck disable=SC1091
+source "${0%/*}/lib/profiles.sh" || { echo "Failed to load lib/profiles.sh" >&2; exit 1; }
+# shellcheck disable=SC1091
+source "${0%/*}/lib/registry.sh" || { echo "Failed to load lib/registry.sh" >&2; exit 1; }
 
 # Configuration variables
 ZPROFILE_CUSTOM_FILE='./zprofile_custom.zsh'
@@ -29,25 +36,129 @@ DOTNET_VERSION='8'
 NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
 ###############################################################
+# => Composite functions for config-driven mode
+###############################################################
+
+# setup_node_full - Install NVM + Node.js LTS (combined for registry)
+setup_node_full() {
+    install_nvm
+    setup_node
+}
+
+# setup_java_full - Install SDKMAN + Java OpenJDK (combined for registry)
+setup_java_full() {
+    install_sdk_man
+    setup_java_openjdk
+}
+
+# install_kubernetes_tools - Install kubectl, k9s, helm (Docker handled separately by registry)
+install_kubernetes_tools() {
+    brew install kubectl
+    brew install k9s
+    brew install helm
+    if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
+        print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
+    fi
+}
+
+# Simple wrapper functions for GUI apps registered in the registry
+install_zoom() { brew install --cask zoom; }
+install_spotify() { brew install --cask spotify; }
+install_chrome() { brew install --cask google-chrome; }
+
+###############################################################
+# => Tool registry setup
+###############################################################
+
+# register_all_tools - Register all tools with the registry for config-driven mode
+register_all_tools() {
+    # System setup
+    register_tool "homebrew"      setup_homebrew                "Homebrew"         "https://brew.sh/"               ""         "all"
+    register_tool "oh_my_zsh"     setup_oh_my_zsh_and_plugins   "Oh My Zsh"        "https://ohmyzsh.dev/"           "homebrew" "all"
+    register_tool "nvim"          setup_nvim                    "Neovim"           "https://neovim.io/"             "homebrew" "all"
+
+    # Dev tools
+    register_tool "useful_tools"  setup_useful_tools            "Useful Tools"     ""                               "homebrew" "all"
+
+    # Languages
+    register_tool "python"        install_python                "Python (pyenv)"   "https://github.com/pyenv"       "homebrew" "all"
+    register_tool "go"            setup_go                      "Go"               "https://go.dev/"                "homebrew" "all"
+    register_tool "rust"          setup_rust                    "Rust"             "https://rust-lang.org/"         ""         "all"
+    register_tool "node"          setup_node_full               "Node.js (NVM)"    "https://nodejs.org/"            ""         "all"
+    register_tool "java"          setup_java_full               "Java (SDKMAN)"    "https://sdkman.io/"             ""         "all"
+    register_tool "dotnet"        setup_dotnet                  ".NET"             "https://dotnet.microsoft.com/"  "homebrew" "all"
+
+    # Containers
+    register_tool "docker"        install_docker                "Docker"           "https://docker.com/"            ""         "all"
+    register_tool "kubernetes"    install_kubernetes_tools       "Kubernetes"       "https://kubernetes.io/"         "homebrew" "all"
+
+    # GUI applications (skipped in CI by run_registry)
+    register_tool "vscode"        install_vscode                "VS Code"          "https://code.visualstudio.com/" ""         "all"
+    register_tool "slack"         setup_slack                   "Slack"            "https://www.slack.com"          ""         "all"
+    register_tool "obsidian"      install_obsidian              "Obsidian"         "https://obsidian.md/"           ""         "all"
+    register_tool "zoom"          install_zoom                  "Zoom"             "https://zoom.us/"               ""         "all"
+    register_tool "spotify"       install_spotify               "Spotify"          "https://www.spotify.com/"       ""         "all"
+    register_tool "chrome"        install_chrome                "Google Chrome"    "https://www.google.com/chrome/" ""         "all"
+    register_tool "nerd_fonts"    install_nerd_fonts            "Nerd Fonts"       "https://www.nerdfonts.com/"     ""         "all"
+    register_tool "iterm2"        install_iterm2                "iTerm2"           "https://iterm2.com/"            ""         "macos"
+    register_tool "displaylink"   install_displaylink           "DisplayLink"      "https://www.synaptics.com/"     ""         "macos"
+
+    # CLI tools with shell config
+    register_tool "claude_code"   setup_claude_code             "Claude Code"      "https://docs.anthropic.com/"    ""         "all"
+    register_tool "devs_cli"      setup_devs_cli                "Devs CLI"         ""                               ""         "all"
+}
+
+###############################################################
 # => Main function
 ###############################################################
 
 # main - Main entry point for the installation script
-# Usage: main [--dry-run] [arguments...]
+# Usage: main [--dry-run] [--config <file>] [--profile <name>]
 # Parameters: Command line arguments passed to the script
 # Returns: 0 on success, 1 on error
-# Note: Orchestrates the entire installation process for development tools
-#       Use --dry-run to show what config blocks WOULD be written without installing anything
+# Note: Supports three modes:
+#   1. Config-driven: ./install.sh --config dotfiles.conf (or --profile minimal|backend|full)
+#   2. Auto-config: ./install.sh (with dotfiles.conf in repo root)
+#   3. Interactive: ./install.sh (no config, current behavior preserved)
+#   All modes support --dry-run to preview without installing
 main() {
-    # Parse --dry-run flag
-    if [[ "${1:-}" == "--dry-run" ]]; then
-        DOTFILES_DRY_RUN="true"
-        shift
-        print_warning "DRY RUN: showing config blocks that would be written (no installs)"
-    fi
-
+    parse_arguments "$@"
     init_custom_files
 
+    if load_configuration; then
+        # Config-driven mode: auto-accept all prompts since config specifies what to install
+        DOTFILES_NON_INTERACTIVE="true"
+
+        # System dependencies (required before registry tools)
+        if [[ "${DOTFILES_DRY_RUN}" != "true" ]]; then
+            if is_macos; then
+                print_info "Installing macOS dependencies"
+                setup_x_code
+            else
+                print_info "Installing Linux dependencies"
+                setup_apt_get
+            fi
+        fi
+
+        register_all_tools
+        run_registry
+    elif [[ -n "${CONFIG_FILE:-}" ]] || [[ -n "${PROFILE:-}" ]]; then
+        # User explicitly requested config/profile but loading failed - exit with error
+        print_error "Failed to load configuration. Check the error above."
+        return 1
+    else
+        # No config found - fall back to interactive mode (backwards compatible)
+        run_interactive
+    fi
+
+    # shellcheck disable=SC2016
+    echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
+}
+
+# run_interactive - Original interactive installation flow
+# Usage: run_interactive (called by main when no config is found)
+# Note: Preserves the original behavior where each tool prompts for confirmation
+run_interactive() {
     # System setup - these run commands directly (not via ask_for_confirmation),
     # so they need an explicit dry-run guard
     if [[ "${DOTFILES_DRY_RUN}" != "true" ]]; then
@@ -163,9 +274,6 @@ main() {
     # CLI tools with shell config
     setup_claude_code
     setup_devs_cli
-
-    # shellcheck disable=SC2016
-    echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
 }
 
 ###############################################################
