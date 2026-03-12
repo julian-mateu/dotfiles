@@ -1046,6 +1046,8 @@ install_iterm2() {
         append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
     fi
 
+    # DynamicProfiles directory is created on first iTerm2 launch - ensure it exists
+    mkdir -p "${HOME}/Library/Application Support/iTerm2/DynamicProfiles"
     ask_for_confirmation "iTerm2 profile" "" cp "${0%/*}/iterm2/iterm2_profile.json" "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/iterm2_profile.json"
 
     print_info "You will need to make the profile the default in the preferences."
