@@ -11,7 +11,7 @@ This is a dotfiles repository for macOS/Linux development environments. It uses 
 ```bash
 # Full setup on a new machine
 ./install.sh                          # Interactive mode (prompts for each tool)
-./install.sh --profile minimal        # Use built-in profile
+./install.sh --profile developer      # Use built-in profile
 ./install.sh --config dotfiles.conf   # Use custom config file
 ./install.sh --dry-run --profile full # Preview what would be installed
 ./setup.sh                            # Create symlinks to home directory
@@ -40,7 +40,7 @@ ZSH loads files in this order: `zshenv` → `zprofile` → `zshrc`
 | `aliases.zsh` | Command shortcuts organized by category |
 | `julianmateu.zsh-theme` | Custom ZSH theme with vim mode indicator, git status, kubecontext |
 | `lib/config.sh` | CLI argument parsing (`--config`, `--profile`, `--dry-run`) and config loading |
-| `lib/profiles.sh` | Built-in profiles: minimal, backend, full (cumulative inheritance) |
+| `lib/profiles.sh` | Built-in profiles: minimal, developer, backend, full (cumulative inheritance) |
 | `lib/registry.sh` | Tool registry: `register_tool()`, `is_tool_enabled()`, `run_registry()` |
 | `dotfiles.conf.example` | Example config with all `INSTALL_*` variables |
 | `tests/` | bats-core unit tests for zutils.zsh, profiles, and registry |
@@ -102,23 +102,23 @@ main() → parse_arguments() → init_custom_files()
 
 #### Registry pattern (`lib/registry.sh`)
 
-Each tool is registered with `register_tool "key" function "description" "url" "deps" "platform"`. The key maps to an `INSTALL_<KEY>` variable (uppercased). `run_registry()` iterates in registration order and for each tool:
+Each tool is registered with `register_tool "key" function "description" "url" "deps" "platform" "gui"`. The key maps to an `INSTALL_<KEY>` variable (uppercased). `run_registry()` iterates in registration order and for each tool:
 1. Checks platform (`all`/`macos`/`linux`)
-2. Skips GUI apps in CI mode (`DOTFILES_CI=true`)
+2. Skips tools with `gui=true` in CI mode (`DOTFILES_CI=true`)
 3. Checks `INSTALL_<KEY>` is `true`
 4. Checks dependencies (comma-separated keys) are all enabled
 5. Calls the install function
 
 #### Profiles (`lib/profiles.sh`)
 
-`_reset_all_install_vars()` sets all 23 `INSTALL_*` variables to `false`. Each profile enables its subset. Profiles use cumulative inheritance: `backend` calls `load_profile minimal` first, `full` calls `load_profile backend`.
+`_reset_all_install_vars()` sets all 23 `INSTALL_*` variables to `false`. Each profile enables its subset. Profiles use cumulative inheritance: `developer` calls `load_profile minimal`, `backend` calls `load_profile developer`, `full` calls `load_profile backend`.
 
 #### Adding a new tool
 
 1. Write the install function in `install.sh`
 2. Add `register_tool` call in `register_all_tools()`
 3. Add `INSTALL_<KEY>=false` to `_reset_all_install_vars()` in `lib/profiles.sh`
-4. Enable in the appropriate profiles (`load_profile_minimal`, `load_profile_backend`, or `load_profile_full`)
+4. Enable in the appropriate profiles (`minimal`, `developer`, `backend`, or `full`)
 5. Add to `dotfiles.conf.example`
 6. If the tool needs interactive-mode support, add `ask_for_confirmation` call in `run_interactive()`
 

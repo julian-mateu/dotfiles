@@ -25,9 +25,10 @@ cp dotfiles.conf.example dotfiles.conf  # customize, then:
 ./install.sh --config dotfiles.conf
 
 # Profile - use a built-in preset
-./install.sh --profile minimal    # Core tools only
+./install.sh --profile minimal    # Shell tools only (no languages)
+./install.sh --profile developer  # + Python, Go, Rust, Node
 ./install.sh --profile backend    # + Java, .NET, K8s, Docker
-./install.sh --profile full       # + GUI apps, fonts, IDE
+./install.sh --profile full       # + all GUI apps, fonts, IDE
 
 # Auto-config - uses ./dotfiles.conf if it exists, otherwise interactive
 ./install.sh
@@ -44,9 +45,10 @@ DOTFILES_CI=true ./install.sh
 
 | Profile | Includes |
 |---------|----------|
-| `minimal` | Homebrew, Oh My Zsh, Neovim, useful tools, Python, Go, Rust, Node, Claude Code |
-| `backend` | minimal + Java (SDKMAN), .NET, Kubernetes, Docker |
-| `full` | backend + VS Code, Nerd Fonts, iTerm2, Devs CLI |
+| `minimal` | Homebrew, Oh My Zsh, Neovim, useful tools, Claude Code |
+| `developer` | minimal + Python, Go, Rust, Node |
+| `backend` | developer + Java (SDKMAN), .NET, Kubernetes, Docker |
+| `full` | backend + VS Code, Nerd Fonts, iTerm2, Devs CLI, Slack, Obsidian, Zoom, Spotify, Chrome, DisplayLink |
 
 ### Config File
 
@@ -127,11 +129,18 @@ These are created by `install.sh` and symlinked by `setup.sh`.
 | `install.sh` | Tool installation (interactive, config-driven, or profile-based) |
 | `setup.sh` | Symlink creation (`-f` to force overwrite) |
 | `lib/config.sh` | CLI argument parsing and config loading |
-| `lib/profiles.sh` | Built-in profiles (minimal, backend, full) |
+| `lib/profiles.sh` | Built-in profiles (minimal, developer, backend, full) |
 | `lib/registry.sh` | Tool registry pattern for config-driven installs |
 | `dotfiles.conf.example` | Example config file with all `INSTALL_*` variables |
 
 ## Tips
+
+### iTerm2 Setup
+
+After installing iTerm2 (`--profile full` or `INSTALL_ITERM2=true`):
+1. The installer copies a Dynamic Profile to `~/Library/Application Support/iTerm2/DynamicProfiles/`
+2. Open iTerm2 → Preferences → Profiles → select the imported profile → set as Default
+3. Color schemes (Catppuccin Latte/Mocha) are in `iterm2/` directory - import via Preferences → Profiles → Colors → Color Presets
 
 ### Prevent Homebrew Auto-Upgrades
 
