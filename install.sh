@@ -844,6 +844,11 @@ install_kubernetes() {
 # Returns: 0 on success, 1 on error
 # Note: Downloads and installs Docker Desktop for macOS and Linux based on system architecture
 install_docker() {
+    if command -v docker &>/dev/null; then
+        print_success "Docker already installed"
+        return 0
+    fi
+
     print_info "Installing Docker"
 
     if is_macos; then
@@ -912,6 +917,11 @@ setup_ides() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Visual Studio Code via direct download for macOS and Linux
 install_vscode() {
+    if command -v code &>/dev/null; then
+        print_success "VS Code already installed"
+        return 0
+    fi
+
     print_info "Installing Visual Studio Code"
 
     if is_macos; then
@@ -950,8 +960,16 @@ setup_slack() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Obsidian via direct download for macOS and Linux
 install_obsidian() {
+    if is_macos && [[ -d "/Applications/Obsidian.app" ]]; then
+        print_success "Obsidian already installed"
+        return 0
+    elif ! is_macos && command -v obsidian &>/dev/null; then
+        print_success "Obsidian already installed"
+        return 0
+    fi
+
     print_info "Installing Obsidian"
-    
+
     if is_macos; then
         local obsidian_dmg="obsidian.dmg"
         local obsidian_app="/Applications/Obsidian.app"
@@ -997,11 +1015,15 @@ install_obsidian() {
 install_nerd_fonts() {
     local font="0xProto"
     local version="3.4.0"
+    local font_dir="${HOME}/.local/share/fonts"
+
+    # Check if font is already installed
+    if ls "${font_dir}"/0xProto*NerdFont*.ttf &>/dev/null 2>&1; then
+        print_success "Nerd Fonts already installed"
+        return 0
+    fi
 
     print_info "Installing Nerd Fonts"
-
-    # Install via direct download on Linux
-    local font_dir="${HOME}/.local/share/fonts"
     local font_zip="${font}.zip"
     
     # Create font directory if it doesn't exist
@@ -1054,6 +1076,11 @@ install_iterm2() {
 }
 
 install_displaylink() {
+  if [[ -d "/Applications/DisplayLink Manager.app" ]]; then
+      print_success "DisplayLink Manager already installed"
+      return 0
+  fi
+
   print_info "Installing DisplayLink Manager..."
   local displaylink_file="./display-link.zip"
   curl -L -o "${displaylink_file}" "https://www.synaptics.com/sites/default/files/exe_files/${DISPLAYLINK_DATE}/DisplayLink%20Manager%20Graphics%20Connectivity${DISPLAYLINK_VERSION}-EXE.zip"
