@@ -65,9 +65,27 @@ install_kubernetes_tools() {
 }
 
 # Simple wrapper functions for GUI apps registered in the registry
-install_zoom() { brew install --cask zoom; }
-install_spotify() { brew install --cask spotify; }
-install_chrome() { brew install --cask google-chrome; }
+install_zoom() {
+    if is_macos; then
+        brew install --cask zoom
+    else
+        sudo snap install zoom-client
+    fi
+}
+install_spotify() {
+    if is_macos; then
+        brew install --cask spotify
+    else
+        sudo snap install spotify
+    fi
+}
+install_chrome() {
+    if is_macos; then
+        brew install --cask google-chrome
+    else
+        sudo snap install chromium
+    fi
+}
 
 ###############################################################
 # => Tool registry setup
@@ -92,19 +110,19 @@ register_all_tools() {
     register_tool "dotnet"        setup_dotnet                  ".NET"             "https://dotnet.microsoft.com/"  "homebrew" "all"
 
     # Containers
-    register_tool "docker"        install_docker                "Docker"           "https://docker.com/"            ""         "all"
+    register_tool "docker"        install_docker                "Docker"           "https://docker.com/"            ""         "all"    "true"
     register_tool "kubernetes"    install_kubernetes_tools       "Kubernetes"       "https://kubernetes.io/"         "homebrew" "all"
 
-    # GUI applications (skipped in CI by run_registry)
-    register_tool "vscode"        install_vscode                "VS Code"          "https://code.visualstudio.com/" ""         "all"
-    register_tool "slack"         setup_slack                   "Slack"            "https://www.slack.com"          ""         "all"
-    register_tool "obsidian"      install_obsidian              "Obsidian"         "https://obsidian.md/"           ""         "all"
-    register_tool "zoom"          install_zoom                  "Zoom"             "https://zoom.us/"               ""         "all"
-    register_tool "spotify"       install_spotify               "Spotify"          "https://www.spotify.com/"       ""         "all"
-    register_tool "chrome"        install_chrome                "Google Chrome"    "https://www.google.com/chrome/" ""         "all"
-    register_tool "nerd_fonts"    install_nerd_fonts            "Nerd Fonts"       "https://www.nerdfonts.com/"     ""         "all"
-    register_tool "iterm2"        install_iterm2                "iTerm2"           "https://iterm2.com/"            ""         "macos"
-    register_tool "displaylink"   install_displaylink           "DisplayLink"      "https://www.synaptics.com/"     ""         "macos"
+    # GUI applications (gui=true: skipped in CI by run_registry)
+    register_tool "vscode"        install_vscode                "VS Code"          "https://code.visualstudio.com/" ""         "all"    "true"
+    register_tool "slack"         setup_slack                   "Slack"            "https://www.slack.com"          ""         "all"    "true"
+    register_tool "obsidian"      install_obsidian              "Obsidian"         "https://obsidian.md/"           ""         "all"    "true"
+    register_tool "zoom"          install_zoom                  "Zoom"             "https://zoom.us/"               ""         "all"    "true"
+    register_tool "spotify"       install_spotify               "Spotify"          "https://www.spotify.com/"       ""         "all"    "true"
+    register_tool "chrome"        install_chrome                "Google Chrome"    "https://www.google.com/chrome/" ""         "all"    "true"
+    register_tool "nerd_fonts"    install_nerd_fonts            "Nerd Fonts"       "https://www.nerdfonts.com/"     ""         "all"    "true"
+    register_tool "iterm2"        install_iterm2                "iTerm2"           "https://iterm2.com/"            ""         "macos"  "true"
+    register_tool "displaylink"   install_displaylink           "DisplayLink"      "https://www.synaptics.com/"     ""         "macos"  "true"
 
     # CLI tools with shell config
     register_tool "claude_code"   setup_claude_code             "Claude Code"      "https://docs.anthropic.com/"    ""         "all"
@@ -120,7 +138,7 @@ register_all_tools() {
 # Parameters: Command line arguments passed to the script
 # Returns: 0 on success, 1 on error
 # Note: Supports three modes:
-#   1. Config-driven: ./install.sh --config dotfiles.conf (or --profile minimal|backend|full)
+#   1. Config-driven: ./install.sh --config dotfiles.conf (or --profile minimal|developer|backend|full)
 #   2. Auto-config: ./install.sh (with dotfiles.conf in repo root)
 #   3. Interactive: ./install.sh (no config, current behavior preserved)
 #   All modes support --dry-run to preview without installing
@@ -358,6 +376,7 @@ setup_apt_get() {
         "file|https://launchpad.net/ubuntu/+source/file"
         "zsh|https://www.zsh.org/"
         "unzip|https://packages.ubuntu.com/search?keywords=unzip"
+        "snapd|https://snapcraft.io/docs/installing-snapd"
     )
     
     install_packages_with_urls "apt_packages" "sudo apt-get install -y {name}"
@@ -370,8 +389,12 @@ setup_apt_get() {
 setup_homebrew() {
 
     if is_macos; then
-        # shellcheck disable=SC2016
-        ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        if command -v brew &>/dev/null; then
+            print_success "Homebrew already installed"
+        else
+            # shellcheck disable=SC2016
+            ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        fi
 
         # Determine Homebrew path based on architecture
         # Apple Silicon: /opt/homebrew, Intel: /usr/local
@@ -444,20 +467,42 @@ setup_homebrew() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Oh My Zsh and clones essential plugins for enhanced shell experience
 setup_oh_my_zsh_and_plugins() {
-    # shellcheck disable=SC2016
-    ask_for_confirmation "oh-my-zsh" "https://github.com/ohmyzsh/ohmyzsh" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    if [[ -d "${HOME}/.oh-my-zsh" ]]; then
+        print_success "Oh My Zsh already installed"
+    else
+        # shellcheck disable=SC2016
+        ask_for_confirmation "oh-my-zsh" "https://github.com/ohmyzsh/ohmyzsh" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    fi
 
-    ask_for_confirmation "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md#oh-my-zsh" \
-        git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+    local plugin_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 
-    ask_for_confirmation "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md" \
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+    if [[ -d "${plugin_dir}/zsh-autosuggestions" ]]; then
+        print_success "zsh-autosuggestions already installed"
+    else
+        ask_for_confirmation "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md#oh-my-zsh" \
+            git clone https://github.com/zsh-users/zsh-autosuggestions "${plugin_dir}/zsh-autosuggestions"
+    fi
 
-    ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" \
-        git clone https://github.com/zsh-users/zsh-history-substring-search "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-history-substring-search"
+    if [[ -d "${plugin_dir}/zsh-syntax-highlighting" ]]; then
+        print_success "zsh-syntax-highlighting already installed"
+    else
+        ask_for_confirmation "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md" \
+            git clone https://github.com/zsh-users/zsh-syntax-highlighting "${plugin_dir}/zsh-syntax-highlighting"
+    fi
 
-    ask_for_confirmation "zsh nvm plugin" "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm" \
-        git clone https://github.com/ohmyzsh/ohmyzsh "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm"
+    if [[ -d "${plugin_dir}/zsh-history-substring-search" ]]; then
+        print_success "zsh-history-substring-search already installed"
+    else
+        ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" \
+            git clone https://github.com/zsh-users/zsh-history-substring-search "${plugin_dir}/zsh-history-substring-search"
+    fi
+
+    if [[ -d "${plugin_dir}/nvm" ]]; then
+        print_success "zsh nvm plugin already installed"
+    else
+        ask_for_confirmation "zsh nvm plugin" "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm" \
+            git clone https://github.com/ohmyzsh/ohmyzsh "${plugin_dir}/nvm"
+    fi
 }
 
 ###############################################################
@@ -469,7 +514,11 @@ setup_oh_my_zsh_and_plugins() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Neovim via Homebrew and clones/updates custom configuration
 setup_nvim() {
-    ask_for_confirmation "nvim" "https://neovim.io/" brew install neovim
+    if command -v nvim &>/dev/null; then
+        print_success "Neovim already installed"
+    else
+        ask_for_confirmation "nvim" "https://neovim.io/" brew install neovim
+    fi
 
     if [[ ! -d "${HOME}/.config/nvim" ]]; then
         ask_for_confirmation "nvim-config" "https://github.com/julianmateu/nvim-config" \
@@ -533,9 +582,13 @@ setup_useful_tools() {
 # Returns: 0 on success, 1 on error
 # Note: Installs pyenv, Python dependencies, and configures brew wrapper for pyenv compatibility
 install_python() {
-    brew install pyenv
-    brew install openssl readline sqlite3 xz zlib
-    brew install openblas
+    if command -v pyenv &>/dev/null; then
+        print_success "pyenv already installed"
+    else
+        brew install pyenv
+        brew install openssl readline sqlite3 xz zlib
+        brew install openblas
+    fi
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -550,21 +603,30 @@ install_python() {
 
 		# pyenv adds *-config scripts and produces a brew warning
 		# This wrapper temporarily switches to system Python to avoid conflicts
+		# Uses 'command brew' to bypass the alias and avoid infinite recursion
 		function brew_wrapper() {
+		    local current_version
 		    current_version="$(pyenv global)"
-		    pyenv global system
-		    echo -e "$(colorize "Warning: changed pyenv version from ${current_version} to system" red)"
-		    brew "${@}"
-		    echo -e "$(colorize "Warning: changed pyenv version from system to ${current_version}" red)"
-		    pyenv global "${current_version}"
-		    echo -e "$(colorize "Warning: running brew update will update go version, make sure to go back to the desired one and update the minor exact version in the zprofile file" red)"
+		    if [[ "${current_version}" != "system" ]]; then
+		        pyenv global system
+		        print_warning "Temporarily switched pyenv from ${current_version} to system for brew"
+		    fi
+		    command brew "${@}"
+		    if [[ "${current_version}" != "system" ]]; then
+		        pyenv global "${current_version}"
+		        print_warning "Restored pyenv to ${current_version}"
+		    fi
 		}
 		alias brew="brew_wrapper"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 
-    pyenv install "${PYTHON_VERSION}"
+    if pyenv versions --bare 2>/dev/null | grep -q "^${PYTHON_VERSION}$"; then
+        print_success "Python ${PYTHON_VERSION} already installed via pyenv"
+    else
+        pyenv install "${PYTHON_VERSION}"
+    fi
     pyenv global "${PYTHON_VERSION}"
 
     export PYENV_ROOT="${HOME}/.pyenv"
@@ -608,8 +670,12 @@ setup_go() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Rust via rustup and configures Cargo environment
 setup_rust() {
-    ask_for_confirmation "rust" "https://www.rust-lang.org/" \
-        sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+    if command -v rustup &>/dev/null; then
+        print_success "Rust already installed"
+    else
+        ask_for_confirmation "rust" "https://www.rust-lang.org/" \
+            sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+    fi
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -632,7 +698,11 @@ setup_rust() {
 # Returns: 0 on success, 1 on error
 # Note: Installs nvm and configures environment, skips if Oh My Zsh nvm plugin is installed
 install_nvm() {
-    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
+    if [[ -d "${HOME}/.nvm" ]]; then
+        print_success "NVM already installed"
+    else
+        curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
+    fi
 
     # Only add the nvm sourcing if the plugin is not installed
     if [[ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm" ]]; then
@@ -675,7 +745,11 @@ setup_node() {
 # Returns: 0 on success, 1 on error
 # Note: Installs SDKMAN and configures environment for Java version management
 install_sdk_man() {
-    curl -s "https://get.sdkman.io" | bash
+    if [[ -d "${HOME}/.sdkman" ]]; then
+        print_success "SDKMAN already installed"
+    else
+        curl -s "https://get.sdkman.io" | bash
+    fi
 
     # Note that indentation with tabs is needed here!
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -839,24 +913,9 @@ setup_ides() {
 # Note: Installs Visual Studio Code via direct download for macOS and Linux
 install_vscode() {
     print_info "Installing Visual Studio Code"
-    
+
     if is_macos; then
-        local vscode_zip="vscode.zip"
-        local vscode_app="/Applications/Visual Studio Code.app"
-        
-        # Download VS Code for macOS
-        curl -L "https://code.visualstudio.com/sha/download?build=stable&os=darwin-universal" -o "${vscode_zip}"
-        
-        # Remove existing installation if present
-        if [[ -d "${vscode_app}" ]]; then
-            print_warning "Removing existing VS Code installation"
-            sudo rm -rf "${vscode_app}"
-        fi
-        
-        # Install VS Code
-        sudo unzip -q "${vscode_zip}" -d "/Applications/"
-        rm -rf "${vscode_zip}"
-    
+        brew install --cask visual-studio-code
     else
         # See https://code.visualstudio.com/docs/setup/linux
         wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
@@ -877,8 +936,13 @@ install_vscode() {
 # Returns: 0 on success, 1 on error
 # Note: Removes existing Slack installation and reinstalls via Homebrew for updates
 setup_slack() {
-    ask_for_confirmation "slack" "https://www.slack.com" \
-        brew install --cask slack
+    if is_macos; then
+        ask_for_confirmation "slack" "https://www.slack.com" \
+            brew install --cask slack
+    else
+        ask_for_confirmation "slack" "https://www.slack.com" \
+            sudo snap install slack --classic
+    fi
 }
 
 # install_obsidian - Install Obsidian
