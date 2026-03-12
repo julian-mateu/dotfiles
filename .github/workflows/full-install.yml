@@ -157,42 +157,33 @@ jobs:
         env:
           DOTFILES_CI: "true"
         run: |
-          echo "=== Counting config markers before second run ==="
-          count_markers() {
-            local total=0
-            for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
-              if [[ -f "./${file}" ]]; then
-                local headers
-                headers=$(grep -c '###############' "./${file}" 2>/dev/null || true)
-                local arrows
-                arrows=$(grep -c '# =>' "./${file}" 2>/dev/null || true)
-                total=$(( total + headers + arrows ))
-              fi
-            done
-            echo "${total}"
-          }
-
-          before=$(count_markers)
-          echo "Marker count before re-run: ${before}"
+          echo "=== Capturing file contents before second run ==="
+          for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
+            if [[ -f "./${file}" ]]; then
+              cp "./${file}" "/tmp/${file}.before"
+            fi
+          done
 
           echo "=== Running install.sh a second time ==="
           ./install.sh
 
-          after=$(count_markers)
-          echo "Marker count after re-run: ${after}"
-
-          if [[ "${before}" -ne "${after}" ]]; then
-            echo "FAIL: Marker count changed from ${before} to ${after} — config blocks were duplicated!"
-            echo "=== Diff of custom files ==="
-            for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
-              if [[ -f "./${file}" ]]; then
-                echo "--- ${file} ---"
-                cat "./${file}"
+          echo "=== Verifying files unchanged after second run ==="
+          failed=0
+          for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
+            if [[ -f "./${file}" ]] && [[ -f "/tmp/${file}.before" ]]; then
+              if ! diff -q "./${file}" "/tmp/${file}.before" &>/dev/null; then
+                echo "FAIL: ${file} changed after second run!"
+                diff "./${file}" "/tmp/${file}.before" || true
+                failed=1
+              else
+                echo "OK: ${file} unchanged"
               fi
-            done
+            fi
+          done
+          if [[ "${failed}" -ne 0 ]]; then
             exit 1
           fi
-          echo "OK: Idempotency verified (marker count unchanged: ${before})"
+          echo "OK: Idempotency verified (all custom files unchanged)"
 
       - name: Run setup.sh
         env:
