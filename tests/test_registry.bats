@@ -24,7 +24,7 @@ teardown() {
     register_tool "python" install_python "Python" "https://python.org" "" "all"
 
     [[ "${#TOOL_REGISTRY[@]}" -eq 1 ]]
-    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all|false" ]]
 }
 
 @test "register_tool: multiple registrations append to array" {
@@ -38,25 +38,37 @@ teardown() {
 @test "register_tool: defaults platform to 'all' when omitted" {
     register_tool "python" install_python "Python" "https://python.org" ""
 
-    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all|false" ]]
 }
 
 @test "register_tool: defaults deps to empty when omitted" {
     register_tool "python" install_python "Python" "https://python.org"
 
-    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all|false" ]]
 }
 
 @test "register_tool: preserves dependency list" {
     register_tool "claude_code" install_claude "Claude Code" "" "node,homebrew" "all"
 
-    [[ "${TOOL_REGISTRY[0]}" == "claude_code|install_claude|Claude Code||node,homebrew|all" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "claude_code|install_claude|Claude Code||node,homebrew|all|false" ]]
 }
 
 @test "register_tool: preserves platform-specific value" {
     register_tool "iterm2" install_iterm "iTerm2" "" "" "macos"
 
-    [[ "${TOOL_REGISTRY[0]}" == "iterm2|install_iterm|iTerm2|||macos" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "iterm2|install_iterm|iTerm2|||macos|false" ]]
+}
+
+@test "register_tool: defaults gui to false when omitted" {
+    register_tool "python" install_python "Python" "https://python.org" "" "all"
+
+    [[ "${TOOL_REGISTRY[0]}" == *"|false" ]]
+}
+
+@test "register_tool: preserves gui flag when set to true" {
+    register_tool "vscode" install_vscode "VS Code" "" "" "all" "true"
+
+    [[ "${TOOL_REGISTRY[0]}" == "vscode|install_vscode|VS Code|||all|true" ]]
 }
 
 ###############################################################
@@ -341,24 +353,37 @@ SCRIPT
 }
 
 ###############################################################
-# run_registry: CI mode skips GUI apps
+# run_registry: CI mode skips GUI apps (gui field)
 ###############################################################
 
-@test "run_registry: CI mode skips GUI app keys" {
+@test "run_registry: CI mode skips gui=true tools" {
     export DOTFILES_CI=true
 
-    vscode_called=false
-    vscode_tool() { vscode_called=true; }
-    INSTALL_VSCODE=true
-    register_tool "vscode" vscode_tool "VS Code" "" "" "all"
+    gui_called=false
+    gui_tool() { gui_called=true; }
+    INSTALL_GUITOOL=true
+    register_tool "guitool" gui_tool "GUI Tool" "" "" "all" "true"
 
     run run_registry
 
-    [[ "${vscode_called}" == "false" ]]
-    [[ "${output}" == *"CI mode: skipping VS Code"* ]]
+    [[ "${gui_called}" == "false" ]]
+    [[ "${output}" == *"CI mode: skipping GUI Tool"* ]]
 }
 
-@test "run_registry: CI mode does not skip non-GUI tools" {
+@test "run_registry: CI mode runs gui=false tools" {
+    export DOTFILES_CI=true
+
+    cli_called=false
+    cli_tool() { cli_called=true; }
+    INSTALL_CLITOOL=true
+    register_tool "clitool" cli_tool "CLI Tool" "" "" "all" "false"
+
+    run_registry
+
+    [[ "${cli_called}" == "true" ]]
+}
+
+@test "run_registry: CI mode does not skip tools with gui defaulting to false" {
     export DOTFILES_CI=true
 
     python_called=false
@@ -371,17 +396,17 @@ SCRIPT
     [[ "${python_called}" == "true" ]]
 }
 
-@test "run_registry: non-CI mode runs GUI apps" {
+@test "run_registry: non-CI mode runs gui=true tools" {
     export DOTFILES_CI=false
 
-    docker_called=false
-    docker_tool() { docker_called=true; }
-    INSTALL_DOCKER=true
-    register_tool "docker" docker_tool "Docker" "" "" "all"
+    gui_called=false
+    gui_tool() { gui_called=true; }
+    INSTALL_GUITOOL=true
+    register_tool "guitool" gui_tool "GUI Tool" "" "" "all" "true"
 
     run_registry
 
-    [[ "${docker_called}" == "true" ]]
+    [[ "${gui_called}" == "true" ]]
 }
 
 ###############################################################

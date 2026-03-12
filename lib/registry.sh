@@ -3,7 +3,7 @@
 # Sourced by install.sh
 
 # Tool registry - array of tool definitions
-# Format: "key|function|description|url|depends_on|platform"
+# Format: "key|function|description|url|depends_on|platform|gui"
 declare -a TOOL_REGISTRY=()
 
 # Register a tool with the registry
@@ -14,9 +14,10 @@ declare -a TOOL_REGISTRY=()
 #   $4 - url: reference URL for more information
 #   $5 - dependencies: comma-separated keys this tool depends on (optional)
 #   $6 - platform: "all", "macos", or "linux" (default: "all")
+#   $7 - gui: "true" if this is a GUI app (skipped in CI mode), default: "false"
 register_tool() {
-    local key="${1}" fn="${2}" desc="${3}" url="${4}" deps="${5:-}" platform="${6:-all}"
-    TOOL_REGISTRY+=("${key}|${fn}|${desc}|${url}|${deps}|${platform}")
+    local key="${1}" fn="${2}" desc="${3}" url="${4}" deps="${5:-}" platform="${6:-all}" gui="${7:-false}"
+    TOOL_REGISTRY+=("${key}|${fn}|${desc}|${url}|${deps}|${platform}|${gui}")
 }
 
 # Check if a tool is enabled via its INSTALL_* variable
@@ -42,21 +43,17 @@ is_tool_enabled() {
 run_registry() {
     local failed=0
     for entry in "${TOOL_REGISTRY[@]}"; do
-        IFS='|' read -r key fn desc url deps platform <<< "${entry}"
+        IFS='|' read -r key fn desc url deps platform gui <<< "${entry}"
 
         # Platform check
         if [[ "${platform}" == "macos" ]] && ! is_macos; then continue; fi
         if [[ "${platform}" == "linux" ]] && is_macos; then continue; fi
 
         # GUI apps: skip in CI mode
-        case "${key}" in
-            vscode|slack|obsidian|zoom|spotify|chrome|nerd_fonts|iterm2|displaylink|docker)
-                if [[ "${DOTFILES_CI:-false}" == "true" ]]; then
-                    print_info "CI mode: skipping ${desc}"
-                    continue
-                fi
-                ;;
-        esac
+        if [[ "${gui}" == "true" ]] && [[ "${DOTFILES_CI:-false}" == "true" ]]; then
+            print_info "CI mode: skipping ${desc}"
+            continue
+        fi
 
         # Skip if disabled
         if ! is_tool_enabled "${key}"; then
