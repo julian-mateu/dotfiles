@@ -31,9 +31,9 @@ _reset_all_install_vars() {
 }
 
 # Load a built-in profile by name
-# Profiles are cumulative: backend includes minimal, full includes backend
+# Profiles are cumulative: developer includes minimal, backend includes developer, full includes backend
 # Parameters:
-#   $1 - Profile name (minimal, backend, full)
+#   $1 - Profile name (minimal, developer, backend, full)
 # Returns: 0 on success, 1 if profile is unknown
 load_profile() {
     local profile_name="${1}"
@@ -44,14 +44,17 @@ load_profile() {
             INSTALL_OH_MY_ZSH=true
             INSTALL_NVIM=true
             INSTALL_USEFUL_TOOLS=true
+            INSTALL_CLAUDE_CODE=true
+            ;;
+        developer)
+            load_profile minimal
             INSTALL_PYTHON=true
             INSTALL_GO=true
             INSTALL_RUST=true
             INSTALL_NODE=true
-            INSTALL_CLAUDE_CODE=true
             ;;
         backend)
-            load_profile minimal
+            load_profile developer
             INSTALL_JAVA=true
             INSTALL_DOTNET=true
             INSTALL_KUBERNETES=true
@@ -63,10 +66,16 @@ load_profile() {
             INSTALL_NERD_FONTS=true
             INSTALL_ITERM2=true
             INSTALL_DEVS_CLI=true
+            INSTALL_SLACK=true
+            INSTALL_OBSIDIAN=true
+            INSTALL_ZOOM=true
+            INSTALL_SPOTIFY=true
+            INSTALL_CHROME=true
+            INSTALL_DISPLAYLINK=true
             ;;
         *)
             print_error "Unknown profile: ${profile_name}"
-            print_info "Available profiles: minimal, backend, full"
+            print_info "Available profiles: minimal, developer, backend, full"
             return 1
             ;;
     esac
