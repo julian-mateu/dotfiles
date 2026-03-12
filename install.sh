@@ -12,6 +12,9 @@ source "${0%/*}/zutils.zsh" || {
     exit 1
 }
 
+# DOTFILES_DIR: script directory, used for resolving relative paths (e.g., dotfiles.conf)
+DOTFILES_DIR="${0%/*}"
+
 # shellcheck disable=SC1091
 source "${0%/*}/lib/config.sh" || { echo "Failed to load lib/config.sh" >&2; exit 1; }
 # shellcheck disable=SC1091

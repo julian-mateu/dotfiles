@@ -61,10 +61,10 @@ load_configuration() {
     elif [[ -n "${PROFILE}" ]]; then
         print_info "Loading profile: ${PROFILE}"
         load_profile "${PROFILE}" || return $?
-    elif [[ -f "./dotfiles.conf" ]]; then
-        print_info "Loading config from: ./dotfiles.conf"
+    elif [[ -f "${DOTFILES_DIR:-.}/dotfiles.conf" ]]; then
+        print_info "Loading config from: ${DOTFILES_DIR:-.}/dotfiles.conf"
         # shellcheck disable=SC1091  # dotfiles.conf is user-created, not tracked
-        source "./dotfiles.conf"
+        source "${DOTFILES_DIR:-.}/dotfiles.conf"
     else
         return 1  # No config found - caller should fall back to interactive
     fi
