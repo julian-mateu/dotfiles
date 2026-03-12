@@ -125,8 +125,8 @@ register_all_tools() {
     register_tool "displaylink"   install_displaylink           "DisplayLink"      "https://www.synaptics.com/"     ""         "macos"  "true"
 
     # CLI tools with shell config
-    register_tool "claude_code"   setup_claude_code             "Claude Code"      "https://docs.anthropic.com/"    ""         "all"
-    register_tool "devs_cli"      setup_devs_cli                "Devs CLI"         ""                               ""         "all"
+    register_tool "claude_code"   setup_claude_code             "Claude Code"      "https://docs.anthropic.com/"              ""         "all"
+    register_tool "devs_cli"      setup_devs_cli                "Devs CLI"         "https://github.com/julianmateu/devs-cli"  "homebrew" "all"
 }
 
 ###############################################################
@@ -1099,13 +1099,14 @@ setup_claude_code() {
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
-# setup_devs_cli - Configure Devs CLI completions
+# setup_devs_cli - Install Devs CLI and configure completions
 # Usage: setup_devs_cli
 # Returns: 0 on success, 1 on error
-# Note: Adds Devs CLI dynamic completions to zshrc_custom
+# Note: Installs Devs CLI via Homebrew tap and adds dynamic completions to zshrc_custom
 setup_devs_cli() {
-    ask_for_confirmation "Devs CLI completions" "Devs CLI dynamic zsh completions" \
-        true  # No install command - just configure completions
+    brew tap julianmateu/devs
+    ask_for_confirmation "Devs CLI" "https://github.com/julianmateu/devs" \
+        brew install devs
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
