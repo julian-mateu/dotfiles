@@ -90,13 +90,37 @@ source "${HOME}/.zutils.zsh" || {
 2. **Config-driven** (`--config` or `--profile`): tool registry pattern with `INSTALL_*` variables
 3. **Auto-config**: if `dotfiles.conf` exists in repo root, uses it automatically
 
-In config-driven mode, `register_all_tools()` in `install.sh` registers all tools with the registry. Each tool has: key (maps to `INSTALL_KEY`), install function, description, URL, dependencies, and platform. `run_registry()` iterates and runs enabled tools.
+#### Execution flow
 
-To add a new tool:
+```
+main() → parse_arguments() → init_custom_files()
+       → load_configuration()
+           ├─ success → register_all_tools() → run_registry()  [config-driven]
+           ├─ fail + explicit --config/--profile → error exit
+           └─ fail + no flags → run_interactive()              [backwards-compatible]
+```
+
+#### Registry pattern (`lib/registry.sh`)
+
+Each tool is registered with `register_tool "key" function "description" "url" "deps" "platform"`. The key maps to an `INSTALL_<KEY>` variable (uppercased). `run_registry()` iterates in registration order and for each tool:
+1. Checks platform (`all`/`macos`/`linux`)
+2. Skips GUI apps in CI mode (`DOTFILES_CI=true`)
+3. Checks `INSTALL_<KEY>` is `true`
+4. Checks dependencies (comma-separated keys) are all enabled
+5. Calls the install function
+
+#### Profiles (`lib/profiles.sh`)
+
+`_reset_all_install_vars()` sets all 23 `INSTALL_*` variables to `false`. Each profile enables its subset. Profiles use cumulative inheritance: `backend` calls `load_profile minimal` first, `full` calls `load_profile backend`.
+
+#### Adding a new tool
+
 1. Write the install function in `install.sh`
 2. Add `register_tool` call in `register_all_tools()`
-3. Add `INSTALL_*` variable to `lib/profiles.sh` (`_reset_all_install_vars` + relevant profiles)
-4. Add to `dotfiles.conf.example`
+3. Add `INSTALL_<KEY>=false` to `_reset_all_install_vars()` in `lib/profiles.sh`
+4. Enable in the appropriate profiles (`load_profile_minimal`, `load_profile_backend`, or `load_profile_full`)
+5. Add to `dotfiles.conf.example`
+6. If the tool needs interactive-mode support, add `ask_for_confirmation` call in `run_interactive()`
 
 ## Environment Variables
 
