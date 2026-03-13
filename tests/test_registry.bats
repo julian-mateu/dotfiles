@@ -21,14 +21,14 @@ teardown() {
 ###############################################################
 
 @test "register_tool: adds entry to TOOL_REGISTRY" {
-    register_tool "python" install_python "Python" "https://python.org" "" "all"
+    register_tool "python" setup_python "Python" "https://python.org" "" "all"
 
     [[ "${#TOOL_REGISTRY[@]}" -eq 1 ]]
-    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all|false" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "python|setup_python|Python|https://python.org||all|false" ]]
 }
 
 @test "register_tool: multiple registrations append to array" {
-    register_tool "python" install_python "Python" "https://python.org" "" "all"
+    register_tool "python" setup_python "Python" "https://python.org" "" "all"
     register_tool "go" install_go "Go" "https://go.dev" "" "all"
     register_tool "rust" install_rust "Rust" "https://rustup.rs" "" "all"
 
@@ -36,15 +36,15 @@ teardown() {
 }
 
 @test "register_tool: defaults platform to 'all' when omitted" {
-    register_tool "python" install_python "Python" "https://python.org" ""
+    register_tool "python" setup_python "Python" "https://python.org" ""
 
-    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all|false" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "python|setup_python|Python|https://python.org||all|false" ]]
 }
 
 @test "register_tool: defaults deps to empty when omitted" {
-    register_tool "python" install_python "Python" "https://python.org"
+    register_tool "python" setup_python "Python" "https://python.org"
 
-    [[ "${TOOL_REGISTRY[0]}" == "python|install_python|Python|https://python.org||all|false" ]]
+    [[ "${TOOL_REGISTRY[0]}" == "python|setup_python|Python|https://python.org||all|false" ]]
 }
 
 @test "register_tool: preserves dependency list" {
@@ -60,7 +60,7 @@ teardown() {
 }
 
 @test "register_tool: defaults gui to false when omitted" {
-    register_tool "python" install_python "Python" "https://python.org" "" "all"
+    register_tool "python" setup_python "Python" "https://python.org" "" "all"
 
     [[ "${TOOL_REGISTRY[0]}" == *"|false" ]]
 }

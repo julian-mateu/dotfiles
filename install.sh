@@ -44,14 +44,14 @@ NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
 # setup_node_full - Install NVM + Node.js LTS (combined for registry)
 setup_node_full() {
-    install_nvm
-    setup_node
+    setup_nvm
+    install_node
 }
 
 # setup_java_full - Install SDKMAN + Java OpenJDK (combined for registry)
 setup_java_full() {
-    install_sdk_man
-    setup_java_openjdk
+    setup_sdkman
+    install_java_openjdk
 }
 
 # install_kubernetes_tools - Install kubectl, k9s, helm (Docker handled separately by registry)
@@ -96,14 +96,14 @@ register_all_tools() {
     # Columns: key          function                      description        url                              deps       platform gui
     # System setup
     register_tool "homebrew"      setup_homebrew                "Homebrew"         "https://brew.sh/"               ""         "all"
-    register_tool "oh_my_zsh"     setup_oh_my_zsh_and_plugins   "Oh My Zsh"        "https://ohmyzsh.dev/"           "homebrew" "all"
-    register_tool "nvim"          setup_nvim                    "Neovim"           "https://neovim.io/"             "homebrew" "all"
+    register_tool "oh_my_zsh"     install_oh_my_zsh_and_plugins   "Oh My Zsh"        "https://ohmyzsh.dev/"           "homebrew" "all"
+    register_tool "nvim"          install_nvim                    "Neovim"           "https://neovim.io/"             "homebrew" "all"
 
     # Dev tools
-    register_tool "useful_tools"  setup_useful_tools            "Useful Tools"     ""                               "homebrew" "all"
+    register_tool "useful_tools"  install_useful_tools            "Useful Tools"     ""                               "homebrew" "all"
 
     # Languages
-    register_tool "python"        install_python                "Python (pyenv)"   "https://github.com/pyenv"       "homebrew" "all"
+    register_tool "python"        setup_python                "Python (pyenv)"   "https://github.com/pyenv"       "homebrew" "all"
     register_tool "go"            setup_go                      "Go"               "https://go.dev/"                "homebrew" "all"
     register_tool "rust"          setup_rust                    "Rust"             "https://rust-lang.org/"         ""         "all"
     register_tool "node"          setup_node_full               "Node.js (NVM)"    "https://nodejs.org/"            ""         "all"
@@ -116,13 +116,13 @@ register_all_tools() {
 
     # GUI applications (gui=true: skipped in CI by run_registry)
     register_tool "vscode"        install_vscode                "VS Code"          "https://code.visualstudio.com/" ""         "all"    "true"
-    register_tool "slack"         setup_slack                   "Slack"            "https://www.slack.com"          ""         "all"    "true"
+    register_tool "slack"         install_slack                   "Slack"            "https://www.slack.com"          ""         "all"    "true"
     register_tool "obsidian"      install_obsidian              "Obsidian"         "https://obsidian.md/"           ""         "all"    "true"
     register_tool "zoom"          install_zoom                  "Zoom"             "https://zoom.us/"               ""         "all"    "true"
     register_tool "spotify"       install_spotify               "Spotify"          "https://www.spotify.com/"       ""         "all"    "true"
     register_tool "chrome"        install_chrome                "Google Chrome"    "https://www.google.com/chrome/" ""         "all"    "true"
     register_tool "nerd_fonts"    install_nerd_fonts            "Nerd Fonts"       "https://www.nerdfonts.com/"     ""         "all"    "true"
-    register_tool "iterm2"        install_iterm2                "iTerm2"           "https://iterm2.com/"            ""         "macos"  "true"
+    register_tool "iterm2"        setup_iterm2                "iTerm2"           "https://iterm2.com/"            ""         "macos"  "true"
     register_tool "displaylink"   install_displaylink           "DisplayLink"      "https://www.synaptics.com/"     ""         "macos"  "true"
 
     # CLI tools with shell config
@@ -141,7 +141,7 @@ register_all_tools() {
 install_system_dependencies() {
     if is_macos; then
         print_info "Installing macOS dependencies"
-        setup_x_code
+        install_xcode
     else
         print_info "Installing Linux dependencies"
         setup_apt_get
@@ -197,10 +197,10 @@ run_interactive() {
         setup_homebrew
 
         # ZSH
-        setup_oh_my_zsh_and_plugins
+        install_oh_my_zsh_and_plugins
 
         # Nvim
-        setup_nvim
+        install_nvim
     else
         print_warning "[DRY RUN] Skipping system setup (xcode/apt, homebrew, oh-my-zsh, nvim)"
         # Still write the homebrew config blocks in dry-run mode
@@ -241,10 +241,10 @@ run_interactive() {
     fi
 
     # Misc tools
-    ask_for_confirmation "useful tools" "more info in the command if you accept" setup_useful_tools
+    ask_for_confirmation "useful tools" "more info in the command if you accept" install_useful_tools
 
     # Python
-    ask_for_confirmation "pyenv-python" "https://github.com/pyenv/pyenv#installation" install_python
+    ask_for_confirmation "pyenv-python" "https://github.com/pyenv/pyenv#installation" setup_python
 
     # Go
     setup_go
@@ -253,12 +253,12 @@ run_interactive() {
     setup_rust
 
     # JS
-    ask_for_confirmation "nvm" "https://github.com/nvm-sh/nvm/blob/master/README.md" install_nvm
-    setup_node
+    ask_for_confirmation "nvm" "https://github.com/nvm-sh/nvm/blob/master/README.md" setup_nvm
+    install_node
 
     # Java
-    ask_for_confirmation "sdk_man" "https://sdkman.io/install" install_sdk_man
-    setup_java_openjdk
+    ask_for_confirmation "sdkman" "https://sdkman.io/install" setup_sdkman
+    install_java_openjdk
 
     # .NET
     setup_dotnet
@@ -275,7 +275,7 @@ run_interactive() {
         ask_for_confirmation "Visual Studio Code" "https://code.visualstudio.com/" install_vscode
 
         # Slack
-        ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
+        ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" install_slack
 
         # Obsidian
         ask_for_confirmation "Obsidian" "https://obsidian.md/" install_obsidian
@@ -290,7 +290,7 @@ run_interactive() {
 
         # Terminal Emulator
         if is_macos; then
-            ask_for_confirmation "iTerm2" "https://iterm2.com/" install_iterm2
+            ask_for_confirmation "iTerm2" "https://iterm2.com/" setup_iterm2
             ask_for_confirmation "DisplayLink Manager" "https://www.synaptics.com/products/displaylink-graphics/downloads/macos" install_displaylink
         fi
     else
@@ -345,11 +345,11 @@ init_custom_files() {
 # => System setup
 ###############################################################
 
-# setup_x_code - Install XCode command line tools
-# Usage: setup_x_code
+# install_xcode - Install XCode command line tools
+# Usage: install_xcode
 # Returns: 0 on success, 1 on error
 # Note: Prompts user to install XCode command line tools via xcode-select
-setup_x_code() {
+install_xcode() {
     # Check if Xcode CLI tools are already installed (xcode-select -p returns 0 if installed)
     if xcode-select -p &>/dev/null; then
         print_success "XCode command line tools already installed"
@@ -467,11 +467,11 @@ setup_homebrew() {
 # => ZSH and plugins setup
 ###############################################################
 
-# setup_oh_my_zsh_and_plugins - Install Oh My Zsh and essential plugins
-# Usage: setup_oh_my_zsh_and_plugins
+# install_oh_my_zsh_and_plugins - Install Oh My Zsh and essential plugins
+# Usage: install_oh_my_zsh_and_plugins
 # Returns: 0 on success, 1 on error
 # Note: Installs Oh My Zsh and clones essential plugins for enhanced shell experience
-setup_oh_my_zsh_and_plugins() {
+install_oh_my_zsh_and_plugins() {
     if [[ -d "${HOME}/.oh-my-zsh" ]]; then
         print_success "Oh My Zsh already installed"
     else
@@ -514,11 +514,11 @@ setup_oh_my_zsh_and_plugins() {
 # => Editor setup
 ###############################################################
 
-# setup_nvim - Install Neovim and custom configuration
-# Usage: setup_nvim
+# install_nvim - Install Neovim and custom configuration
+# Usage: install_nvim
 # Returns: 0 on success, 1 on error
 # Note: Installs Neovim via Homebrew and clones/updates custom configuration
-setup_nvim() {
+install_nvim() {
     if command -v nvim &>/dev/null; then
         print_success "Neovim already installed"
     else
@@ -538,11 +538,11 @@ setup_nvim() {
 # => Development tools setup
 ###############################################################
 
-# setup_useful_tools - Install essential development and system tools
-# Usage: setup_useful_tools
+# install_useful_tools - Install essential development and system tools
+# Usage: install_useful_tools
 # Returns: 0 on success, 1 on error
 # Note: Installs a comprehensive set of tools for development, system administration, and productivity
-setup_useful_tools() {
+install_useful_tools() {
     # Install useful tools with URLs
     local brew_tools=(
         "wget|https://www.gnu.org/software/wget/"
@@ -582,11 +582,11 @@ setup_useful_tools() {
 # => Git and Python setup
 ###############################################################
 
-# install_python - Install Python with pyenv and configure environment
-# Usage: install_python
+# setup_python - Install Python with pyenv and configure environment
+# Usage: setup_python
 # Returns: 0 on success, 1 on error
 # Note: Installs pyenv, Python dependencies, and configures brew wrapper for pyenv compatibility
-install_python() {
+setup_python() {
     if command -v pyenv &>/dev/null; then
         print_success "pyenv already installed"
     else
@@ -707,11 +707,11 @@ setup_rust() {
 # => Node.js setup
 ###############################################################
 
-# install_nvm - Install Node Version Manager
-# Usage: install_nvm
+# setup_nvm - Install Node Version Manager
+# Usage: setup_nvm
 # Returns: 0 on success, 1 on error
 # Note: Installs nvm and configures environment, skips if Oh My Zsh nvm plugin is installed
-install_nvm() {
+setup_nvm() {
     if [[ -d "${HOME}/.nvm" ]]; then
         print_success "NVM already installed"
     else
@@ -741,11 +741,11 @@ install_nvm() {
     [ -s "${NVM_DIR}/bash_completion" ] && source "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 }
 
-# setup_node - Install Node.js LTS version
-# Usage: setup_node
+# install_node - Install Node.js LTS version
+# Usage: install_node
 # Returns: 0 on success, 1 on error
 # Note: Installs the latest LTS version of Node.js via nvm
-setup_node() {
+install_node() {
     ask_for_confirmation "Node LTS" "https://nodejs.org/en/download/package-manager/#nvm" \
         nvm install --lts
 }
@@ -754,11 +754,11 @@ setup_node() {
 # => Java setup
 ###############################################################
 
-# install_sdk_man - Install SDKMAN for JVM ecosystem management
-# Usage: install_sdk_man
+# setup_sdkman - Install SDKMAN for JVM ecosystem management
+# Usage: setup_sdkman
 # Returns: 0 on success, 1 on error
 # Note: Installs SDKMAN and configures environment for Java version management
-install_sdk_man() {
+setup_sdkman() {
     if [[ -d "${HOME}/.sdkman" ]]; then
         print_success "SDKMAN already installed"
     else
@@ -781,11 +781,11 @@ install_sdk_man() {
     [[ -s "${HOME}/.sdkman/bin/sdkman-init.sh" ]] && source "${HOME}/.sdkman/bin/sdkman-init.sh"
 }
 
-# setup_java_openjdk - Install Java OpenJDK via SDKMAN
-# Usage: setup_java_openjdk
+# install_java_openjdk - Install Java OpenJDK via SDKMAN
+# Usage: install_java_openjdk
 # Returns: 0 on success, 1 on error
 # Note: Installs Java OpenJDK using SDKMAN (may require manual execution in separate terminal)
-setup_java_openjdk() {
+install_java_openjdk() {
     print_warning "sdk might not work inside a script so you might need to run the following command in a separate terminal..."
     # Source sdkman-init.sh in the subprocess so the sdk function is available
     ask_for_confirmation "java_20_openjdk" "https://sdkman.io/usage" \
@@ -918,11 +918,11 @@ install_vscode() {
     print_success "Visual Studio Code installed successfully"
 }
 
-# setup_slack - Reinstall Slack via Homebrew
-# Usage: setup_slack
+# install_slack - Reinstall Slack via Homebrew
+# Usage: install_slack
 # Returns: 0 on success, 1 on error
 # Note: Removes existing Slack installation and reinstalls via Homebrew for updates
-setup_slack() {
+install_slack() {
     if is_macos; then
         ask_for_confirmation "slack" "https://www.slack.com" \
             brew install --cask slack
@@ -1024,11 +1024,11 @@ install_nerd_fonts() {
     print_info "Font cache updated. You may need to restart your terminal or applications to see the new fonts."
 }
 
-# install_iterm2 - Install iTerm2
-# Usage: install_iterm2
+# setup_iterm2 - Install iTerm2
+# Usage: setup_iterm2
 # Returns: 0 on success, 1 on error
 # Note: Installs iTerm2 via direct download for macOS and Linux
-install_iterm2() {
+setup_iterm2() {
     print_info "Installing iTerm2"
     ask_for_confirmation "iTerm2" "https://iterm2.com/" brew install --cask iterm2
     ask_for_confirmation "iTerm2 shell integration" "https://iterm2.com/shell_integration.html" curl -L https://iterm2.com/shell_integration/zsh -o "${HOME}/.iterm2_shell_integration.zsh"
