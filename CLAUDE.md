@@ -10,14 +10,16 @@ This is a dotfiles repository for macOS/Linux development environments. It uses 
 
 ```bash
 # Full setup on a new machine
-./install.sh    # Install tools (Homebrew, Oh My Zsh, pyenv, nvm, Go, Rust, etc.)
-./setup.sh      # Create symlinks to home directory
+./install.sh                          # Interactive mode (prompts for each tool)
+./install.sh --profile developer      # Use built-in profile
+./install.sh --config dotfiles.conf   # Use custom config file
+./install.sh --dry-run --profile full # Preview what would be installed
+./setup.sh                            # Create symlinks to home directory
+./setup.sh -f                         # Overwrite existing symlinks
+source ~/.zshrc                       # Reload shell configuration
 
-# Setup with force overwrite
-./setup.sh -f   # Overwrite existing symlinks
-
-# After changes
-source ~/.zshrc # Reload shell configuration
+# Run unit tests
+bats tests/test_*.bats
 ```
 
 ## Architecture
@@ -37,6 +39,11 @@ ZSH loads files in this order: `zshenv` → `zprofile` → `zshrc`
 | `zutils.zsh` | Utility library: ANSI colors, `print_*` functions, `source_if_exists`, `add_to_path`, system detection |
 | `aliases.zsh` | Command shortcuts organized by category |
 | `julianmateu.zsh-theme` | Custom ZSH theme with vim mode indicator, git status, kubecontext |
+| `lib/config.sh` | CLI argument parsing (`--config`, `--profile`, `--dry-run`) and config loading |
+| `lib/profiles.sh` | Built-in profiles: minimal, developer, backend, full (cumulative inheritance) |
+| `lib/registry.sh` | Tool registry: `register_tool()`, `is_tool_enabled()`, `run_registry()` |
+| `dotfiles.conf.example` | Example config with all `INSTALL_*` variables |
+| `tests/` | bats-core unit tests for zutils.zsh, profiles, and registry |
 
 ### Customization Layer (gitignored)
 
@@ -76,10 +83,50 @@ source "${HOME}/.zutils.zsh" || {
 - Scripts use `set -e -o pipefail` for fail-fast behavior
 - The `${0%/*}` pattern extracts the script's directory for relative sourcing
 
+### Install Architecture
+
+`install.sh` supports three modes:
+1. **Interactive** (default): each tool prompts via `ask_for_confirmation`
+2. **Config-driven** (`--config` or `--profile`): tool registry pattern with `INSTALL_*` variables
+3. **Auto-config**: if `dotfiles.conf` exists in repo root, uses it automatically
+
+#### Execution flow
+
+```
+main() → parse_arguments() → init_custom_files()
+       → load_configuration()
+           ├─ success → register_all_tools() → run_registry()  [config-driven]
+           ├─ fail + explicit --config/--profile → error exit
+           └─ fail + no flags → run_interactive()              [backwards-compatible]
+```
+
+#### Registry pattern (`lib/registry.sh`)
+
+Each tool is registered with `register_tool "key" function "description" "url" "deps" "platform" "gui"`. The key maps to an `INSTALL_<KEY>` variable (uppercased). `run_registry()` iterates in registration order and for each tool:
+1. Checks platform (`all`/`macos`/`linux`)
+2. Skips tools with `gui=true` in CI mode (`DOTFILES_CI=true`)
+3. Checks `INSTALL_<KEY>` is `true`
+4. Checks dependencies (comma-separated keys) are all enabled
+5. Calls the install function
+
+#### Profiles (`lib/profiles.sh`)
+
+`_reset_all_install_vars()` sets all 23 `INSTALL_*` variables to `false`. Each profile enables its subset. Profiles use cumulative inheritance: `developer` calls `load_profile minimal`, `backend` calls `load_profile developer`, `full` calls `load_profile backend`.
+
+#### Adding a new tool
+
+1. Write the install function in `install.sh`
+2. Add `register_tool` call in `register_all_tools()`
+3. Add `INSTALL_<KEY>=false` to `_reset_all_install_vars()` in `lib/profiles.sh`
+4. Enable in the appropriate profiles (`minimal`, `developer`, `backend`, or `full`)
+5. Add to `dotfiles.conf.example`
+6. If the tool needs interactive-mode support, add `ask_for_confirmation` call in `run_interactive()`
+
 ## Environment Variables
 
 - `DOTFILES_DRY_RUN=true` - Preview config blocks without installing (also via `--dry-run` flag)
 - `DOTFILES_CI=true` - Non-interactive mode: auto-accepts all prompts, skips GUI apps
+- `DOTFILES_NON_INTERACTIVE=true` - Auto-accept prompts (set automatically in config-driven mode)
 - `ZSH_PROFILE=true` - Enable zsh startup profiling (run `ZSH_PROFILE=true zsh -i -c ''`)
 
 ## Cross-Platform Patterns

@@ -30,16 +30,6 @@ ZPROFILE_CUSTOM_FILE='./zprofile_custom.zsh'
 main() {
     parse_arguments "${@}"
 
-    print_info "Do you want to install dependencies (needed if setting up a new computer)? [y/n]"
-    print_warning "Note that if the setup process fails because some command is not found, you might need to open a new shell and run ./install.sh again!"
-    read -p "" -n 1 -r REPLY
-    echo
-
-    # =~ ^[Yy]$ - regex match for y or Y
-    if [[ "${REPLY}" =~ ^[Yy]$ ]]; then
-        ./install.sh
-    fi
-
     # -L is a test for a symbolic link
     if [[ ! -L "${HOME}/.gitconfig" ]]; then
         create_git_config

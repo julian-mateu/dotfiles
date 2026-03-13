@@ -14,12 +14,63 @@ cd dotfiles
 source ~/.zshrc # Reload shell
 ```
 
-## Advanced Usage
+## Installation Modes
 
 ```bash
-./install.sh --dry-run       # Preview what config blocks would be written (no installs)
-DOTFILES_CI=true ./install.sh  # Non-interactive mode: auto-accepts all prompts, skips GUI apps
-ZSH_PROFILE=true zsh -i -c ''    # Profile shell startup time
+# Interactive (default) - prompts for each tool
+./install.sh
+
+# Config file - install exactly what's in the config
+cp dotfiles.conf.example dotfiles.conf  # customize, then:
+./install.sh --config dotfiles.conf
+
+# Profile - use a built-in preset
+./install.sh --profile minimal    # Shell tools only (no languages)
+./install.sh --profile developer  # + Python, Go, Rust, Node
+./install.sh --profile backend    # + Java, .NET, K8s, Docker
+./install.sh --profile full       # + all GUI apps, fonts, IDE
+
+# Auto-config - uses ./dotfiles.conf if it exists, otherwise interactive
+./install.sh
+
+# Preview mode - works with all modes
+./install.sh --dry-run
+./install.sh --dry-run --profile full
+
+# CI mode - auto-accepts all prompts, skips GUI apps
+DOTFILES_CI=true ./install.sh
+```
+
+### Profiles
+
+| Profile | Includes |
+|---------|----------|
+| `minimal` | Homebrew, Oh My Zsh, Neovim, useful tools, Claude Code |
+| `developer` | minimal + Python, Go, Rust, Node |
+| `backend` | developer + Java (SDKMAN), .NET, Kubernetes, Docker |
+| `full` | backend + VS Code, Nerd Fonts, iTerm2, Devs CLI, Slack, Obsidian, Zoom, Spotify, Chrome, DisplayLink |
+
+### Config File
+
+Copy `dotfiles.conf.example` to `dotfiles.conf` and set `INSTALL_*` variables to `true`/`false`. Version overrides (`PYTHON_VERSION`, `NVM_VERSION`, etc.) are also supported.
+
+## Other Commands
+
+```bash
+./setup.sh         # Create symlinks to home directory
+./setup.sh -f      # Force overwrite existing symlinks
+ZSH_PROFILE=true zsh -i -c ''  # Profile shell startup time
+```
+
+## Testing
+
+```bash
+# Unit tests (requires bats-core)
+bats tests/test_*.bats
+
+# Or install bats first
+brew install bats-core  # macOS
+sudo apt-get install bats  # Ubuntu
 ```
 
 ## What's Included
@@ -75,10 +126,21 @@ These are created by `install.sh` and symlinked by `setup.sh`.
 | `zutils.zsh` | Utility functions (colors, `add_to_path`, `source_if_exists`, etc.) |
 | `aliases.zsh` | Command shortcuts |
 | `julianmateu.zsh-theme` | Custom prompt theme |
-| `install.sh` | Tool installation (interactive) |
+| `install.sh` | Tool installation (interactive, config-driven, or profile-based) |
 | `setup.sh` | Symlink creation (`-f` to force overwrite) |
+| `lib/config.sh` | CLI argument parsing and config loading |
+| `lib/profiles.sh` | Built-in profiles (minimal, developer, backend, full) |
+| `lib/registry.sh` | Tool registry pattern for config-driven installs |
+| `dotfiles.conf.example` | Example config file with all `INSTALL_*` variables |
 
 ## Tips
+
+### iTerm2 Setup
+
+After installing iTerm2 (`--profile full` or `INSTALL_ITERM2=true`):
+1. The installer copies a Dynamic Profile to `~/Library/Application Support/iTerm2/DynamicProfiles/`
+2. Open iTerm2 → Preferences → Profiles → select the imported profile → set as Default
+3. Color schemes (Catppuccin Latte/Mocha) are in `iterm2/` directory - import via Preferences → Profiles → Colors → Color Presets
 
 ### Prevent Homebrew Auto-Upgrades
 
@@ -98,9 +160,32 @@ ln -s /Volumes/sourcecode ~/src
 
 This repo is designed to be forked and customized. Here's what you need to know:
 
+### How install.sh Works
+
+`install.sh` uses a **tool registry pattern** for config-driven installs:
+
+1. `main()` parses CLI flags, creates `*_custom.zsh` files, then tries to load config
+2. If config loads (via `--config`, `--profile`, or auto-detected `dotfiles.conf`), it runs in **config-driven mode**: registers all tools, then `run_registry()` iterates them in order
+3. If no config is found and no flags were passed, it falls back to **interactive mode** where each tool prompts for confirmation
+
+Each tool is registered with a key, install function, description, URL, dependencies, and platform:
+```bash
+register_tool "python" install_python "Python (pyenv)" "https://github.com/pyenv" "homebrew" "all"
+```
+
+The key maps to an `INSTALL_PYTHON` variable (uppercased). `run_registry()` checks each tool's platform, CI skip list, enabled state, and dependencies before calling its install function.
+
+**Adding a new tool:**
+1. Write the install function in `install.sh`
+2. Register it in `register_all_tools()`
+3. Add `INSTALL_<KEY>=false` to `_reset_all_install_vars()` in `lib/profiles.sh`
+4. Enable in the appropriate profiles
+5. Add to `dotfiles.conf.example`
+6. Add `ask_for_confirmation` call in `run_interactive()` for interactive mode
+
 ### What to Customize
 
-1. **`install.sh`** - Every tool install is wrapped in `ask_for_confirmation`, so you can skip anything during installation. Add/remove tools to match your setup.
+1. **`install.sh`** - See "How install.sh Works" above. Copy `dotfiles.conf.example` to `dotfiles.conf` to customize which tools are installed.
 2. **`*_custom.zsh` files** - These are **gitignored** and machine-specific. They're generated by `install.sh` based on which tools you install. You can also add manual entries for tools not covered by `install.sh`.
 3. **`setup.sh`** - Creates SSH keys with a personal/work split (`id_ed25519-personal` and `id_ed25519`). Modify the `ssh_config` function to match your key naming convention.
 4. **`julianmateu.zsh-theme`** - Rename and customize the prompt theme.

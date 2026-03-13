@@ -260,6 +260,13 @@ ask_for_confirmation() {
         return $?
     fi
 
+    # Non-interactive mode: auto-accept all prompts (config-driven install)
+    if [[ "${DOTFILES_NON_INTERACTIVE:-false}" == "true" ]]; then
+        print_info "Auto-accepting: ${description}"
+        "${command_args[@]}"
+        return $?
+    fi
+
     # Loop until valid input is received
     while true; do
         print_info "Do you want to install ${description}? [y/n]"

@@ -6,11 +6,21 @@ set -e -o pipefail
 # ${0%/*} is parameter expansion that removes the shortest match of "/*" from the end of $0
 # See: bash manual "Parameter Expansion" section
 # shellcheck disable=SC1091
-source "${0%/*}/zutils.zsh" || { 
+source "${0%/*}/zutils.zsh" || {
     echo "Failed to load zutils.zsh" >&2
     echo "Please ensure the dotfiles repository is properly set up." >&2
     exit 1
 }
+
+# DOTFILES_DIR: script directory, used for resolving relative paths (e.g., dotfiles.conf)
+DOTFILES_DIR="${0%/*}"
+
+# shellcheck disable=SC1091
+source "${0%/*}/lib/config.sh" || { echo "Failed to load lib/config.sh" >&2; exit 1; }
+# shellcheck disable=SC1091
+source "${0%/*}/lib/profiles.sh" || { echo "Failed to load lib/profiles.sh" >&2; exit 1; }
+# shellcheck disable=SC1091
+source "${0%/*}/lib/registry.sh" || { echo "Failed to load lib/registry.sh" >&2; exit 1; }
 
 # Configuration variables
 ZPROFILE_CUSTOM_FILE='./zprofile_custom.zsh'
@@ -29,25 +39,147 @@ DOTNET_VERSION='8'
 NEOVIM_CONFIG_REPO='https://github.com/julianmateu/nvim-config.git'
 
 ###############################################################
+# => Composite functions for config-driven mode
+###############################################################
+
+# setup_node_full - Install NVM + Node.js LTS (combined for registry)
+setup_node_full() {
+    install_nvm
+    setup_node
+}
+
+# setup_java_full - Install SDKMAN + Java OpenJDK (combined for registry)
+setup_java_full() {
+    install_sdk_man
+    setup_java_openjdk
+}
+
+# install_kubernetes_tools - Install kubectl, k9s, helm (Docker handled separately by registry)
+install_kubernetes_tools() {
+    brew install kubectl
+    brew install k9s
+    brew install helm
+    if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
+        print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
+    fi
+}
+
+# Simple wrapper functions for GUI apps registered in the registry
+install_zoom() {
+    if is_macos; then
+        brew install --cask zoom
+    else
+        sudo snap install zoom-client
+    fi
+}
+install_spotify() {
+    if is_macos; then
+        brew install --cask spotify
+    else
+        sudo snap install spotify
+    fi
+}
+install_chrome() {
+    if is_macos; then
+        brew install --cask google-chrome
+    else
+        sudo snap install chromium
+    fi
+}
+
+###############################################################
+# => Tool registry setup
+###############################################################
+
+# register_all_tools - Register all tools with the registry for config-driven mode
+register_all_tools() {
+    # System setup
+    register_tool "homebrew"      setup_homebrew                "Homebrew"         "https://brew.sh/"               ""         "all"
+    register_tool "oh_my_zsh"     setup_oh_my_zsh_and_plugins   "Oh My Zsh"        "https://ohmyzsh.dev/"           "homebrew" "all"
+    register_tool "nvim"          setup_nvim                    "Neovim"           "https://neovim.io/"             "homebrew" "all"
+
+    # Dev tools
+    register_tool "useful_tools"  setup_useful_tools            "Useful Tools"     ""                               "homebrew" "all"
+
+    # Languages
+    register_tool "python"        install_python                "Python (pyenv)"   "https://github.com/pyenv"       "homebrew" "all"
+    register_tool "go"            setup_go                      "Go"               "https://go.dev/"                "homebrew" "all"
+    register_tool "rust"          setup_rust                    "Rust"             "https://rust-lang.org/"         ""         "all"
+    register_tool "node"          setup_node_full               "Node.js (NVM)"    "https://nodejs.org/"            ""         "all"
+    register_tool "java"          setup_java_full               "Java (SDKMAN)"    "https://sdkman.io/"             ""         "all"
+    register_tool "dotnet"        setup_dotnet                  ".NET"             "https://dotnet.microsoft.com/"  "homebrew" "all"
+
+    # Containers
+    register_tool "docker"        install_docker                "Docker"           "https://docker.com/"            ""         "all"    "true"
+    register_tool "kubernetes"    install_kubernetes_tools       "Kubernetes"       "https://kubernetes.io/"         "homebrew" "all"
+
+    # GUI applications (gui=true: skipped in CI by run_registry)
+    register_tool "vscode"        install_vscode                "VS Code"          "https://code.visualstudio.com/" ""         "all"    "true"
+    register_tool "slack"         setup_slack                   "Slack"            "https://www.slack.com"          ""         "all"    "true"
+    register_tool "obsidian"      install_obsidian              "Obsidian"         "https://obsidian.md/"           ""         "all"    "true"
+    register_tool "zoom"          install_zoom                  "Zoom"             "https://zoom.us/"               ""         "all"    "true"
+    register_tool "spotify"       install_spotify               "Spotify"          "https://www.spotify.com/"       ""         "all"    "true"
+    register_tool "chrome"        install_chrome                "Google Chrome"    "https://www.google.com/chrome/" ""         "all"    "true"
+    register_tool "nerd_fonts"    install_nerd_fonts            "Nerd Fonts"       "https://www.nerdfonts.com/"     ""         "all"    "true"
+    register_tool "iterm2"        install_iterm2                "iTerm2"           "https://iterm2.com/"            ""         "macos"  "true"
+    register_tool "displaylink"   install_displaylink           "DisplayLink"      "https://www.synaptics.com/"     ""         "macos"  "true"
+
+    # CLI tools with shell config
+    register_tool "claude_code"   setup_claude_code             "Claude Code"      "https://docs.anthropic.com/"              ""         "all"
+    register_tool "devs_cli"      setup_devs_cli                "Devs CLI"         "https://github.com/julianmateu/devs-cli"  "homebrew" "all"
+}
+
+###############################################################
 # => Main function
 ###############################################################
 
 # main - Main entry point for the installation script
-# Usage: main [--dry-run] [arguments...]
+# Usage: main [--dry-run] [--config <file>] [--profile <name>]
 # Parameters: Command line arguments passed to the script
 # Returns: 0 on success, 1 on error
-# Note: Orchestrates the entire installation process for development tools
-#       Use --dry-run to show what config blocks WOULD be written without installing anything
+# Note: Supports three modes:
+#   1. Config-driven: ./install.sh --config dotfiles.conf (or --profile minimal|developer|backend|full)
+#   2. Auto-config: ./install.sh (with dotfiles.conf in repo root)
+#   3. Interactive: ./install.sh (no config, current behavior preserved)
+#   All modes support --dry-run to preview without installing
 main() {
-    # Parse --dry-run flag
-    if [[ "${1:-}" == "--dry-run" ]]; then
-        DOTFILES_DRY_RUN="true"
-        shift
-        print_warning "DRY RUN: showing config blocks that would be written (no installs)"
-    fi
-
+    parse_arguments "$@"
     init_custom_files
 
+    if load_configuration; then
+        # Config-driven mode: auto-accept all prompts since config specifies what to install
+        DOTFILES_NON_INTERACTIVE="true"
+
+        # System dependencies (required before registry tools)
+        if [[ "${DOTFILES_DRY_RUN}" != "true" ]]; then
+            if is_macos; then
+                print_info "Installing macOS dependencies"
+                setup_x_code
+            else
+                print_info "Installing Linux dependencies"
+                setup_apt_get
+            fi
+        fi
+
+        register_all_tools
+        run_registry
+    elif [[ -n "${CONFIG_FILE:-}" ]] || [[ -n "${PROFILE:-}" ]]; then
+        # User explicitly requested config/profile but loading failed - exit with error
+        print_error "Failed to load configuration. Check the error above."
+        return 1
+    else
+        # No config found - fall back to interactive mode (backwards compatible)
+        run_interactive
+    fi
+
+    # shellcheck disable=SC2016
+    echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
+}
+
+# run_interactive - Original interactive installation flow
+# Usage: run_interactive (called by main when no config is found)
+# Note: Preserves the original behavior where each tool prompts for confirmation
+run_interactive() {
     # System setup - these run commands directly (not via ask_for_confirmation),
     # so they need an explicit dry-run guard
     if [[ "${DOTFILES_DRY_RUN}" != "true" ]]; then
@@ -163,9 +295,6 @@ main() {
     # CLI tools with shell config
     setup_claude_code
     setup_devs_cli
-
-    # shellcheck disable=SC2016
-    echo -e "$(colorize "Done!" green) you will have to run: $(fmt_code 'source "${HOME}/.zshrc"')"
 }
 
 ###############################################################
@@ -197,9 +326,9 @@ init_custom_files() {
     append_lines_to_file_if_not_there "${lines}" "${ZSHRC_CUSTOM_FILE}"
 
     for file in "${ZPROFILE_CUSTOM_FILE}" "${ZSHENV_CUSTOM_FILE}" "${ZSHRC_CUSTOM_FILE}"; do
-      # ${parameter%%word} is a parameter expansion that removes the trailing "word" from the parameter.
+      # basename strips directory prefix and .zsh suffix → "zprofile_custom"
       local file_basename
-      file_basename="${file%%.zsh}"
+      file_basename="$(basename "${file}" .zsh)"
       IFS='' read -r -d '' lines <<-EOS || true
 			print_debug "sourcing ${file_basename}"
 		EOS
@@ -247,6 +376,7 @@ setup_apt_get() {
         "file|https://launchpad.net/ubuntu/+source/file"
         "zsh|https://www.zsh.org/"
         "unzip|https://packages.ubuntu.com/search?keywords=unzip"
+        "snapd|https://snapcraft.io/docs/installing-snapd"
     )
     
     install_packages_with_urls "apt_packages" "sudo apt-get install -y {name}"
@@ -259,8 +389,12 @@ setup_apt_get() {
 setup_homebrew() {
 
     if is_macos; then
-        # shellcheck disable=SC2016
-        ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        if command -v brew &>/dev/null; then
+            print_success "Homebrew already installed"
+        else
+            # shellcheck disable=SC2016
+            ask_for_confirmation "brew" "https://brew.sh/" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        fi
 
         # Determine Homebrew path based on architecture
         # Apple Silicon: /opt/homebrew, Intel: /usr/local
@@ -333,20 +467,42 @@ setup_homebrew() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Oh My Zsh and clones essential plugins for enhanced shell experience
 setup_oh_my_zsh_and_plugins() {
-    # shellcheck disable=SC2016
-    ask_for_confirmation "oh-my-zsh" "https://github.com/ohmyzsh/ohmyzsh" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    if [[ -d "${HOME}/.oh-my-zsh" ]]; then
+        print_success "Oh My Zsh already installed"
+    else
+        # shellcheck disable=SC2016
+        ask_for_confirmation "oh-my-zsh" "https://github.com/ohmyzsh/ohmyzsh" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    fi
 
-    ask_for_confirmation "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md#oh-my-zsh" \
-        git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+    local plugin_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 
-    ask_for_confirmation "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md" \
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+    if [[ -d "${plugin_dir}/zsh-autosuggestions" ]]; then
+        print_success "zsh-autosuggestions already installed"
+    else
+        ask_for_confirmation "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md#oh-my-zsh" \
+            git clone https://github.com/zsh-users/zsh-autosuggestions "${plugin_dir}/zsh-autosuggestions"
+    fi
 
-    ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" \
-        git clone https://github.com/zsh-users/zsh-history-substring-search "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-history-substring-search"
+    if [[ -d "${plugin_dir}/zsh-syntax-highlighting" ]]; then
+        print_success "zsh-syntax-highlighting already installed"
+    else
+        ask_for_confirmation "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md" \
+            git clone https://github.com/zsh-users/zsh-syntax-highlighting "${plugin_dir}/zsh-syntax-highlighting"
+    fi
 
-    ask_for_confirmation "zsh nvm plugin" "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm" \
-        git clone https://github.com/ohmyzsh/ohmyzsh "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm"
+    if [[ -d "${plugin_dir}/zsh-history-substring-search" ]]; then
+        print_success "zsh-history-substring-search already installed"
+    else
+        ask_for_confirmation "zsh-history-substring-search" "https://github.com/zsh-users/zsh-history-substring-search" \
+            git clone https://github.com/zsh-users/zsh-history-substring-search "${plugin_dir}/zsh-history-substring-search"
+    fi
+
+    if [[ -d "${plugin_dir}/nvm" ]]; then
+        print_success "zsh nvm plugin already installed"
+    else
+        ask_for_confirmation "zsh nvm plugin" "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm" \
+            git clone https://github.com/ohmyzsh/ohmyzsh "${plugin_dir}/nvm"
+    fi
 }
 
 ###############################################################
@@ -358,7 +514,11 @@ setup_oh_my_zsh_and_plugins() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Neovim via Homebrew and clones/updates custom configuration
 setup_nvim() {
-    ask_for_confirmation "nvim" "https://neovim.io/" brew install neovim
+    if command -v nvim &>/dev/null; then
+        print_success "Neovim already installed"
+    else
+        ask_for_confirmation "nvim" "https://neovim.io/" brew install neovim
+    fi
 
     if [[ ! -d "${HOME}/.config/nvim" ]]; then
         ask_for_confirmation "nvim-config" "https://github.com/julianmateu/nvim-config" \
@@ -422,9 +582,22 @@ setup_useful_tools() {
 # Returns: 0 on success, 1 on error
 # Note: Installs pyenv, Python dependencies, and configures brew wrapper for pyenv compatibility
 install_python() {
-    brew install pyenv
-    brew install openssl readline sqlite3 xz zlib
-    brew install openblas
+    if command -v pyenv &>/dev/null; then
+        print_success "pyenv already installed"
+    else
+        brew install pyenv
+        brew install openssl readline sqlite3 xz zlib
+        brew install openblas
+    fi
+
+    # Migration: remove old buggy brew_wrapper that used 'brew "${@}"' (infinite recursion).
+    # The old block won't match the new one (exact match), so append_lines_to_file_if_not_there
+    # would add the fixed version alongside the broken one. Remove the old block first.
+    # We detect the old version by checking for 'brew "${@}"' without 'command' prefix.
+    if [[ -f "${ZSHENV_CUSTOM_FILE}" ]] && grep -q '^\s*brew "\${@}"' "${ZSHENV_CUSTOM_FILE}" 2>/dev/null; then
+        print_warning "Migrating old brew_wrapper in ${ZSHENV_CUSTOM_FILE} (was missing 'command' prefix)"
+        gsed -i '/# => Python configuration/,/^alias brew="brew_wrapper"$/d' "${ZSHENV_CUSTOM_FILE}"
+    fi
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -439,21 +612,30 @@ install_python() {
 
 		# pyenv adds *-config scripts and produces a brew warning
 		# This wrapper temporarily switches to system Python to avoid conflicts
+		# Uses 'command brew' to bypass the alias and avoid infinite recursion
 		function brew_wrapper() {
+		    local current_version
 		    current_version="$(pyenv global)"
-		    pyenv global system
-		    echo -e "$(colorize "Warning: changed pyenv version from ${current_version} to system" red)"
-		    brew "${@}"
-		    echo -e "$(colorize "Warning: changed pyenv version from system to ${current_version}" red)"
-		    pyenv global "${current_version}"
-		    echo -e "$(colorize "Warning: running brew update will update go version, make sure to go back to the desired one and update the minor exact version in the zprofile file" red)"
+		    if [[ "${current_version}" != "system" ]]; then
+		        pyenv global system
+		        print_warning "Temporarily switched pyenv from ${current_version} to system for brew"
+		    fi
+		    command brew "${@}"
+		    if [[ "${current_version}" != "system" ]]; then
+		        pyenv global "${current_version}"
+		        print_warning "Restored pyenv to ${current_version}"
+		    fi
 		}
 		alias brew="brew_wrapper"
 	EOS
 
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 
-    pyenv install "${PYTHON_VERSION}"
+    if pyenv versions --bare 2>/dev/null | grep -q "^${PYTHON_VERSION}$"; then
+        print_success "Python ${PYTHON_VERSION} already installed via pyenv"
+    else
+        pyenv install "${PYTHON_VERSION}"
+    fi
     pyenv global "${PYTHON_VERSION}"
 
     export PYENV_ROOT="${HOME}/.pyenv"
@@ -497,8 +679,12 @@ setup_go() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Rust via rustup and configures Cargo environment
 setup_rust() {
-    ask_for_confirmation "rust" "https://www.rust-lang.org/" \
-        sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+    if command -v rustup &>/dev/null; then
+        print_success "Rust already installed"
+    else
+        ask_for_confirmation "rust" "https://www.rust-lang.org/" \
+            sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+    fi
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -521,7 +707,11 @@ setup_rust() {
 # Returns: 0 on success, 1 on error
 # Note: Installs nvm and configures environment, skips if Oh My Zsh nvm plugin is installed
 install_nvm() {
-    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
+    if [[ -d "${HOME}/.nvm" ]]; then
+        print_success "NVM already installed"
+    else
+        curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
+    fi
 
     # Only add the nvm sourcing if the plugin is not installed
     if [[ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/nvm" ]]; then
@@ -564,7 +754,11 @@ setup_node() {
 # Returns: 0 on success, 1 on error
 # Note: Installs SDKMAN and configures environment for Java version management
 install_sdk_man() {
-    curl -s "https://get.sdkman.io" | bash
+    if [[ -d "${HOME}/.sdkman" ]]; then
+        print_success "SDKMAN already installed"
+    else
+        curl -s "https://get.sdkman.io" | bash
+    fi
 
     # Note that indentation with tabs is needed here!
     IFS='' read -r -d '' lines <<-"EOS" || true
@@ -659,6 +853,11 @@ install_kubernetes() {
 # Returns: 0 on success, 1 on error
 # Note: Downloads and installs Docker Desktop for macOS and Linux based on system architecture
 install_docker() {
+    if command -v docker &>/dev/null; then
+        print_success "Docker already installed"
+        return 0
+    fi
+
     print_info "Installing Docker"
 
     if is_macos; then
@@ -727,25 +926,15 @@ setup_ides() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Visual Studio Code via direct download for macOS and Linux
 install_vscode() {
+    if command -v code &>/dev/null; then
+        print_success "VS Code already installed"
+        return 0
+    fi
+
     print_info "Installing Visual Studio Code"
-    
+
     if is_macos; then
-        local vscode_zip="vscode.zip"
-        local vscode_app="/Applications/Visual Studio Code.app"
-        
-        # Download VS Code for macOS
-        curl -L "https://code.visualstudio.com/sha/download?build=stable&os=darwin-universal" -o "${vscode_zip}"
-        
-        # Remove existing installation if present
-        if [[ -d "${vscode_app}" ]]; then
-            print_warning "Removing existing VS Code installation"
-            sudo rm -rf "${vscode_app}"
-        fi
-        
-        # Install VS Code
-        sudo unzip -q "${vscode_zip}" -d "/Applications/"
-        rm -rf "${vscode_zip}"
-    
+        brew install --cask visual-studio-code
     else
         # See https://code.visualstudio.com/docs/setup/linux
         wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
@@ -766,8 +955,13 @@ install_vscode() {
 # Returns: 0 on success, 1 on error
 # Note: Removes existing Slack installation and reinstalls via Homebrew for updates
 setup_slack() {
-    ask_for_confirmation "slack" "https://www.slack.com" \
-        brew install --cask slack
+    if is_macos; then
+        ask_for_confirmation "slack" "https://www.slack.com" \
+            brew install --cask slack
+    else
+        ask_for_confirmation "slack" "https://www.slack.com" \
+            sudo snap install slack --classic
+    fi
 }
 
 # install_obsidian - Install Obsidian
@@ -775,8 +969,16 @@ setup_slack() {
 # Returns: 0 on success, 1 on error
 # Note: Installs Obsidian via direct download for macOS and Linux
 install_obsidian() {
+    if is_macos && [[ -d "/Applications/Obsidian.app" ]]; then
+        print_success "Obsidian already installed"
+        return 0
+    elif ! is_macos && command -v obsidian &>/dev/null; then
+        print_success "Obsidian already installed"
+        return 0
+    fi
+
     print_info "Installing Obsidian"
-    
+
     if is_macos; then
         local obsidian_dmg="obsidian.dmg"
         local obsidian_app="/Applications/Obsidian.app"
@@ -822,11 +1024,15 @@ install_obsidian() {
 install_nerd_fonts() {
     local font="0xProto"
     local version="3.4.0"
+    local font_dir="${HOME}/.local/share/fonts"
+
+    # Check if font is already installed
+    if ls "${font_dir}"/0xProto*NerdFont*.ttf &>/dev/null 2>&1; then
+        print_success "Nerd Fonts already installed"
+        return 0
+    fi
 
     print_info "Installing Nerd Fonts"
-
-    # Install via direct download on Linux
-    local font_dir="${HOME}/.local/share/fonts"
     local font_zip="${font}.zip"
     
     # Create font directory if it doesn't exist
@@ -871,12 +1077,19 @@ install_iterm2() {
         append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
     fi
 
+    # DynamicProfiles directory is created on first iTerm2 launch - ensure it exists
+    mkdir -p "${HOME}/Library/Application Support/iTerm2/DynamicProfiles"
     ask_for_confirmation "iTerm2 profile" "" cp "${0%/*}/iterm2/iterm2_profile.json" "${HOME}/Library/Application Support/iTerm2/DynamicProfiles/iterm2_profile.json"
 
     print_info "You will need to make the profile the default in the preferences."
 }
 
 install_displaylink() {
+  if [[ -d "/Applications/DisplayLink Manager.app" ]]; then
+      print_success "DisplayLink Manager already installed"
+      return 0
+  fi
+
   print_info "Installing DisplayLink Manager..."
   local displaylink_file="./display-link.zip"
   curl -L -o "${displaylink_file}" "https://www.synaptics.com/sites/default/files/exe_files/${DISPLAYLINK_DATE}/DisplayLink%20Manager%20Graphics%20Connectivity${DISPLAYLINK_VERSION}-EXE.zip"
@@ -924,13 +1137,14 @@ setup_claude_code() {
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
-# setup_devs_cli - Configure Devs CLI completions
+# setup_devs_cli - Install Devs CLI and configure completions
 # Usage: setup_devs_cli
 # Returns: 0 on success, 1 on error
-# Note: Adds Devs CLI dynamic completions to zshrc_custom
+# Note: Installs Devs CLI via Homebrew tap and adds dynamic completions to zshrc_custom
 setup_devs_cli() {
-    ask_for_confirmation "Devs CLI completions" "Devs CLI dynamic zsh completions" \
-        true  # No install command - just configure completions
+    brew tap julianmateu/devs
+    ask_for_confirmation "Devs CLI" "https://github.com/julianmateu/devs" \
+        brew install devs
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
