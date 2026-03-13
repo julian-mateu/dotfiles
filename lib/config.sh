@@ -10,6 +10,32 @@ parse_arguments() {
     PROFILE=""
     while [[ $# -gt 0 ]]; do
         case "${1}" in
+            -h|--help)
+                cat <<-EOF
+		Usage: install.sh [OPTIONS]
+
+		Options:
+		  --config <file>    Load INSTALL_* variables from a config file
+		  --profile <name>   Use a built-in profile (minimal, developer, backend, full)
+		  --dry-run          Preview config blocks without installing anything
+		  -h, --help         Show this help message and exit
+
+		Modes:
+		  Interactive (default)   Prompts for each tool
+		  Config-driven           --config or --profile (or auto-detects dotfiles.conf)
+
+		Profiles:
+		  minimal    Homebrew, Oh My Zsh, Neovim, useful tools, Claude Code
+		  developer  minimal + Python, Go, Rust, Node
+		  backend    developer + Java, .NET, Kubernetes, Docker
+		  full       backend + all GUI apps, fonts, IDE
+
+		Environment:
+		  DOTFILES_CI=true    Auto-accept prompts, skip GUI apps
+		  DOTFILES_DRY_RUN=true  Same as --dry-run
+		EOF
+                exit 0
+                ;;
             --dry-run)
                 DOTFILES_DRY_RUN="true"
                 print_warning "DRY RUN: showing config blocks that would be written (no installs)"

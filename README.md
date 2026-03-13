@@ -173,7 +173,7 @@ Each tool is registered with a key, install function, description, URL, dependen
 register_tool "python" install_python "Python (pyenv)" "https://github.com/pyenv" "homebrew" "all"
 ```
 
-The key maps to an `INSTALL_PYTHON` variable (uppercased). `run_registry()` checks each tool's platform, CI skip list, enabled state, and dependencies before calling its install function.
+The key maps to an `INSTALL_PYTHON` variable (uppercased). `run_registry()` checks each tool's platform, gui flag (skips GUI apps in CI), enabled state, and dependencies before calling its install function.
 
 **Adding a new tool:**
 1. Write the install function in `install.sh`

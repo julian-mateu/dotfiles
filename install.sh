@@ -93,6 +93,7 @@ install_chrome() {
 
 # register_all_tools - Register all tools with the registry for config-driven mode
 register_all_tools() {
+    # Columns: key          function                      description        url                              deps       platform gui
     # System setup
     register_tool "homebrew"      setup_homebrew                "Homebrew"         "https://brew.sh/"               ""         "all"
     register_tool "oh_my_zsh"     setup_oh_my_zsh_and_plugins   "Oh My Zsh"        "https://ohmyzsh.dev/"           "homebrew" "all"
@@ -133,6 +134,20 @@ register_all_tools() {
 # => Main function
 ###############################################################
 
+# install_system_dependencies - Install OS-level dependencies before any tools
+# Usage: install_system_dependencies
+# Returns: 0 on success, 1 on error
+# Note: Installs XCode CLI tools on macOS or apt packages on Linux
+install_system_dependencies() {
+    if is_macos; then
+        print_info "Installing macOS dependencies"
+        setup_x_code
+    else
+        print_info "Installing Linux dependencies"
+        setup_apt_get
+    fi
+}
+
 # main - Main entry point for the installation script
 # Usage: main [--dry-run] [--config <file>] [--profile <name>]
 # Parameters: Command line arguments passed to the script
@@ -152,13 +167,7 @@ main() {
 
         # System dependencies (required before registry tools)
         if [[ "${DOTFILES_DRY_RUN}" != "true" ]]; then
-            if is_macos; then
-                print_info "Installing macOS dependencies"
-                setup_x_code
-            else
-                print_info "Installing Linux dependencies"
-                setup_apt_get
-            fi
+            install_system_dependencies
         fi
 
         register_all_tools
@@ -180,17 +189,10 @@ main() {
 # Usage: run_interactive (called by main when no config is found)
 # Note: Preserves the original behavior where each tool prompts for confirmation
 run_interactive() {
-    # System setup - these run commands directly (not via ask_for_confirmation),
-    # so they need an explicit dry-run guard
     if [[ "${DOTFILES_DRY_RUN}" != "true" ]]; then
-        # Check OS and install dependencies
-        if is_macos; then
-            print_info "Installing macOS dependencies"
-            setup_x_code
-        else
-            print_info "Installing Linux dependencies"
-            setup_apt_get
-        fi
+        # System setup - these run commands directly (not via ask_for_confirmation),
+        # so they need an explicit dry-run guard
+        install_system_dependencies
 
         setup_homebrew
 
