@@ -263,13 +263,16 @@ run_interactive() {
     # .NET
     setup_dotnet
 
-    # Kubernetes
-    ask_for_confirmation "kubernetes" "https://kubernetes.io/" install_kubernetes
+    # Docker
+    ask_for_confirmation "Docker" "https://docker.com/" install_docker
+
+    # Kubernetes tools (kubectl, k9s, helm)
+    ask_for_confirmation "Kubernetes tools" "https://kubernetes.io/" install_kubernetes_tools
 
     # GUI applications - skip in CI mode
     if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
-        # IDEs
-        setup_ides
+        # VS Code
+        ask_for_confirmation "Visual Studio Code" "https://code.visualstudio.com/" install_vscode
 
         # Slack
         ask_for_confirmation "Reinstall slack" "Will delete the current version and reinstall using brew" setup_slack
@@ -819,36 +822,8 @@ setup_dotnet() {
 }
 
 ###############################################################
-# => Kubernetes setup
+# => Docker and Kubernetes setup
 ###############################################################
-
-# install_kubernetes - Install Kubernetes development tools
-# Usage: install_kubernetes
-# Returns: 0 on success, 1 on error
-# Note: Installs Docker, kubectl, k9s, and helm. Minikube can be added separately if needed.
-#       Docker install is skipped in CI mode (requires GUI/systemd).
-install_kubernetes() {
-    if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
-        print_warning "$(cat <<-EOS
-			Before installing Kubernetes, it is advised to first install docker desktop: $(fmt_underline https://docs.docker.com/desktop/mac/install/)
-			However, it is possible to use hyperkit $(fmt_underline https://minikube.sigs.k8s.io/docs/drivers/hyperkit/)
-		EOS
-        )"
-        ask_for_confirmation "docker" "https://docs.docker.com/desktop" \
-            install_docker
-    else
-        print_info "CI mode: skipping Docker install"
-    fi
-    ask_for_confirmation "kubectl" "https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/#install-with-homebrew-on-macos" \
-        brew install kubectl
-    ask_for_confirmation "k9s" "https://k9scli.io/" \
-        brew install k9s
-    ask_for_confirmation "helm" "https://helm.sh/" \
-        brew install helm
-    if [[ "${DOTFILES_CI:-false}" != "true" ]]; then
-        print_warning "You will need to have installed docker desktop, and change the memory to at least 4.1GB. Then run: $(fmt_code minikube start --cpus 4 --memory 4096)"
-    fi
-}
 
 # install_docker - Install Docker Desktop
 # Usage: install_docker
@@ -913,15 +888,6 @@ install_docker() {
 ###############################################################
 # => Additional tools setup
 ###############################################################
-
-# setup_ides - Install development IDEs
-# Usage: setup_ides
-# Returns: 0 on success, 1 on error
-# Note: Installs popular development IDEs via Homebrew Cask
-setup_ides() {
-    ask_for_confirmation "Visual Studio Code" "https://code.visualstudio.com/" \
-        install_vscode
-}
 
 # install_vscode - Install Visual Studio Code
 # Usage: install_vscode
@@ -1139,14 +1105,18 @@ setup_claude_code() {
     append_lines_to_file_if_not_there "${lines}" "${ZSHENV_CUSTOM_FILE}"
 }
 
+_install_devs_cli() {
+    brew tap julianmateu/devs
+    brew install devs
+}
+
 # setup_devs_cli - Install Devs CLI and configure completions
 # Usage: setup_devs_cli
 # Returns: 0 on success, 1 on error
 # Note: Installs Devs CLI via Homebrew tap and adds dynamic completions to zshrc_custom
 setup_devs_cli() {
-    brew tap julianmateu/devs
-    ask_for_confirmation "Devs CLI" "https://github.com/julianmateu/devs" \
-        brew install devs
+    ask_for_confirmation "Devs CLI" "https://github.com/julianmateu/devs-cli" \
+        _install_devs_cli
 
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
