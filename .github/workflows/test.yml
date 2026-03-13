@@ -123,9 +123,7 @@ jobs:
         env:
           GIT_NAME: "Test User"
           GIT_EMAIL: "test@example.com"
-        run: |
-          # Answer "no" to install.sh prompt; ssh keys already exist so ssh_config skips keygen
-          echo "n" | ./setup.sh
+        run: ./setup.sh
 
       - name: Verify symlinks created
         run: |

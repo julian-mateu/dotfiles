@@ -47,10 +47,10 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y zsh
 
-      - name: Run install.sh in CI mode
+      - name: Run install.sh in CI mode with developer profile
         env:
           DOTFILES_CI: "true"
-        run: ./install.sh
+        run: ./install.sh --profile developer
 
       - name: Verify critical tools
         run: |
@@ -165,7 +165,7 @@ jobs:
           done
 
           echo "=== Running install.sh a second time ==="
-          ./install.sh
+          ./install.sh --profile developer
 
           echo "=== Verifying files unchanged after second run ==="
           failed=0
@@ -189,9 +189,7 @@ jobs:
         env:
           GIT_NAME: "CI Test User"
           GIT_EMAIL: "ci@test.example.com"
-        run: |
-          # SSH keys already exist, answer "no" to install.sh prompt
-          echo "n" | ./setup.sh
+        run: ./setup.sh
 
       - name: Verify symlinks
         run: |
