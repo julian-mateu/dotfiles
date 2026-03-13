@@ -590,6 +590,15 @@ install_python() {
         brew install openblas
     fi
 
+    # Migration: remove old buggy brew_wrapper that used 'brew "${@}"' (infinite recursion).
+    # The old block won't match the new one (exact match), so append_lines_to_file_if_not_there
+    # would add the fixed version alongside the broken one. Remove the old block first.
+    # We detect the old version by checking for 'brew "${@}"' without 'command' prefix.
+    if [[ -f "${ZSHENV_CUSTOM_FILE}" ]] && grep -q '^\s*brew "\${@}"' "${ZSHENV_CUSTOM_FILE}" 2>/dev/null; then
+        print_warning "Migrating old brew_wrapper in ${ZSHENV_CUSTOM_FILE} (was missing 'command' prefix)"
+        gsed -i '/# => Python configuration/,/^alias brew="brew_wrapper"$/d' "${ZSHENV_CUSTOM_FILE}"
+    fi
+
     # Note that indentation with tabs is needed here! Using quotes to avoid interpolation.
     IFS='' read -r -d '' lines <<-"EOS" || true
 		###############################################################
