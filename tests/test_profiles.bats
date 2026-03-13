@@ -243,63 +243,43 @@ teardown() {
 ###############################################################
 
 @test "profile inheritance: developer inherits all minimal values" {
-    load_profile minimal
-    local -A minimal_values
-    minimal_values[HOMEBREW]="${INSTALL_HOMEBREW}"
-    minimal_values[OH_MY_ZSH]="${INSTALL_OH_MY_ZSH}"
-    minimal_values[NVIM]="${INSTALL_NVIM}"
-    minimal_values[USEFUL_TOOLS]="${INSTALL_USEFUL_TOOLS}"
-    minimal_values[CLAUDE_CODE]="${INSTALL_CLAUDE_CODE}"
-
     load_profile developer
 
-    [[ "${INSTALL_HOMEBREW}" == "${minimal_values[HOMEBREW]}" ]]
-    [[ "${INSTALL_OH_MY_ZSH}" == "${minimal_values[OH_MY_ZSH]}" ]]
-    [[ "${INSTALL_NVIM}" == "${minimal_values[NVIM]}" ]]
-    [[ "${INSTALL_USEFUL_TOOLS}" == "${minimal_values[USEFUL_TOOLS]}" ]]
-    [[ "${INSTALL_CLAUDE_CODE}" == "${minimal_values[CLAUDE_CODE]}" ]]
+    # All minimal tools should be enabled
+    [[ "${INSTALL_HOMEBREW}" == "true" ]]
+    [[ "${INSTALL_OH_MY_ZSH}" == "true" ]]
+    [[ "${INSTALL_NVIM}" == "true" ]]
+    [[ "${INSTALL_USEFUL_TOOLS}" == "true" ]]
+    [[ "${INSTALL_CLAUDE_CODE}" == "true" ]]
 }
 
 @test "profile inheritance: backend inherits all developer values" {
-    load_profile developer
-    local -A developer_values
-    developer_values[HOMEBREW]="${INSTALL_HOMEBREW}"
-    developer_values[OH_MY_ZSH]="${INSTALL_OH_MY_ZSH}"
-    developer_values[NVIM]="${INSTALL_NVIM}"
-    developer_values[USEFUL_TOOLS]="${INSTALL_USEFUL_TOOLS}"
-    developer_values[PYTHON]="${INSTALL_PYTHON}"
-    developer_values[GO]="${INSTALL_GO}"
-    developer_values[RUST]="${INSTALL_RUST}"
-    developer_values[NODE]="${INSTALL_NODE}"
-    developer_values[CLAUDE_CODE]="${INSTALL_CLAUDE_CODE}"
-
     load_profile backend
 
-    [[ "${INSTALL_HOMEBREW}" == "${developer_values[HOMEBREW]}" ]]
-    [[ "${INSTALL_OH_MY_ZSH}" == "${developer_values[OH_MY_ZSH]}" ]]
-    [[ "${INSTALL_NVIM}" == "${developer_values[NVIM]}" ]]
-    [[ "${INSTALL_USEFUL_TOOLS}" == "${developer_values[USEFUL_TOOLS]}" ]]
-    [[ "${INSTALL_PYTHON}" == "${developer_values[PYTHON]}" ]]
-    [[ "${INSTALL_GO}" == "${developer_values[GO]}" ]]
-    [[ "${INSTALL_RUST}" == "${developer_values[RUST]}" ]]
-    [[ "${INSTALL_NODE}" == "${developer_values[NODE]}" ]]
-    [[ "${INSTALL_CLAUDE_CODE}" == "${developer_values[CLAUDE_CODE]}" ]]
+    # All minimal tools should be enabled
+    [[ "${INSTALL_HOMEBREW}" == "true" ]]
+    [[ "${INSTALL_OH_MY_ZSH}" == "true" ]]
+    [[ "${INSTALL_NVIM}" == "true" ]]
+    [[ "${INSTALL_USEFUL_TOOLS}" == "true" ]]
+    [[ "${INSTALL_CLAUDE_CODE}" == "true" ]]
+    # All developer tools should be enabled
+    [[ "${INSTALL_PYTHON}" == "true" ]]
+    [[ "${INSTALL_GO}" == "true" ]]
+    [[ "${INSTALL_RUST}" == "true" ]]
+    [[ "${INSTALL_NODE}" == "true" ]]
 }
 
 @test "profile inheritance: full inherits all backend values" {
-    load_profile backend
-    local -A backend_values
-    backend_values[JAVA]="${INSTALL_JAVA}"
-    backend_values[DOTNET]="${INSTALL_DOTNET}"
-    backend_values[KUBERNETES]="${INSTALL_KUBERNETES}"
-    backend_values[DOCKER]="${INSTALL_DOCKER}"
-
     load_profile full
 
-    [[ "${INSTALL_JAVA}" == "${backend_values[JAVA]}" ]]
-    [[ "${INSTALL_DOTNET}" == "${backend_values[DOTNET]}" ]]
-    [[ "${INSTALL_KUBERNETES}" == "${backend_values[KUBERNETES]}" ]]
-    [[ "${INSTALL_DOCKER}" == "${backend_values[DOCKER]}" ]]
+    # All backend tools should be enabled
+    [[ "${INSTALL_JAVA}" == "true" ]]
+    [[ "${INSTALL_DOTNET}" == "true" ]]
+    [[ "${INSTALL_KUBERNETES}" == "true" ]]
+    [[ "${INSTALL_DOCKER}" == "true" ]]
+    # Plus all developer + minimal (spot check)
+    [[ "${INSTALL_HOMEBREW}" == "true" ]]
+    [[ "${INSTALL_PYTHON}" == "true" ]]
 }
 
 @test "profile inheritance: loading minimal after full resets all non-minimal tools" {
