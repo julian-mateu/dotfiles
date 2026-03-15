@@ -132,8 +132,9 @@ jobs:
         run: |
           echo "=== Verifying config blocks in custom files ==="
           failed=0
+          # Only check sections included in the 'developer' profile
           for section in "Homebrew configuration" "Go configuration" "Rust configuration" \
-                         ".NET configuration" "Claude Code configuration"; do
+                         "Claude Code configuration"; do
               found=0
               for file in zshenv_custom.zsh zshrc_custom.zsh zprofile_custom.zsh; do
                   if [[ -f "./${file}" ]] && grep -q "${section}" "./${file}"; then

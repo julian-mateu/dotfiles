@@ -68,6 +68,9 @@ install_kubernetes_tools() {
 install_zoom() {
     if is_macos; then
         brew install --cask zoom
+    elif [[ "$(get_architecture)" == "aarch64" ]]; then
+        print_warning "Zoom is not available for Linux arm64 (no snap/flatpak). Skipping."
+        return 0
     else
         sudo snap install zoom-client
     fi
@@ -75,6 +78,9 @@ install_zoom() {
 install_spotify() {
     if is_macos; then
         brew install --cask spotify
+    elif [[ "$(get_architecture)" == "aarch64" ]]; then
+        print_warning "Spotify is not available for Linux arm64 (no snap/flatpak). Skipping."
+        return 0
     else
         sudo snap install spotify
     fi
@@ -381,6 +387,7 @@ setup_apt_get() {
         "file|https://launchpad.net/ubuntu/+source/file"
         "zsh|https://www.zsh.org/"
         "unzip|https://packages.ubuntu.com/search?keywords=unzip"
+        "zip|https://packages.ubuntu.com/search?keywords=zip"
         "snapd|https://snapcraft.io/docs/installing-snapd"
     )
     
@@ -590,9 +597,18 @@ setup_python() {
     if command -v pyenv &>/dev/null; then
         print_success "pyenv already installed"
     else
-        brew install pyenv
-        brew install openssl readline sqlite3 xz zlib
-        brew install openblas
+        if is_macos; then
+            brew install pyenv
+            brew install openssl readline sqlite3 xz zlib
+            brew install openblas
+        else
+            # On Linux, install pyenv via official installer (not brew) so it
+            # links against system libraries instead of Homebrew's
+            sudo apt-get install -y libssl-dev libreadline-dev libsqlite3-dev \
+                libbz2-dev libffi-dev liblzma-dev zlib1g-dev tk-dev \
+                libncursesw5-dev libxml2-dev libxmlsec1-dev
+            curl https://pyenv.run | bash
+        fi
     fi
 
     # Migration: remove old buggy brew_wrapper that used 'brew "${@}"' (infinite recursion).
@@ -712,10 +728,26 @@ setup_rust() {
 # Returns: 0 on success, 1 on error
 # Note: Installs nvm and configures environment, skips if Oh My Zsh nvm plugin is installed
 setup_nvm() {
-    if [[ -d "${HOME}/.nvm" ]]; then
+    # Detect NVM directory: respect NVM_DIR if set, then check common locations
+    local nvm_dir="${NVM_DIR:-}"
+    if [[ -z "${nvm_dir}" ]]; then
+        if [[ -s "${HOME}/.nvm/nvm.sh" ]]; then
+            nvm_dir="${HOME}/.nvm"
+        elif [[ -s "${HOME}/.config/nvm/nvm.sh" ]]; then
+            nvm_dir="${HOME}/.config/nvm"
+        else
+            nvm_dir="${HOME}/.nvm"
+        fi
+    fi
+
+    if [[ -s "${nvm_dir}/nvm.sh" ]]; then
         print_success "NVM already installed"
     else
         curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | bash
+        # Re-detect: installer may choose ~/.config/nvm or ~/.nvm
+        if [[ -s "${HOME}/.config/nvm/nvm.sh" ]]; then
+            nvm_dir="${HOME}/.config/nvm"
+        fi
     fi
 
     # Only add the nvm sourcing if the plugin is not installed
@@ -727,16 +759,21 @@ setup_nvm() {
 			###############################################################
 			# NVM configuration
 			# See: https://github.com/nvm-sh/nvm#installing-and-updating
-			export NVM_DIR="${HOME}/.nvm"
+			# Detect NVM directory (installer may use ~/.nvm or ~/.config/nvm)
+			if [[ -s "${HOME}/.nvm/nvm.sh" ]]; then
+			    export NVM_DIR="${HOME}/.nvm"
+			elif [[ -s "${HOME}/.config/nvm/nvm.sh" ]]; then
+			    export NVM_DIR="${HOME}/.config/nvm"
+			fi
 			[ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"  # This loads nvm
 			[ -s "${NVM_DIR}/bash_completion" ] && \. "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 		EOS
-        
+
         # Appending to the profile file, as this would be too slow on every shell
         append_lines_to_file_if_not_there "${lines}" "${ZPROFILE_CUSTOM_FILE}"
     fi
 
-    export NVM_DIR="${HOME}/.nvm"
+    export NVM_DIR="${nvm_dir}"
     [ -s "${NVM_DIR}/nvm.sh" ] && source "${NVM_DIR}/nvm.sh"  # This loads nvm
     [ -s "${NVM_DIR}/bash_completion" ] && source "${NVM_DIR}/bash_completion"  # This loads nvm bash_completion
 }
@@ -863,16 +900,20 @@ install_docker() {
 
         for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove -y "${pkg}"; done
 
+        # Detect distro (ubuntu or debian) for Docker repo URL
+        local distro_id
+        distro_id="$(. /etc/os-release && echo "${ID}")"
+
         # Add Docker's official GPG key:
         sudo apt-get update -y
         sudo apt-get install -y ca-certificates curl
         sudo install -m 0755 -d /etc/apt/keyrings
-        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo curl -fsSL "https://download.docker.com/linux/${distro_id}/gpg" -o /etc/apt/keyrings/docker.asc
         sudo chmod a+r /etc/apt/keyrings/docker.asc
 
         # Add the repository to Apt sources:
         echo \
-          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${distro_id} \
           $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
           sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
         sudo apt-get update -y
@@ -926,6 +967,9 @@ install_slack() {
     if is_macos; then
         ask_for_confirmation "slack" "https://www.slack.com" \
             brew install --cask slack
+    elif [[ "$(get_architecture)" == "aarch64" ]]; then
+        print_warning "Slack is not available for Linux arm64 (no snap/flatpak). Skipping."
+        return 0
     else
         ask_for_confirmation "slack" "https://www.slack.com" \
             sudo snap install slack --classic
@@ -935,13 +979,13 @@ install_slack() {
 # install_obsidian - Install Obsidian
 # Usage: install_obsidian
 # Returns: 0 on success, 1 on error
-# Note: Installs Obsidian via direct download for macOS and Linux
+# Note: Installs Obsidian via DMG on macOS, flatpak on Linux
 install_obsidian() {
     if is_macos && [[ -d "/Applications/Obsidian.app" ]]; then
         print_success "Obsidian already installed"
         return 0
-    elif ! is_macos && command -v obsidian &>/dev/null; then
-        print_success "Obsidian already installed"
+    elif ! is_macos && flatpak info md.obsidian.Obsidian &>/dev/null; then
+        print_success "Obsidian already installed (flatpak)"
         return 0
     fi
 
@@ -950,38 +994,33 @@ install_obsidian() {
     if is_macos; then
         local obsidian_dmg="obsidian.dmg"
         local obsidian_app="/Applications/Obsidian.app"
-        
+
         # Download Obsidian for macOS
         curl -L "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg" -o "${obsidian_dmg}"
-        
+
         # Remove existing installation if present
         if [[ -d "${obsidian_app}" ]]; then
             print_warning "Removing existing Obsidian installation"
             sudo rm -rf "${obsidian_app}"
         fi
-        
+
         # Install Obsidian
         sudo hdiutil attach "./${obsidian_dmg}"
         sudo cp -R "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" "/Applications"
         sudo hdiutil unmount "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal"
         rm -rf "./${obsidian_dmg}"
-        
+
         print_success "Obsidian installed successfully"
-        
+
     else
-        local architecture
-        architecture="$(get_architecture)"
-        local obsidian_deb="obsidian.deb"
-        
-        # Download Obsidian for Linux
-        curl -L "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}-${architecture}.deb" -o "${obsidian_deb}"
-        
-        # Install Obsidian
-        sudo dpkg -i "${obsidian_deb}"
-        sudo apt-get install -f -y  # Fix any dependency issues
-        rm -rf "${obsidian_deb}"
-        
-        print_success "Obsidian installed successfully"
+        # Install via flatpak (works on both amd64 and arm64)
+        if ! command -v flatpak &>/dev/null; then
+            sudo apt-get install -y flatpak
+        fi
+        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak install -y flathub md.obsidian.Obsidian
+
+        print_success "Obsidian installed successfully (flatpak)"
     fi
 }
 

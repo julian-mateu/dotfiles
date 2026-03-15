@@ -141,7 +141,7 @@ append_lines_to_file_if_not_there() {
 
     # Dry-run mode: show what would be written and whether it already exists
     if [[ "${DOTFILES_DRY_RUN:-false}" == "true" ]]; then
-        if [[ -f "${file}" ]] && perl -0777 -sne '/$text/ or exit 1' -- -text="${lines}" "${file}" 2>/dev/null; then
+        if [[ -f "${file}" ]] && perl -0777 -sne 'index($_, $text) >= 0 or exit 1' -- -text="${lines}" "${file}" 2>/dev/null; then
             print_success "[DRY RUN] Block already exists in ${file}"
         else
             print_warning "[DRY RUN] Would add to ${file}:"
@@ -157,7 +157,7 @@ append_lines_to_file_if_not_there() {
     # The -0777 option causes perl to slurp the whole file in memory. -0digits uses octal digits to define a record separator.
     #  As there's no valid 777 character, this will read the whole file as a single "line".
     #  See: http://www2.ocean.washington.edu/perl4/pl-opt.html
-    if perl -0777 -sne '/$text/ or exit 1' -- -text="${lines}" "${file}"; then
+    if perl -0777 -sne 'index($_, $text) >= 0 or exit 1' -- -text="${lines}" "${file}"; then
         print_info "Block already exists in ${file}, skipping:"
         print_info "$(fmt_code "${lines}")"
         return 0
