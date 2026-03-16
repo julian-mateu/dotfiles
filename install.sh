@@ -532,6 +532,15 @@ install_nvim() {
         ask_for_confirmation "nvim" "https://neovim.io/" brew install neovim
     fi
 
+    # tree-sitter-cli is required by nvim treesitter plugin
+    if command -v tree-sitter &>/dev/null; then
+        print_success "tree-sitter-cli already installed"
+    elif command -v cargo &>/dev/null; then
+        cargo install tree-sitter-cli
+    else
+        brew install tree-sitter
+    fi
+
     if [[ ! -d "${HOME}/.config/nvim" ]]; then
         ask_for_confirmation "nvim-config" "https://github.com/julianmateu/nvim-config" \
             git clone "${NEOVIM_CONFIG_REPO}" "${HOME}/.config/nvim"
