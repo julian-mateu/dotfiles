@@ -62,8 +62,9 @@ plugins=(
 
 # NVM plugin
 # See: https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm
-zstyle ':omz:plugins:nvm' lazy no
+zstyle ':omz:plugins:nvm' lazy yes
 zstyle ':omz:plugins:nvm' autoload yes
+zstyle ':omz:plugins:nvm' lazy-cmd nvim
 
 ###############################################################
 # => External files
