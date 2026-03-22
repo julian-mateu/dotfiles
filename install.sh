@@ -538,7 +538,7 @@ install_nvim() {
     elif command -v cargo &>/dev/null; then
         cargo install tree-sitter-cli
     else
-        brew install tree-sitter
+        brew install tree-sitter-cli
     fi
 
     if [[ ! -d "${HOME}/.config/nvim" ]]; then
